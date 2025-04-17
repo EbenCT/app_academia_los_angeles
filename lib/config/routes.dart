@@ -1,0 +1,50 @@
+import 'package:flutter/material.dart';
+import '../../screens/auth/login_screen.dart';
+import '../../screens/auth/register_screen.dart';
+import '../../screens/home_screen.dart';
+/*import '../../screens/home/profile_screen.dart';
+import '../../home/courses_screen.dart';
+import '../../screens/game/achievements_screen.dart';
+import '../../screens/game/leaderboard_screen.dart';*/
+
+/// Contiene todas las rutas de navegación de la aplicación
+class AppRoutes {
+  // Nombres de rutas estáticas para fácil referencia
+  static const String login = '/login';
+  static const String register = '/register';
+  static const String home = '/home';
+  static const String profile = '/profile';
+  static const String courses = '/courses';
+  static const String achievements = '/achievements';
+  static const String leaderboard = '/leaderboard';
+
+  /// Mapa de rutas nombradas para la navegación en MaterialApp
+  static Map<String, WidgetBuilder> get routes => {
+    login: (context) => const LoginScreen(),
+    register: (context) => const RegisterScreen(),
+    home: (context) => const HomeScreen(),
+    /*profile: (context) => const ProfileScreen(),
+    courses: (context) => const CoursesScreen(),
+    achievements: (context) => const AchievementsScreen(),
+    leaderboard: (context) => const LeaderboardScreen(),*/
+  };
+
+  /// Navega a una ruta nombrada
+  static void navigateTo(BuildContext context, String routeName) {
+    Navigator.pushNamed(context, routeName);
+  }
+
+  /// Navega a una ruta y reemplaza la actual en el stack
+  static void navigateReplacementTo(BuildContext context, String routeName) {
+    Navigator.pushReplacementNamed(context, routeName);
+  }
+
+  /// Navega al inicio y limpia todo el stack de navegación
+  static void navigateToHomeAndClearStack(BuildContext context) {
+    Navigator.pushNamedAndRemoveUntil(
+      context, 
+      home, 
+      (Route<dynamic> route) => false,
+    );
+  }
+}
