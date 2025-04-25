@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:lottie/lottie.dart';
 import '../../config/routes.dart';
-import '../../constants/app_constants.dart';
 import '../../constants/asset_paths.dart';
 import '../../providers/auth_provider.dart';
 import '../../theme/app_colors.dart';
@@ -419,7 +418,7 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                                     child: CustomButton(
                                       text: '¡Regístrate para unirte a la misión!',
                                       onPressed: () {
-                                        AppRoutes.navigateTo(context, AppRoutes.register);
+                                        _showRoleSelectionDialog(context);
                                       },
                                       isOutlined: true,
                                       icon: Icons.how_to_reg_rounded,
@@ -585,4 +584,159 @@ List<Widget> _generateStars(int count, Size screenSize) {
       ),
     );
   }
+  
+  void _showRoleSelectionDialog(BuildContext context) {
+  showDialog(
+    context: context,
+    builder: (BuildContext context) {
+      return Dialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20.0),
+        ),
+        backgroundColor: Theme.of(context).brightness == Brightness.dark
+            ? AppColors.darkSurface
+            : Colors.white,
+        child: Padding(
+          padding: const EdgeInsets.all(20.0),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Lottie.asset(
+                AssetPaths.astronautAnimation,
+                width: 100,
+                height: 100,
+              ),
+              const SizedBox(height: 16),
+              Text(
+                '¿Cuál es tu rol en la misión espacial?',
+                style: TextStyle(
+                  fontFamily: 'Comic Sans MS',
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: Theme.of(context).brightness == Brightness.dark
+                      ? Colors.white
+                      : AppColors.textPrimary,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 24),
+              // Opción Estudiante
+              _buildRoleOption(
+                context: context,
+                title: 'Estudiante Explorador',
+                description: 'Para pequeños aventureros espaciales',
+                icon: Icons.school_rounded,
+                color: AppColors.primary,
+                onTap: () {
+                  Navigator.pop(context);
+                  AppRoutes.navigateTo(context, AppRoutes.register);
+                },
+              ),
+              const SizedBox(height: 16),
+              // Opción Profesor
+              _buildRoleOption(
+                context: context,
+                title: 'Profesor Guía',
+                description: 'Para comandantes de la misión',
+                icon: Icons.science_rounded,
+                color: AppColors.secondary,
+                onTap: () {
+                  Navigator.pop(context);
+                  AppRoutes.navigateTo(context, AppRoutes.registerTeacher);
+                },
+              ),
+              const SizedBox(height: 16),
+              TextButton(
+                onPressed: () {
+                  Navigator.pop(context);
+                },
+                child: Text(
+                  'Cancelar',
+                  style: TextStyle(
+                    fontFamily: 'Comic Sans MS',
+                    fontSize: 16,
+                    color: AppColors.textSecondary,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    },
+  );
+}
+
+Widget _buildRoleOption({
+  required BuildContext context,
+  required String title,
+  required String description,
+  required IconData icon,
+  required Color color,
+  required VoidCallback onTap,
+}) {
+  return InkWell(
+    onTap: onTap,
+    borderRadius: BorderRadius.circular(15),
+    child: Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(15),
+        border: Border.all(
+          color: color.withOpacity(0.3),
+          width: 2,
+        ),
+      ),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: color.withOpacity(0.2),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(
+              icon,
+              color: color,
+              size: 30,
+            ),
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: TextStyle(
+                    fontFamily: 'Comic Sans MS',
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: color,
+                  ),
+                ),
+                Text(
+                  description,
+                  style: TextStyle(
+                    fontFamily: 'Comic Sans MS',
+                    fontSize: 14,
+                    color: Theme.of(context).brightness == Brightness.dark
+                        ? Colors.white70
+                        : Colors.black87,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Icon(
+            Icons.arrow_forward_ios_rounded,
+            color: color,
+            size: 20,
+          ),
+        ],
+      ),
+    ),
+  );
+}
 }

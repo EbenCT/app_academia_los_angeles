@@ -1,7 +1,6 @@
 // lib/widgets/home/achievement_preview_widget.dart
 import 'package:flutter/material.dart';
 import '../../theme/app_colors.dart';
-import '../../theme/app_text_styles.dart';
 import '../animations/fade_animation.dart';
 
 class AchievementPreviewWidget extends StatelessWidget {
@@ -18,7 +17,6 @@ class AchievementPreviewWidget extends StatelessWidget {
   Widget build(BuildContext context) {
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
     final backgroundColor = isDarkMode ? AppColors.darkSurface : Colors.white;
-    final textColor = isDarkMode ? Colors.white : AppColors.textPrimary;
 
     return Container(
       width: double.infinity,

@@ -66,6 +66,180 @@ mutation SignUp($email: String!, $password: String!, $firstName: String!, $lastN
 }
 ''';
 
+// Modificación en lib/services/auth_service.dart
+// Agregar estas mutaciones a la clase AuthService
+
+final String _signUpStudentMutation = r'''
+mutation SignUpStudent($email: String!, $password: String!, $firstName: String!, $lastName: String!) {
+  signUpStudent(signUpStudentInput: {
+    email: $email
+    password: $password
+    firstName: $firstName
+    lastName: $lastName
+  }) {
+    token
+    user {
+      id
+      firstName
+      lastName
+      email
+      role
+      isActive
+    }
+  }
+}
+''';
+
+final String _signUpTeacherMutation = r'''
+mutation SignUpTeacher($email: String!, $password: String!, $firstName: String!, $lastName: String!, $cellphone: Int!) {
+  signUpTeacher(signUpTeacherInput: {
+    email: $email
+    password: $password
+    firstName: $firstName
+    lastName: $lastName
+    cellphone: $cellphone
+  }) {
+    token
+    user {
+      id
+      firstName
+      lastName
+      email
+      role
+      isActive
+    }
+  }
+}
+''';
+
+// Agregar estos métodos a la clase AuthService
+
+Future<Map<String, dynamic>> registerStudent(
+  String email,
+  String password,
+  String firstName,
+  String lastName,
+) async {
+  try {
+    final result = await _client.mutate(
+      MutationOptions(
+        document: gql(_signUpStudentMutation),
+        variables: {
+          'email': email,
+          'password': password,
+          'firstName': firstName,
+          'lastName': lastName,
+        },
+      ),
+    );
+    
+    if (result.hasException) {
+      print('GraphQL Error: ${result.exception.toString()}');
+      return {
+        'success': false,
+        'message': 'Error de registro: ${_getErrorMessage(result.exception)}',
+      };
+    }
+    
+    final data = result.data?['signUpStudent'];
+    if (data != null) {
+      // Guardar token
+      await _secureStorage.write(key: 'token', value: data['token']);
+      // Transformar los datos del usuario para que coincidan con el modelo UserModel
+      final user = {
+        'id': data['user']['id'],
+        'username': '${data['user']['firstName']} ${data['user']['lastName']}',
+        'email': data['user']['email'],
+        'role': data['user']['role'].toString().toLowerCase(),
+        'achievements': [],
+        'points': 0,
+        'level': 1,
+      };
+      
+      return {
+        'success': true,
+        'token': data['token'],
+        'user': user,
+      };
+    } else {
+      return {
+        'success': false,
+        'message': 'No se pudo completar el registro de estudiante',
+      };
+    }
+  } catch (e) {
+    print('Exception during student registration: $e');
+    return {
+      'success': false,
+      'message': 'Error de conexión: $e',
+    };
+  }
+}
+
+Future<Map<String, dynamic>> registerTeacher(
+  String email,
+  String password,
+  String firstName,
+  String lastName,
+  int cellphone,
+) async {
+  try {
+    final result = await _client.mutate(
+      MutationOptions(
+        document: gql(_signUpTeacherMutation),
+        variables: {
+          'email': email,
+          'password': password,
+          'firstName': firstName,
+          'lastName': lastName,
+          'cellphone': cellphone,
+        },
+      ),
+    );
+    
+    if (result.hasException) {
+      print('GraphQL Error: ${result.exception.toString()}');
+      return {
+        'success': false,
+        'message': 'Error de registro: ${_getErrorMessage(result.exception)}',
+      };
+    }
+    
+    final data = result.data?['signUpTeacher'];
+    if (data != null) {
+      // Guardar token
+      await _secureStorage.write(key: 'token', value: data['token']);
+      // Transformar los datos del usuario para que coincidan con el modelo UserModel
+      final user = {
+        'id': data['user']['id'],
+        'username': '${data['user']['firstName']} ${data['user']['lastName']}',
+        'email': data['user']['email'],
+        'role': data['user']['role'].toString().toLowerCase(),
+        'achievements': [],
+        'points': 0,
+        'level': 1,
+      };
+      
+      return {
+        'success': true,
+        'token': data['token'],
+        'user': user,
+      };
+    } else {
+      return {
+        'success': false,
+        'message': 'No se pudo completar el registro de profesor',
+      };
+    }
+  } catch (e) {
+    print('Exception during teacher registration: $e');
+    return {
+      'success': false,
+      'message': 'Error de conexión: $e',
+    };
+  }
+}
+
   /// Intenta iniciar sesión con las credenciales proporcionadas
   Future<Map<String, dynamic>> login(String email, String password) async {
     try {

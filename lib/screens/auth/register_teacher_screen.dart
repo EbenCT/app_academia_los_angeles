@@ -1,4 +1,5 @@
-// lib/screens/auth/register_screen.dart
+// Crear un nuevo archivo: lib/screens/auth/register_teacher_screen.dart
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../config/routes.dart';
@@ -10,47 +11,28 @@ import '../../widgets/common/custom_button.dart';
 import '../../widgets/common/custom_text_field.dart';
 import '../../widgets/common/loading_indicator.dart';
 
-class RegisterScreen extends StatefulWidget {
-  const RegisterScreen({super.key});
+class RegisterTeacherScreen extends StatefulWidget {
+  const RegisterTeacherScreen({super.key});
 
   @override
-  State<RegisterScreen> createState() => _RegisterScreenState();
+  State<RegisterTeacherScreen> createState() => _RegisterTeacherScreenState();
 }
 
-class _RegisterScreenState extends State<RegisterScreen> with SingleTickerProviderStateMixin {
+class _RegisterTeacherScreenState extends State<RegisterTeacherScreen>
+    with SingleTickerProviderStateMixin {
   final _formKey = GlobalKey<FormState>();
-  final _nameController = TextEditingController();
+  final _firstNameController = TextEditingController();
+  final _lastNameController = TextEditingController();
   final _emailController = TextEditingController();
+  final _cellphoneController = TextEditingController();
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
-  
   late AnimationController _animationController;
   bool _isPasswordVisible = false;
   bool _isConfirmPasswordVisible = false;
   bool _acceptTerms = false;
   int _currentStep = 1;
   int _totalSteps = 3;
-  
-  List<Color> _avatarColors = [
-    Colors.blue,
-    Colors.purple,
-    Colors.orange,
-    Colors.green,
-    Colors.red,
-    Colors.teal,
-    Colors.pink,
-    Colors.amber,
-  ];
-  
-  int _selectedColorIndex = 0;
-  int _selectedAvatarType = 0;
-  
-  List<String> _characterTypes = [
-    'Astronauta',
-    'Explorador',
-    'Científico',
-    'Alienígena',
-  ];
 
   @override
   void initState() {
@@ -64,8 +46,10 @@ class _RegisterScreenState extends State<RegisterScreen> with SingleTickerProvid
 
   @override
   void dispose() {
-    _nameController.dispose();
+    _firstNameController.dispose();
+    _lastNameController.dispose();
     _emailController.dispose();
+    _cellphoneController.dispose();
     _passwordController.dispose();
     _confirmPasswordController.dispose();
     _animationController.dispose();
@@ -90,33 +74,28 @@ class _RegisterScreenState extends State<RegisterScreen> with SingleTickerProvid
     
     // Validar formulario
     if (_formKey.currentState!.validate() && _acceptTerms) {
-      // Crear nombre y apellido a partir del nombre completo
-      final nameParts = _nameController.text.trim().split(' ');
-      String firstName = nameParts.first;
-      String lastName = nameParts.length > 1 
-          ? nameParts.sublist(1).join(' ') 
-          : '';
+      final firstName = _firstNameController.text.trim();
+      final lastName = _lastNameController.text.trim();
+      final email = _emailController.text.trim();
+      final cellphone = int.tryParse(_cellphoneController.text.trim()) ?? 0;
+      final password = _passwordController.text.trim();
       
-      // Si no hay apellido, usar un valor predeterminado
-      if (lastName.isEmpty) {
-        lastName = "Explorador";
-      }
-      
-     // Llamar al AuthProvider para realizar el registro de estudiante
-    final authProvider = Provider.of<AuthProvider>(context, listen: false);
-    final success = await authProvider.registerStudent(
-      _emailController.text.trim(),
-      _passwordController.text.trim(),
-      firstName,
-      lastName,
-    );
+      // Llamar al AuthProvider para realizar el registro
+      final authProvider = Provider.of<AuthProvider>(context, listen: false);
+      final success = await authProvider.registerTeacher(
+        email,
+        password,
+        firstName,
+        lastName,
+        cellphone,
+      );
       
       if (success && mounted) {
         // Mostrar mensaje de éxito
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-              '¡Registro exitoso! Tu aventura espacial comenzará pronto.',
+              '¡Registro exitoso! Bienvenido a la Academia Espacial, Profesor.',
               style: TextStyle(fontFamily: 'Comic Sans MS'),
             ),
             backgroundColor: AppColors.success,
@@ -161,7 +140,7 @@ class _RegisterScreenState extends State<RegisterScreen> with SingleTickerProvid
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            'Debes aceptar las reglas espaciales para unirte a la misión.',
+            'Debes aceptar las reglas espaciales para unirte como profesor.',
             style: TextStyle(fontFamily: 'Comic Sans MS'),
           ),
           backgroundColor: AppColors.warning,
@@ -173,7 +152,7 @@ class _RegisterScreenState extends State<RegisterScreen> with SingleTickerProvid
       );
     }
   }
-  
+
   void _nextStep() {
     if (_currentStep < _totalSteps) {
       setState(() {
@@ -181,7 +160,7 @@ class _RegisterScreenState extends State<RegisterScreen> with SingleTickerProvid
       });
     }
   }
-  
+
   void _previousStep() {
     if (_currentStep > 1) {
       setState(() {
@@ -196,13 +175,13 @@ class _RegisterScreenState extends State<RegisterScreen> with SingleTickerProvid
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
     final authProvider = Provider.of<AuthProvider>(context);
     final isLoading = authProvider.isLoading;
-
+    
     return Scaffold(
       body: Stack(
         children: [
           // Fondo espacial
           _buildSpaceBackground(size),
-
+          
           // Contenido principal
           SafeArea(
             child: SingleChildScrollView(
@@ -234,7 +213,6 @@ class _RegisterScreenState extends State<RegisterScreen> with SingleTickerProvid
                                 },
                                 icon: const Icon(Icons.arrow_back_ios, color: Colors.white),
                               ),
-                              
                               // Indicador de pasos
                               Container(
                                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
@@ -245,7 +223,7 @@ class _RegisterScreenState extends State<RegisterScreen> with SingleTickerProvid
                                 child: Row(
                                   children: [
                                     Icon(
-                                      Icons.rocket_launch,
+                                      Icons.science_rounded,
                                       color: Colors.white,
                                       size: 16,
                                     ),
@@ -261,16 +239,13 @@ class _RegisterScreenState extends State<RegisterScreen> with SingleTickerProvid
                                   ],
                                 ),
                               ),
-                              
                               // Espaciador para mantener centrado el indicador
                               const SizedBox(width: 48),
                             ],
                           ),
                         ),
-                        
                         const SizedBox(height: 20),
-                        
-                        // Logo pequeño 
+                        // Logo pequeño
                         Hero(
                           tag: 'school_logo',
                           child: Container(
@@ -295,9 +270,7 @@ class _RegisterScreenState extends State<RegisterScreen> with SingleTickerProvid
                             ),
                           ),
                         ),
-                        
                         const SizedBox(height: 20),
-                        
                         // Título con animación
                         FadeAnimation(
                           delay: const Duration(milliseconds: 200),
@@ -319,10 +292,8 @@ class _RegisterScreenState extends State<RegisterScreen> with SingleTickerProvid
                             textAlign: TextAlign.center,
                           ),
                         ),
-                        
                         const SizedBox(height: 10),
-                        
-                        // Subtítulo 
+                        // Subtítulo
                         FadeAnimation(
                           delay: const Duration(milliseconds: 300),
                           child: Text(
@@ -342,9 +313,7 @@ class _RegisterScreenState extends State<RegisterScreen> with SingleTickerProvid
                             textAlign: TextAlign.center,
                           ),
                         ),
-                        
                         const SizedBox(height: 30),
-                        
                         // Tarjeta con formulario por pasos
                         Flexible(
                           fit: FlexFit.loose,
@@ -355,8 +324,8 @@ class _RegisterScreenState extends State<RegisterScreen> with SingleTickerProvid
                               width: double.infinity,
                               padding: const EdgeInsets.all(20),
                               decoration: BoxDecoration(
-                                color: isDarkMode 
-                                    ? AppColors.darkSurface.withOpacity(0.95) 
+                                color: isDarkMode
+                                    ? AppColors.darkSurface.withOpacity(0.95)
                                     : Colors.white.withOpacity(0.95),
                                 borderRadius: const BorderRadius.only(
                                   topLeft: Radius.circular(30),
@@ -377,7 +346,6 @@ class _RegisterScreenState extends State<RegisterScreen> with SingleTickerProvid
                             ),
                           ),
                         ),
-                        
                         const SizedBox(height: 20),
                       ],
                     ),
@@ -392,7 +360,7 @@ class _RegisterScreenState extends State<RegisterScreen> with SingleTickerProvid
             Container(
               color: Colors.black45,
               child: const LoadingIndicator(
-                message: '¡Preparando tu nave espacial!',
+                message: '¡Preparando tu estación espacial!',
                 useAstronaut: true,
                 size: 180,
               ),
@@ -405,9 +373,9 @@ class _RegisterScreenState extends State<RegisterScreen> with SingleTickerProvid
   String _getStepTitle() {
     switch (_currentStep) {
       case 1:
-        return '¡Únete a la Aventura!';
+        return '¡Únete como Profesor Espacial!';
       case 2:
-        return '¡Crea tu Personaje!';
+        return '¡Información de Contacto!';
       case 3:
         return '¡Última Misión!';
       default:
@@ -418,9 +386,9 @@ class _RegisterScreenState extends State<RegisterScreen> with SingleTickerProvid
   String _getStepSubtitle() {
     switch (_currentStep) {
       case 1:
-        return 'Cuéntanos sobre ti para comenzar';
+        return 'Crea tu perfil de profesor guía';
       case 2:
-        return 'Personaliza tu avatar espacial';
+        return 'Datos para comunicarnos contigo';
       case 3:
         return 'Establece tu contraseña secreta';
       default:
@@ -433,7 +401,7 @@ class _RegisterScreenState extends State<RegisterScreen> with SingleTickerProvid
       case 1:
         return _buildPersonalInfoStep();
       case 2:
-        return _buildAvatarStep();
+        return _buildContactInfoStep();
       case 3:
         return _buildPasswordStep();
       default:
@@ -449,8 +417,8 @@ class _RegisterScreenState extends State<RegisterScreen> with SingleTickerProvid
         FadeAnimation(
           delay: const Duration(milliseconds: 500),
           child: CustomTextField(
-            controller: _nameController,
-            hintText: 'Tu nombre de explorador',
+            controller: _firstNameController,
+            hintText: 'Tu nombre',
             prefixIcon: Icons.badge_rounded,
             validator: (value) {
               if (value == null || value.trim().isEmpty) {
@@ -460,14 +428,27 @@ class _RegisterScreenState extends State<RegisterScreen> with SingleTickerProvid
             },
           ),
         ),
-        
         const SizedBox(height: 16),
-        
         FadeAnimation(
           delay: const Duration(milliseconds: 600),
           child: CustomTextField(
+            controller: _lastNameController,
+            hintText: 'Tu apellido',
+            prefixIcon: Icons.badge_rounded,
+            validator: (value) {
+              if (value == null || value.trim().isEmpty) {
+                return 'Por favor ingresa tu apellido';
+              }
+              return null;
+            },
+          ),
+        ),
+        const SizedBox(height: 16),
+        FadeAnimation(
+          delay: const Duration(milliseconds: 700),
+          child: CustomTextField(
             controller: _emailController,
-            hintText: 'Tu correo o el de tus padres',
+            hintText: 'Tu correo electrónico',
             prefixIcon: Icons.email_rounded,
             keyboardType: TextInputType.emailAddress,
             validator: (value) {
@@ -481,163 +462,12 @@ class _RegisterScreenState extends State<RegisterScreen> with SingleTickerProvid
             },
           ),
         ),
-        
-        const SizedBox(height: 24),
-        
-        // Fecha de nacimiento simplificada para niños
-        FadeAnimation(
-          delay: const Duration(milliseconds: 700),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Padding(
-                padding: const EdgeInsets.only(left: 12, bottom: 8),
-                child: Text(
-                  '¿Cuántos años tienes?',
-                  style: TextStyle(
-                    fontFamily: 'Comic Sans MS',
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                    color: Theme.of(context).brightness == Brightness.dark
-                        ? Colors.white70
-                        : Colors.black87,
-                  ),
-                ),
-              ),
-              Container(
-                height: 70,
-                decoration: BoxDecoration(
-                  color: AppColors.primary.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(15),
-                ),
-                child: ListView.builder(
-                  scrollDirection: Axis.horizontal,
-                  itemCount: 10, // Edades de 5 a 14 años
-                  itemBuilder: (context, index) {
-                    final age = index + 5;
-                    return GestureDetector(
-                      onTap: () {
-                        // Seleccionar edad
-                      },
-                      child: Container(
-                        width: 60,
-                        margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
-                        decoration: BoxDecoration(
-                          color: age == 10 
-                              ? AppColors.primary 
-                              : Theme.of(context).brightness == Brightness.dark
-                                  ? Colors.black26
-                                  : Colors.white,
-                          borderRadius: BorderRadius.circular(12),
-                          boxShadow: age == 10
-                              ? [
-                                  BoxShadow(
-                                    color: AppColors.primary.withOpacity(0.3),
-                                    blurRadius: 8,
-                                    offset: const Offset(0, 3),
-                                  ),
-                                ]
-                              : null,
-                        ),
-                        child: Center(
-                          child: Text(
-                            '$age',
-                            style: TextStyle(
-                              fontFamily: 'Comic Sans MS',
-                              fontSize: 20,
-                              fontWeight: FontWeight.bold,
-                              color: age == 10
-                                  ? Colors.white
-                                  : AppColors.primary,
-                            ),
-                          ),
-                        ),
-                      ),
-                    );
-                  },
-                ),
-              ),
-            ],
-          ),
-        ),
-        
-        const SizedBox(height: 24),
-        
-        // Selección de curso
-        FadeAnimation(
-          delay: const Duration(milliseconds: 800),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Padding(
-                padding: const EdgeInsets.only(left: 12, bottom: 8),
-                child: Text(
-                  '¿En qué grado estás?',
-                  style: TextStyle(
-                    fontFamily: 'Comic Sans MS',
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                    color: Theme.of(context).brightness == Brightness.dark
-                        ? Colors.white70
-                        : Colors.black87,
-                  ),
-                ),
-              ),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 5),
-                decoration: BoxDecoration(
-                  color: AppColors.primary.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(15),
-                  border: Border.all(
-                    color: AppColors.primary.withOpacity(0.3),
-                    width: 1,
-                  ),
-                ),
-                child: DropdownButtonHideUnderline(
-                  child: DropdownButton<String>(
-                    isExpanded: true,
-                    value: '4to Grado',
-                    icon: Icon(Icons.arrow_drop_down, color: AppColors.primary),
-                    iconSize: 30,
-                    elevation: 16,
-                    dropdownColor: Theme.of(context).brightness == Brightness.dark
-                        ? AppColors.darkSurface
-                        : Colors.white,
-                    style: TextStyle(
-                      fontFamily: 'Comic Sans MS',
-                      fontSize: 16,
-                      color: Theme.of(context).brightness == Brightness.dark
-                          ? Colors.white
-                          : Colors.black87,
-                    ),
-                    onChanged: (newValue) {
-                      // Actualizar grado
-                    },
-                    items: <String>[
-                      '3er Grado',
-                      '4to Grado',
-                      '5to Grado',
-                      '6to Grado',
-                    ].map<DropdownMenuItem<String>>((String value) {
-                      return DropdownMenuItem<String>(
-                        value: value,
-                        child: Text(value),
-                      );
-                    }).toList(),
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-        
         const SizedBox(height: 30),
-        
         // Botón para continuar
         FadeAnimation(
           delay: const Duration(milliseconds: 900),
           child: CustomButton(
-            text: 'Continuar a personalización',
+            text: 'Continuar',
             onPressed: _nextStep,
             icon: Icons.arrow_forward_rounded,
             backgroundColor: const Color(0xFF00C853), // Verde
@@ -648,44 +478,32 @@ class _RegisterScreenState extends State<RegisterScreen> with SingleTickerProvid
     );
   }
 
-  Widget _buildAvatarStep() {
+  Widget _buildContactInfoStep() {
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        // Previsualización del avatar
+        // Teléfono celular
         FadeAnimation(
           delay: const Duration(milliseconds: 500),
-          child: Container(
-            width: 150,
-            height: 150,
-            decoration: BoxDecoration(
-              color: _avatarColors[_selectedColorIndex].withOpacity(0.2),
-              shape: BoxShape.circle,
-              border: Border.all(
-                color: _avatarColors[_selectedColorIndex],
-                width: 4,
-              ),
-              boxShadow: [
-                BoxShadow(
-                  color: _avatarColors[_selectedColorIndex].withOpacity(0.3),
-                  blurRadius: 10,
-                  offset: const Offset(0, 5),
-                ),
-              ],
-            ),
-            child: Center(
-              child: Icon(
-                _getAvatarIcon(),
-                color: _avatarColors[_selectedColorIndex],
-                size: 80,
-              ),
-            ),
+          child: CustomTextField(
+            controller: _cellphoneController,
+            hintText: 'Número de teléfono',
+            prefixIcon: Icons.phone_rounded,
+            keyboardType: TextInputType.phone,
+            validator: (value) {
+              if (value == null || value.trim().isEmpty) {
+                return 'Por favor ingresa tu número de teléfono';
+              }
+              if (value.trim().length < 8) {
+                return 'Por favor ingresa un número válido';
+              }
+              return null;
+            },
           ),
         ),
+        const SizedBox(height: 30),
         
-        const SizedBox(height: 24),
-        
-        // Selección de tipo de personaje
+        // Botón para materias que enseña (solo visual, para mantener el paso UI)
         FadeAnimation(
           delay: const Duration(milliseconds: 600),
           child: Column(
@@ -694,7 +512,7 @@ class _RegisterScreenState extends State<RegisterScreen> with SingleTickerProvid
               Padding(
                 padding: const EdgeInsets.only(left: 12, bottom: 8),
                 child: Text(
-                  'Elige tu tipo de personaje',
+                  '¿Qué materias enseñas?',
                   style: TextStyle(
                     fontFamily: 'Comic Sans MS',
                     fontSize: 16,
@@ -705,149 +523,42 @@ class _RegisterScreenState extends State<RegisterScreen> with SingleTickerProvid
                   ),
                 ),
               ),
-              SizedBox(
-                height: 80,
-                child: ListView.builder(
-                  scrollDirection: Axis.horizontal,
-                  itemCount: _characterTypes.length,
-                  itemBuilder: (context, index) {
-                    return GestureDetector(
-                      onTap: () {
-                        setState(() {
-                          _selectedAvatarType = index;
-                        });
-                      },
-                      child: Container(
-                        width: 100,
-                        margin: const EdgeInsets.symmetric(horizontal: 8),
-                        decoration: BoxDecoration(
-                          color: _selectedAvatarType == index
-                              ? _avatarColors[_selectedColorIndex].withOpacity(0.2)
-                              : Theme.of(context).brightness == Brightness.dark
-                                  ? Colors.black26
-                                  : Colors.white,
-                          borderRadius: BorderRadius.circular(15),
-                          border: Border.all(
-                            color: _selectedAvatarType == index
-                                ? _avatarColors[_selectedColorIndex]
-                                : Colors.transparent,
-                            width: 2,
-                          ),
-                          boxShadow: _selectedAvatarType == index
-                              ? [
-                                  BoxShadow(
-                                    color: _avatarColors[_selectedColorIndex].withOpacity(0.3),
-                                    blurRadius: 8,
-                                    offset: const Offset(0, 3),
-                                  ),
-                                ]
-                              : null,
-                        ),
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(
-                              _getCharacterIcon(index),
-                              color: _selectedAvatarType == index
-                                  ? _avatarColors[_selectedColorIndex]
-                                  : Colors.grey,
-                              size: 36,
-                            ),
-                            const SizedBox(height: 8),
-                            Text(
-                              _characterTypes[index],
-                              style: TextStyle(
-                                fontFamily: 'Comic Sans MS',
-                                fontSize: 12,
-                                fontWeight: FontWeight.bold,
-                                color: _selectedAvatarType == index
-                                    ? _avatarColors[_selectedColorIndex]
-                                    : Colors.grey,
-                              ),
-                              textAlign: TextAlign.center,
-                            ),
-                          ],
-                        ),
-                      ),
-                    );
-                  },
-                ),
-              ),
-            ],
-          ),
-        ),
-        
-        const SizedBox(height: 24),
-        
-        // Selección de color
-        FadeAnimation(
-          delay: const Duration(milliseconds: 700),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Padding(
-                padding: const EdgeInsets.only(left: 12, bottom: 8),
-                child: Text(
-                  'Elige tu color favorito',
-                  style: TextStyle(
-                    fontFamily: 'Comic Sans MS',
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                    color: Theme.of(context).brightness == Brightness.dark
-                        ? Colors.white70
-                        : Colors.black87,
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: AppColors.primary.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(15),
+                  border: Border.all(
+                    color: AppColors.primary.withOpacity(0.3),
+                    width: 1,
                   ),
                 ),
-              ),
-              SizedBox(
-                height: 60,
-                child: ListView.builder(
-                  scrollDirection: Axis.horizontal,
-                  itemCount: _avatarColors.length,
-                  itemBuilder: (context, index) {
-                    return GestureDetector(
-                      onTap: () {
-                        setState(() {
-                          _selectedColorIndex = index;
-                        });
-                      },
-                      child: Container(
-                        width: 50,
-                        height: 50,
-                        margin: const EdgeInsets.symmetric(horizontal: 8),
-                        decoration: BoxDecoration(
-                          color: _avatarColors[index],
-                          shape: BoxShape.circle,
-                          border: Border.all(
-                            color: _selectedColorIndex == index
-                                ? Colors.white
-                                : Colors.transparent,
-                            width: 3,
-                          ),
-                          boxShadow: [
-                            BoxShadow(
-                              color: _avatarColors[index].withOpacity(0.3),
-                              blurRadius: 8,
-                              offset: const Offset(0, 3),
-                            ),
-                          ],
-                        ),
-                        child: _selectedColorIndex == index
-                            ? const Icon(
-                                Icons.check,
-                                color: Colors.white,
-                                size: 30,
-                              )
-                            : null,
+                child: Column(
+                  children: [
+                    _buildSubjectChip('Matemáticas', true),
+                    _buildSubjectChip('Ciencias', false),
+                    _buildSubjectChip('Lenguaje', false),
+                    _buildSubjectChip('Historia', false),
+                    _buildSubjectChip('Arte', false),
+                    const SizedBox(height: 8),
+                    Text(
+                      'Podrás configurar tus materias después del registro',
+                      style: TextStyle(
+                        fontFamily: 'Comic Sans MS',
+                        fontSize: 12,
+                        fontStyle: FontStyle.italic,
+                        color: Theme.of(context).brightness == Brightness.dark
+                            ? Colors.white60
+                            : Colors.black54,
                       ),
-                    );
-                  },
+                      textAlign: TextAlign.center,
+                    ),
+                  ],
                 ),
               ),
             ],
           ),
         ),
-        
         const SizedBox(height: 30),
         
         // Botones de navegación
@@ -866,9 +577,7 @@ class _RegisterScreenState extends State<RegisterScreen> with SingleTickerProvid
                 ),
               ),
             ),
-            
             const SizedBox(width: 16),
-            
             // Botón para continuar
             Expanded(
               flex: 2,
@@ -889,11 +598,37 @@ class _RegisterScreenState extends State<RegisterScreen> with SingleTickerProvid
     );
   }
 
+  Widget _buildSubjectChip(String subject, bool isSelected) {
+    return Container(
+      margin: const EdgeInsets.symmetric(vertical: 4),
+      child: Row(
+        children: [
+          Checkbox(
+            value: isSelected,
+            onChanged: (value) {
+              // Solo visual
+            },
+            activeColor: AppColors.primary,
+          ),
+          Text(
+            subject,
+            style: TextStyle(
+              fontFamily: 'Comic Sans MS',
+              fontSize: 16,
+              color: isSelected
+                  ? AppColors.primary
+                  : Theme.of(context).brightness == Brightness.dark
+                      ? Colors.white70
+                      : Colors.black87,
+              fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildPasswordStep() {
-    // Nota: La validación de contraseña debe coincidir con los requisitos del backend
-    // Por lo general, se requiere al menos 6 caracteres, y puede tener reglas adicionales
-    // como incluir letras mayúsculas, minúsculas, números y caracteres especiales.
-    
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
@@ -924,9 +659,7 @@ class _RegisterScreenState extends State<RegisterScreen> with SingleTickerProvid
             },
           ),
         ),
-        
         const SizedBox(height: 16),
-        
         FadeAnimation(
           delay: const Duration(milliseconds: 600),
           child: CustomTextField(
@@ -953,10 +686,8 @@ class _RegisterScreenState extends State<RegisterScreen> with SingleTickerProvid
             },
           ),
         ),
-        
         const SizedBox(height: 24),
-        
-        // Consejos de seguridad amigables para niños
+        // Consejos de seguridad
         FadeAnimation(
           delay: const Duration(milliseconds: 700),
           child: Container(
@@ -992,15 +723,13 @@ class _RegisterScreenState extends State<RegisterScreen> with SingleTickerProvid
                 ),
                 const SizedBox(height: 8),
                 _buildPasswordTip('Usa letras y números'),
-                _buildPasswordTip('No uses tu nombre'),
-                _buildPasswordTip('No la compartas con nadie'),
+                _buildPasswordTip('Incluye algún carácter especial (@,!,?)'),
+                _buildPasswordTip('Incluye mayusculas y minusculas'),
               ],
             ),
           ),
         ),
-        
         const SizedBox(height: 24),
-        
         // Aceptar términos y condiciones
         FadeAnimation(
           delay: const Duration(milliseconds: 800),
@@ -1026,7 +755,7 @@ class _RegisterScreenState extends State<RegisterScreen> with SingleTickerProvid
                     });
                   },
                   child: Text(
-                    'Acepto las reglas espaciales y prometo ser un buen explorador.',
+                    'Acepto las reglas espaciales y prometo guiar a mis estudiantes en su aventura de aprendizaje.',
                     style: TextStyle(
                       fontFamily: 'Comic Sans MS',
                       fontSize: 12,
@@ -1041,12 +770,12 @@ class _RegisterScreenState extends State<RegisterScreen> with SingleTickerProvid
             ],
           ),
         ),
-        
         const SizedBox(height: 30),
-        
         // Botones de navegación
         Row(
           children: [
+            // Continuación de lib/screens/auth/register_teacher_screen.dart
+
             // Botón para regresar
             Expanded(
               flex: 1,
@@ -1060,9 +789,7 @@ class _RegisterScreenState extends State<RegisterScreen> with SingleTickerProvid
                 ),
               ),
             ),
-            
             const SizedBox(width: 16),
-            
             // Botón para registrarse
             Expanded(
               flex: 2,
@@ -1071,9 +798,8 @@ class _RegisterScreenState extends State<RegisterScreen> with SingleTickerProvid
                 child: CustomButton(
                   text: '¡Registrarme!',
                   onPressed: _register,
-                  icon: Icons.rocket_launch_rounded,
-                  backgroundColor: const Color(0xFFFFD700), // Amarillo
-                  textColor: const Color(0xFF003366), // Azul oscuro
+                  icon: Icons.science_rounded,
+                  backgroundColor: const Color(0xFFFF5252), // Rojo - color secundario
                   height: 55,
                 ),
               ),
@@ -1119,9 +845,9 @@ class _RegisterScreenState extends State<RegisterScreen> with SingleTickerProvid
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
           colors: [
-            const Color(0xFF6A1B9A), // Púrpura oscuro espacial
-            const Color(0xFF4527A0), // Púrpura espacial
-            const Color(0xFF283593), // Azul espacial
+            const Color(0xFF8E24AA), // Púrpura más científico
+            const Color(0xFF7B1FA2), // Púrpura medio
+            const Color(0xFF6A1B9A), // Púrpura oscuro
           ],
         ),
       ),
@@ -1129,7 +855,6 @@ class _RegisterScreenState extends State<RegisterScreen> with SingleTickerProvid
         children: [
           // Estrellas parpadeantes (puntos blancos)
           ..._generateStars(150, screenSize),
-          
           // Planeta decorativo
           Positioned(
             top: screenSize.height * 0.15,
@@ -1157,14 +882,13 @@ class _RegisterScreenState extends State<RegisterScreen> with SingleTickerProvid
               ),
             ),
           ),
-          
-          // Planeta pequeño decorativo
+          // "Laboratorio" espacial decorativo
           Positioned(
             bottom: screenSize.height * 0.3,
             right: -20,
             child: Container(
-              width: 60,
-              height: 60,
+              width: 80,
+              height: 80,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 gradient: LinearGradient(
@@ -1183,6 +907,13 @@ class _RegisterScreenState extends State<RegisterScreen> with SingleTickerProvid
                   ),
                 ],
               ),
+              child: const Center(
+                child: Icon(
+                  Icons.science,
+                  color: Colors.white,
+                  size: 40,
+                ),
+              ),
             ),
           ),
         ],
@@ -1197,7 +928,6 @@ class _RegisterScreenState extends State<RegisterScreen> with SingleTickerProvid
       final double left = (i * 17) % screenSize.width;
       final double top = (i * 23) % screenSize.height;
       final double starSize = (i % 3) * 0.5 + 1.0; // Tamaño entre 1.0 y 2.5
-      
       stars.add(
         Positioned(
           left: left,
@@ -1237,35 +967,5 @@ class _RegisterScreenState extends State<RegisterScreen> with SingleTickerProvid
         ),
       ),
     );
-  }
-
-  IconData _getAvatarIcon() {
-    switch (_selectedAvatarType) {
-      case 0: // Astronauta
-        return Icons.rocket_launch;
-      case 1: // Explorador
-        return Icons.explore;
-      case 2: // Científico
-        return Icons.science;
-      case 3: // Alienígena
-        return Icons.android;
-      default:
-        return Icons.person;
-    }
-  }
-
-  IconData _getCharacterIcon(int index) {
-    switch (index) {
-      case 0: // Astronauta
-        return Icons.rocket_launch;
-      case 1: // Explorador
-        return Icons.explore;
-      case 2: // Científico
-        return Icons.science;
-      case 3: // Alienígena
-        return Icons.android;
-      default:
-        return Icons.person;
-    }
   }
 }

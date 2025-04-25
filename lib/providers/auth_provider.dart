@@ -132,25 +132,21 @@ class AuthProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<bool> register(
+  Future<bool> registerStudent(
   String email,
   String password,
   String firstName,
   String lastName,
-  String role,
 ) async {
   _setLoading(true);
   _error = null;
-
   try {
-    final result = await _authService.register(
+    final result = await _authService.registerStudent(
       email,
       password,
       firstName,
       lastName,
-      role,
     );
-
     if (result['success']) {
       // Registro exitoso
       _currentUser = UserModel.fromJson(result['user']);
@@ -168,5 +164,52 @@ class AuthProvider extends ChangeNotifier {
     _setLoading(false);
     return false;
   }
+}
+
+Future<bool> registerTeacher(
+  String email,
+  String password,
+  String firstName,
+  String lastName,
+  int cellphone,
+) async {
+  _setLoading(true);
+  _error = null;
+  try {
+    final result = await _authService.registerTeacher(
+      email,
+      password,
+      firstName,
+      lastName,
+      cellphone,
+    );
+    if (result['success']) {
+      // Registro exitoso
+      _currentUser = UserModel.fromJson(result['user']);
+      _isAuthenticated = true;
+      _setLoading(false);
+      return true;
+    } else {
+      // Registro fallido
+      _error = result['message'] ?? 'Error en el registro';
+      _setLoading(false);
+      return false;
+    }
+  } catch (e) {
+    _error = 'Error de conexión. Verifica tu internet e intenta nuevamente.';
+    _setLoading(false);
+    return false;
+  }
+}
+
+Future<bool> register(
+  String email,
+  String password,
+  String firstName,
+  String lastName,
+  String role,
+) async {
+  // Por compatibilidad, mantenemos este método pero ahora delegamos a registerStudent
+  return registerStudent(email, password, firstName, lastName);
 }
 }

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../screens/auth/login_screen.dart';
 import '../../screens/auth/register_screen.dart';
 import '../../screens/home_screen.dart';
+import '../screens/auth/register_teacher_screen.dart';
 /*import '../../screens/home/profile_screen.dart';
 import '../../home/courses_screen.dart';
 import '../../screens/game/achievements_screen.dart';
@@ -17,11 +18,13 @@ class AppRoutes {
   static const String courses = '/courses';
   static const String achievements = '/achievements';
   static const String leaderboard = '/leaderboard';
+  static const String registerTeacher = '/registerTeacher';
 
   /// Mapa de rutas nombradas para la navegación en MaterialApp
   static Map<String, WidgetBuilder> get routes => {
     login: (context) => const LoginScreen(),
     register: (context) => const RegisterScreen(),
+    registerTeacher: (context) => const RegisterTeacherScreen(),
     home: (context) => const HomeScreen(),
     /*profile: (context) => const ProfileScreen(),
     courses: (context) => const CoursesScreen(),
