@@ -61,10 +61,15 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
         _emailController.text.trim(),
         _passwordController.text.trim()
       );
-      if (success && mounted) {
-        // Navegar a la pantalla principal si el login fue exitoso
+if (success && mounted) {
+      // Navegar a la pantalla principal según el rol
+      final user = authProvider.currentUser;
+      if (user?.role == 'teacher') {
+        AppRoutes.navigateToTeacherHomeAndClearStack(context);
+      } else {
         AppRoutes.navigateToHomeAndClearStack(context);
       }
+    }
     }
   }
 

@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import '../../screens/auth/login_screen.dart';
 import '../../screens/auth/register_screen.dart';
-import '../../screens/home_screen.dart';
+import '../screens/home/home_screen.dart';
 import '../screens/auth/register_teacher_screen.dart';
+import '../screens/home/teacher_home_screen.dart';
 /*import '../../screens/home/profile_screen.dart';
 import '../../home/courses_screen.dart';
 import '../../screens/game/achievements_screen.dart';
@@ -19,6 +20,7 @@ class AppRoutes {
   static const String achievements = '/achievements';
   static const String leaderboard = '/leaderboard';
   static const String registerTeacher = '/registerTeacher';
+  static const String teacherHome = '/teacherHome';
 
   /// Mapa de rutas nombradas para la navegación en MaterialApp
   static Map<String, WidgetBuilder> get routes => {
@@ -26,6 +28,7 @@ class AppRoutes {
     register: (context) => const RegisterScreen(),
     registerTeacher: (context) => const RegisterTeacherScreen(),
     home: (context) => const HomeScreen(),
+    teacherHome: (context) => const TeacherHomeScreen(),
     /*profile: (context) => const ProfileScreen(),
     courses: (context) => const CoursesScreen(),
     achievements: (context) => const AchievementsScreen(),
@@ -49,5 +52,13 @@ class AppRoutes {
       home, 
       (Route<dynamic> route) => false,
     );
+  }
+
+  static void navigateToTeacherHomeAndClearStack(BuildContext context) {
+  Navigator.pushNamedAndRemoveUntil(
+    context,
+    teacherHome,
+    (Route<dynamic> route) => false,
+  );
   }
 }

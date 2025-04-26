@@ -43,6 +43,8 @@ dependencies:
   graphql_flutter: ^5.2.0-beta.8
   flutter_secure_storage: ^9.2.4
   confetti: ^0.8.0
+  qr_flutter: ^4.1.0
+  share_plus: ^11.0.0
 
 dev_dependencies:
   flutter_test:

@@ -1,18 +1,18 @@
 // lib/screens/home/home_screen.dart
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../../providers/auth_provider.dart';
-import '../../providers/theme_provider.dart';
-import '../../widgets/animations/fade_animation.dart';
-import '../../widgets/common/loading_indicator.dart';
-import '../../theme/app_colors.dart';
-import '../../theme/app_text_styles.dart';
-import '../../config/routes.dart';
-import '../../widgets/home/welcome_banner_widget.dart';
-import '../../widgets/home/course_card_widget.dart';
-import '../../widgets/home/achievement_preview_widget.dart';
-import '../../widgets/home/daily_challenge_widget.dart';
-import '../../widgets/home/progress_summary_widget.dart';
+import '../../../providers/auth_provider.dart';
+import '../../../providers/theme_provider.dart';
+import '../../../widgets/animations/fade_animation.dart';
+import '../../../widgets/common/loading_indicator.dart';
+import '../../../theme/app_colors.dart';
+import '../../../theme/app_text_styles.dart';
+import '../../../config/routes.dart';
+import '../../../widgets/home/welcome_banner_widget.dart';
+import '../../../widgets/home/course_card_widget.dart';
+import '../../../widgets/home/achievement_preview_widget.dart';
+import '../../../widgets/home/daily_challenge_widget.dart';
+import '../../../widgets/home/progress_summary_widget.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});

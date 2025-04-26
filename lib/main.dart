@@ -5,6 +5,7 @@ import 'package:graphql_flutter/graphql_flutter.dart';
 import 'config/routes.dart';
 import 'config/themes.dart';
 import 'providers/auth_provider.dart';
+import 'providers/classroom_provider.dart';
 import 'providers/theme_provider.dart';
 import 'screens/auth/login_screen.dart';
 import 'services/graphql_service.dart';
@@ -38,11 +39,17 @@ class MyApp extends StatelessWidget {
       client: clientNotifier,
       child: MultiProvider(
         providers: [
+          Provider<GraphQLClient>.value(value: clientNotifier.value),
           ChangeNotifierProvider(create: (_) => ThemeProvider()),
           ChangeNotifierProvider(create: (_) {
             // Pasar el cliente GraphQL al AuthProvider
             final client = clientNotifier.value;
             return AuthProvider(client);
+          }),
+          ChangeNotifierProvider(create: (context) {
+            // Accedemos directamente al GraphQLClient que expusimos arriba
+            final client = Provider.of<GraphQLClient>(context, listen: false);
+            return ClassroomProvider(client);
           }),
         ],
         child: Consumer<ThemeProvider>(
