@@ -5,8 +5,8 @@ import '../screens/home/home_screen.dart';
 import '../screens/auth/register_teacher_screen.dart';
 import '../screens/home/teacher_home_screen.dart';
 import '../screens/join_classroom_screen.dart';
-/*import '../../screens/home/profile_screen.dart';
-import '../../home/courses_screen.dart';
+import '../../screens/profile_screen.dart';
+/*import '../../home/courses_screen.dart';
 import '../../screens/game/achievements_screen.dart';
 import '../../screens/game/leaderboard_screen.dart';*/
 
@@ -32,8 +32,8 @@ class AppRoutes {
     home: (context) => const HomeScreen(),
     teacherHome: (context) => const TeacherHomeScreen(),
     joinClassroom: (context) => const JoinClassroomScreen(),
-    /*profile: (context) => const ProfileScreen(),
-    courses: (context) => const CoursesScreen(),
+    profile: (context) => const ProfileScreen(),
+    /*courses: (context) => const CoursesScreen(),
     achievements: (context) => const AchievementsScreen(),
     leaderboard: (context) => const LeaderboardScreen(),*/
   };

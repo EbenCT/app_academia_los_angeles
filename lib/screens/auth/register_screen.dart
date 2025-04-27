@@ -9,10 +9,10 @@ import '../../widgets/animations/fade_animation.dart';
 import '../../widgets/common/custom_button.dart';
 import '../../widgets/common/custom_text_field.dart';
 import '../../widgets/common/loading_indicator.dart';
+import '../../widgets/common/space_background.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
-
   @override
   State<RegisterScreen> createState() => _RegisterScreenState();
 }
@@ -23,14 +23,12 @@ class _RegisterScreenState extends State<RegisterScreen> with SingleTickerProvid
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
-  
   late AnimationController _animationController;
   bool _isPasswordVisible = false;
   bool _isConfirmPasswordVisible = false;
   bool _acceptTerms = false;
   int _currentStep = 1;
   int _totalSteps = 3;
-  
   List<Color> _avatarColors = [
     Colors.blue,
     Colors.purple,
@@ -41,10 +39,8 @@ class _RegisterScreenState extends State<RegisterScreen> with SingleTickerProvid
     Colors.pink,
     Colors.amber,
   ];
-  
   int _selectedColorIndex = 0;
   int _selectedAvatarType = 0;
-  
   List<String> _characterTypes = [
     'Astronauta',
     'Explorador',
@@ -87,30 +83,27 @@ class _RegisterScreenState extends State<RegisterScreen> with SingleTickerProvid
   Future<void> _register() async {
     // Ocultar teclado
     FocusScope.of(context).unfocus();
-    
     // Validar formulario
     if (_formKey.currentState!.validate() && _acceptTerms) {
       // Crear nombre y apellido a partir del nombre completo
       final nameParts = _nameController.text.trim().split(' ');
       String firstName = nameParts.first;
-      String lastName = nameParts.length > 1 
-          ? nameParts.sublist(1).join(' ') 
+      String lastName = nameParts.length > 1
+          ? nameParts.sublist(1).join(' ')
           : '';
-      
+
       // Si no hay apellido, usar un valor predeterminado
       if (lastName.isEmpty) {
         lastName = "Explorador";
       }
-      
-     // Llamar al AuthProvider para realizar el registro de estudiante
-    final authProvider = Provider.of<AuthProvider>(context, listen: false);
-    final success = await authProvider.registerStudent(
-      _emailController.text.trim(),
-      _passwordController.text.trim(),
-      firstName,
-      lastName,
-    );
-      
+      // Llamar al AuthProvider para realizar el registro de estudiante
+      final authProvider = Provider.of<AuthProvider>(context, listen: false);
+      final success = await authProvider.registerStudent(
+        _emailController.text.trim(),
+        _passwordController.text.trim(),
+        firstName,
+        lastName,
+      );
       if (success && mounted) {
         // Mostrar mensaje de éxito
         ScaffoldMessenger.of(context).showSnackBar(
@@ -126,7 +119,6 @@ class _RegisterScreenState extends State<RegisterScreen> with SingleTickerProvid
             ),
           ),
         );
-        
         // Navegar al home directamente o al login según la configuración
         Future.delayed(const Duration(seconds: 2), () {
           if (mounted) {
@@ -173,7 +165,7 @@ class _RegisterScreenState extends State<RegisterScreen> with SingleTickerProvid
       );
     }
   }
-  
+
   void _nextStep() {
     if (_currentStep < _totalSteps) {
       setState(() {
@@ -181,7 +173,7 @@ class _RegisterScreenState extends State<RegisterScreen> with SingleTickerProvid
       });
     }
   }
-  
+
   void _previousStep() {
     if (_currentStep > 1) {
       setState(() {
@@ -200,186 +192,174 @@ class _RegisterScreenState extends State<RegisterScreen> with SingleTickerProvid
     return Scaffold(
       body: Stack(
         children: [
-          // Fondo espacial
-          _buildSpaceBackground(size),
-
-          // Contenido principal
-          SafeArea(
-            child: SingleChildScrollView(
-              child: ConstrainedBox(
-                constraints: BoxConstraints(
-                  minHeight: size.height,
-                ),
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 20),
-                  child: Form(
-                    key: _formKey,
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        // Barra superior con botón atrás
-                        Padding(
-                          padding: const EdgeInsets.only(top: 16),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              // Botón atrás
-                              IconButton(
-                                onPressed: () {
-                                  if (_currentStep > 1) {
-                                    _previousStep();
-                                  } else {
-                                    Navigator.pop(context);
-                                  }
-                                },
-                                icon: const Icon(Icons.arrow_back_ios, color: Colors.white),
-                              ),
-                              
-                              // Indicador de pasos
-                              Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                                decoration: BoxDecoration(
-                                  color: Colors.white24,
-                                  borderRadius: BorderRadius.circular(20),
+          // Usamos el nuevo widget SpaceBackground
+          SpaceBackground.forRegister(
+            child: SafeArea(
+              child: SingleChildScrollView(
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(
+                    minHeight: size.height,
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    child: Form(
+                      key: _formKey,
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          // Barra superior con botón atrás
+                          Padding(
+                            padding: const EdgeInsets.only(top: 16),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                // Botón atrás
+                                IconButton(
+                                  onPressed: () {
+                                    if (_currentStep > 1) {
+                                      _previousStep();
+                                    } else {
+                                      Navigator.pop(context);
+                                    }
+                                  },
+                                  icon: const Icon(Icons.arrow_back_ios, color: Colors.white),
                                 ),
-                                child: Row(
-                                  children: [
-                                    Icon(
-                                      Icons.rocket_launch,
-                                      color: Colors.white,
-                                      size: 16,
-                                    ),
-                                    const SizedBox(width: 5),
-                                    Text(
-                                      'Paso $_currentStep de $_totalSteps',
-                                      style: TextStyle(
-                                        fontFamily: 'Comic Sans MS',
+                                // Indicador de pasos
+                                Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                                  decoration: BoxDecoration(
+                                    color: Colors.white24,
+                                    borderRadius: BorderRadius.circular(20),
+                                  ),
+                                  child: Row(
+                                    children: [
+                                      Icon(
+                                        Icons.rocket_launch,
                                         color: Colors.white,
-                                        fontWeight: FontWeight.bold,
+                                        size: 16,
                                       ),
-                                    ),
-                                  ],
+                                      const SizedBox(width: 5),
+                                      Text(
+                                        'Paso $_currentStep de $_totalSteps',
+                                        style: TextStyle(
+                                          fontFamily: 'Comic Sans MS',
+                                          color: Colors.white,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
                                 ),
-                              ),
-                              
-                              // Espaciador para mantener centrado el indicador
-                              const SizedBox(width: 48),
-                            ],
-                          ),
-                        ),
-                        
-                        const SizedBox(height: 20),
-                        
-                        // Logo pequeño 
-                        Hero(
-                          tag: 'school_logo',
-                          child: Container(
-                            width: 100,
-                            height: 100,
-                            padding: const EdgeInsets.all(8),
-                            decoration: BoxDecoration(
-                              color: Colors.white,
-                              shape: BoxShape.circle,
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.black.withOpacity(0.2),
-                                  blurRadius: 10,
-                                  spreadRadius: 1,
-                                  offset: const Offset(0, 4),
-                                ),
+                                // Espaciador para mantener centrado el indicador
+                                const SizedBox(width: 48),
                               ],
                             ),
-                            child: Image.asset(
-                              AssetPaths.logo,
-                              fit: BoxFit.contain,
-                            ),
                           ),
-                        ),
-                        
-                        const SizedBox(height: 20),
-                        
-                        // Título con animación
-                        FadeAnimation(
-                          delay: const Duration(milliseconds: 200),
-                          child: Text(
-                            _getStepTitle(),
-                            style: TextStyle(
-                              fontFamily: 'Comic Sans MS',
-                              fontSize: 24,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.white,
-                              shadows: [
-                                Shadow(
-                                  color: Colors.black45,
-                                  blurRadius: 5,
-                                  offset: const Offset(1, 1),
-                                ),
-                              ],
-                            ),
-                            textAlign: TextAlign.center,
-                          ),
-                        ),
-                        
-                        const SizedBox(height: 10),
-                        
-                        // Subtítulo 
-                        FadeAnimation(
-                          delay: const Duration(milliseconds: 300),
-                          child: Text(
-                            _getStepSubtitle(),
-                            style: TextStyle(
-                              fontFamily: 'Comic Sans MS',
-                              fontSize: 16,
-                              color: Colors.white,
-                              shadows: [
-                                Shadow(
-                                  color: Colors.black45,
-                                  blurRadius: 5,
-                                  offset: const Offset(1, 1),
-                                ),
-                              ],
-                            ),
-                            textAlign: TextAlign.center,
-                          ),
-                        ),
-                        
-                        const SizedBox(height: 30),
-                        
-                        // Tarjeta con formulario por pasos
-                        Flexible(
-                          fit: FlexFit.loose,
-                          child: FadeAnimation(
-                            delay: const Duration(milliseconds: 400),
-                            slideOffset: const Offset(0, 30),
+                          const SizedBox(height: 20),
+                          // Logo pequeño
+                          Hero(
+                            tag: 'school_logo',
                             child: Container(
-                              width: double.infinity,
-                              padding: const EdgeInsets.all(20),
+                              width: 100,
+                              height: 100,
+                              padding: const EdgeInsets.all(8),
                               decoration: BoxDecoration(
-                                color: isDarkMode 
-                                    ? AppColors.darkSurface.withOpacity(0.95) 
-                                    : Colors.white.withOpacity(0.95),
-                                borderRadius: const BorderRadius.only(
-                                  topLeft: Radius.circular(30),
-                                  topRight: Radius.circular(30),
-                                  bottomLeft: Radius.circular(30),
-                                  bottomRight: Radius.circular(30),
-                                ),
+                                color: Colors.white,
+                                shape: BoxShape.circle,
                                 boxShadow: [
                                   BoxShadow(
                                     color: Colors.black.withOpacity(0.2),
-                                    blurRadius: 15,
-                                    spreadRadius: 2,
-                                    offset: const Offset(0, 8),
+                                    blurRadius: 10,
+                                    spreadRadius: 1,
+                                    offset: const Offset(0, 4),
                                   ),
                                 ],
                               ),
-                              child: _buildCurrentStepContent(),
+                              child: Image.asset(
+                                AssetPaths.logo,
+                                fit: BoxFit.contain,
+                              ),
                             ),
                           ),
-                        ),
-                        
-                        const SizedBox(height: 20),
-                      ],
+                          const SizedBox(height: 20),
+                          // Título con animación
+                          FadeAnimation(
+                            delay: const Duration(milliseconds: 200),
+                            child: Text(
+                              _getStepTitle(),
+                              style: TextStyle(
+                                fontFamily: 'Comic Sans MS',
+                                fontSize: 24,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white,
+                                shadows: [
+                                  Shadow(
+                                    color: Colors.black45,
+                                    blurRadius: 5,
+                                    offset: const Offset(1, 1),
+                                  ),
+                                ],
+                              ),
+                              textAlign: TextAlign.center,
+                            ),
+                          ),
+                          const SizedBox(height: 10),
+                          // Subtítulo
+                          FadeAnimation(
+                            delay: const Duration(milliseconds: 300),
+                            child: Text(
+                              _getStepSubtitle(),
+                              style: TextStyle(
+                                fontFamily: 'Comic Sans MS',
+                                fontSize: 16,
+                                color: Colors.white,
+                                shadows: [
+                                  Shadow(
+                                    color: Colors.black45,
+                                    blurRadius: 5,
+                                    offset: const Offset(1, 1),
+                                  ),
+                                ],
+                              ),
+                              textAlign: TextAlign.center,
+                            ),
+                          ),
+                          const SizedBox(height: 30),
+                          // Tarjeta con formulario por pasos
+                          Flexible(
+                            fit: FlexFit.loose,
+                            child: FadeAnimation(
+                              delay: const Duration(milliseconds: 400),
+                              slideOffset: const Offset(0, 30),
+                              child: Container(
+                                width: double.infinity,
+                                padding: const EdgeInsets.all(20),
+                                decoration: BoxDecoration(
+                                  color: isDarkMode
+                                      ? AppColors.darkSurface.withOpacity(0.95)
+                                      : Colors.white.withOpacity(0.95),
+                                  borderRadius: const BorderRadius.only(
+                                    topLeft: Radius.circular(30),
+                                    topRight: Radius.circular(30),
+                                    bottomLeft: Radius.circular(30),
+                                    bottomRight: Radius.circular(30),
+                                  ),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Colors.black.withOpacity(0.2),
+                                      blurRadius: 15,
+                                      spreadRadius: 2,
+                                      offset: const Offset(0, 8),
+                                    ),
+                                  ],
+                                ),
+                                child: _buildCurrentStepContent(),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 20),
+                        ],
+                      ),
                     ),
                   ),
                 ),
@@ -460,9 +440,7 @@ class _RegisterScreenState extends State<RegisterScreen> with SingleTickerProvid
             },
           ),
         ),
-        
         const SizedBox(height: 16),
-        
         FadeAnimation(
           delay: const Duration(milliseconds: 600),
           child: CustomTextField(
@@ -481,9 +459,7 @@ class _RegisterScreenState extends State<RegisterScreen> with SingleTickerProvid
             },
           ),
         ),
-        
         const SizedBox(height: 24),
-        
         // Fecha de nacimiento simplificada para niños
         FadeAnimation(
           delay: const Duration(milliseconds: 700),
@@ -523,8 +499,8 @@ class _RegisterScreenState extends State<RegisterScreen> with SingleTickerProvid
                         width: 60,
                         margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
                         decoration: BoxDecoration(
-                          color: age == 10 
-                              ? AppColors.primary 
+                          color: age == 10
+                              ? AppColors.primary
                               : Theme.of(context).brightness == Brightness.dark
                                   ? Colors.black26
                                   : Colors.white,
@@ -560,9 +536,7 @@ class _RegisterScreenState extends State<RegisterScreen> with SingleTickerProvid
             ],
           ),
         ),
-        
         const SizedBox(height: 24),
-        
         // Selección de curso
         FadeAnimation(
           delay: const Duration(milliseconds: 800),
@@ -630,9 +604,7 @@ class _RegisterScreenState extends State<RegisterScreen> with SingleTickerProvid
             ],
           ),
         ),
-        
         const SizedBox(height: 30),
-        
         // Botón para continuar
         FadeAnimation(
           delay: const Duration(milliseconds: 900),
@@ -682,9 +654,7 @@ class _RegisterScreenState extends State<RegisterScreen> with SingleTickerProvid
             ),
           ),
         ),
-        
         const SizedBox(height: 24),
-        
         // Selección de tipo de personaje
         FadeAnimation(
           delay: const Duration(milliseconds: 600),
@@ -736,7 +706,8 @@ class _RegisterScreenState extends State<RegisterScreen> with SingleTickerProvid
                           boxShadow: _selectedAvatarType == index
                               ? [
                                   BoxShadow(
-                                    color: _avatarColors[_selectedColorIndex].withOpacity(0.3),
+                                    color:
+                                        _avatarColors[_selectedColorIndex].withOpacity(0.3),
                                     blurRadius: 8,
                                     offset: const Offset(0, 3),
                                   ),
@@ -776,9 +747,7 @@ class _RegisterScreenState extends State<RegisterScreen> with SingleTickerProvid
             ],
           ),
         ),
-        
         const SizedBox(height: 24),
-        
         // Selección de color
         FadeAnimation(
           delay: const Duration(milliseconds: 700),
@@ -847,9 +816,7 @@ class _RegisterScreenState extends State<RegisterScreen> with SingleTickerProvid
             ],
           ),
         ),
-        
         const SizedBox(height: 30),
-        
         // Botones de navegación
         Row(
           children: [
@@ -866,9 +833,7 @@ class _RegisterScreenState extends State<RegisterScreen> with SingleTickerProvid
                 ),
               ),
             ),
-            
             const SizedBox(width: 16),
-            
             // Botón para continuar
             Expanded(
               flex: 2,
@@ -893,7 +858,6 @@ class _RegisterScreenState extends State<RegisterScreen> with SingleTickerProvid
     // Nota: La validación de contraseña debe coincidir con los requisitos del backend
     // Por lo general, se requiere al menos 6 caracteres, y puede tener reglas adicionales
     // como incluir letras mayúsculas, minúsculas, números y caracteres especiales.
-    
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
@@ -924,9 +888,7 @@ class _RegisterScreenState extends State<RegisterScreen> with SingleTickerProvid
             },
           ),
         ),
-        
         const SizedBox(height: 16),
-        
         FadeAnimation(
           delay: const Duration(milliseconds: 600),
           child: CustomTextField(
@@ -953,9 +915,7 @@ class _RegisterScreenState extends State<RegisterScreen> with SingleTickerProvid
             },
           ),
         ),
-        
         const SizedBox(height: 24),
-        
         // Consejos de seguridad amigables para niños
         FadeAnimation(
           delay: const Duration(milliseconds: 700),
@@ -998,9 +958,7 @@ class _RegisterScreenState extends State<RegisterScreen> with SingleTickerProvid
             ),
           ),
         ),
-        
         const SizedBox(height: 24),
-        
         // Aceptar términos y condiciones
         FadeAnimation(
           delay: const Duration(milliseconds: 800),
@@ -1041,9 +999,7 @@ class _RegisterScreenState extends State<RegisterScreen> with SingleTickerProvid
             ],
           ),
         ),
-        
         const SizedBox(height: 30),
-        
         // Botones de navegación
         Row(
           children: [
@@ -1060,9 +1016,7 @@ class _RegisterScreenState extends State<RegisterScreen> with SingleTickerProvid
                 ),
               ),
             ),
-            
             const SizedBox(width: 16),
-            
             // Botón para registrarse
             Expanded(
               flex: 2,
@@ -1106,135 +1060,6 @@ class _RegisterScreenState extends State<RegisterScreen> with SingleTickerProvid
             ),
           ),
         ],
-      ),
-    );
-  }
-
-  Widget _buildSpaceBackground(Size screenSize) {
-    return Container(
-      width: screenSize.width,
-      height: screenSize.height,
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [
-            const Color(0xFF6A1B9A), // Púrpura oscuro espacial
-            const Color(0xFF4527A0), // Púrpura espacial
-            const Color(0xFF283593), // Azul espacial
-          ],
-        ),
-      ),
-      child: Stack(
-        children: [
-          // Estrellas parpadeantes (puntos blancos)
-          ..._generateStars(150, screenSize),
-          
-          // Planeta decorativo
-          Positioned(
-            top: screenSize.height * 0.15,
-            left: -30,
-            child: Container(
-              width: 80,
-              height: 80,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                gradient: LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [
-                    Colors.deepPurple.shade300,
-                    Colors.deepPurple.shade900,
-                  ],
-                ),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.deepPurple.withOpacity(0.3),
-                    blurRadius: 15,
-                    spreadRadius: 3,
-                  ),
-                ],
-              ),
-            ),
-          ),
-          
-          // Planeta pequeño decorativo
-          Positioned(
-            bottom: screenSize.height * 0.3,
-            right: -20,
-            child: Container(
-              width: 60,
-              height: 60,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                gradient: LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [
-                    Colors.teal.shade300,
-                    Colors.teal.shade900,
-                  ],
-                ),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.teal.withOpacity(0.3),
-                    blurRadius: 15,
-                    spreadRadius: 3,
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  // Función para generar estrellas aleatorias
-  List<Widget> _generateStars(int count, Size screenSize) {
-    final List<Widget> stars = [];
-    for (int i = 0; i < count; i++) {
-      final double left = (i * 17) % screenSize.width;
-      final double top = (i * 23) % screenSize.height;
-      final double starSize = (i % 3) * 0.5 + 1.0; // Tamaño entre 1.0 y 2.5
-      
-      stars.add(
-        Positioned(
-          left: left,
-          top: top,
-          child: _buildStar(starSize),
-        ),
-      );
-    }
-    return stars;
-  }
-
-  // Construye una estrella con animación de brillo
-  Widget _buildStar(double size) {
-    return TweenAnimationBuilder<double>(
-      tween: Tween<double>(begin: 0.5, end: 1.0),
-      duration: Duration(milliseconds: 1000 + (size * 500).toInt()),
-      curve: Curves.easeInOut,
-      builder: (context, value, child) {
-        return Opacity(
-          opacity: value,
-          child: Container(
-            width: size,
-            height: size,
-            decoration: const BoxDecoration(
-              color: Colors.white,
-              shape: BoxShape.circle,
-            ),
-          ),
-        );
-      },
-      child: Container(
-        width: size,
-        height: size,
-        decoration: const BoxDecoration(
-          color: Colors.white,
-          shape: BoxShape.circle,
-        ),
       ),
     );
   }

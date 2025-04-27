@@ -1,5 +1,4 @@
-// Crear un nuevo archivo: lib/screens/auth/register_teacher_screen.dart
-
+// lib/screens/auth/register_teacher_screen.dart
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../config/routes.dart';
@@ -10,10 +9,10 @@ import '../../widgets/animations/fade_animation.dart';
 import '../../widgets/common/custom_button.dart';
 import '../../widgets/common/custom_text_field.dart';
 import '../../widgets/common/loading_indicator.dart';
+import '../../widgets/common/space_background.dart';
 
 class RegisterTeacherScreen extends StatefulWidget {
   const RegisterTeacherScreen({super.key});
-
   @override
   State<RegisterTeacherScreen> createState() => _RegisterTeacherScreenState();
 }
@@ -71,7 +70,6 @@ class _RegisterTeacherScreenState extends State<RegisterTeacherScreen>
   Future<void> _register() async {
     // Ocultar teclado
     FocusScope.of(context).unfocus();
-    
     // Validar formulario
     if (_formKey.currentState!.validate() && _acceptTerms) {
       final firstName = _firstNameController.text.trim();
@@ -79,7 +77,6 @@ class _RegisterTeacherScreenState extends State<RegisterTeacherScreen>
       final email = _emailController.text.trim();
       final cellphone = int.tryParse(_cellphoneController.text.trim()) ?? 0;
       final password = _passwordController.text.trim();
-      
       // Llamar al AuthProvider para realizar el registro
       final authProvider = Provider.of<AuthProvider>(context, listen: false);
       final success = await authProvider.registerTeacher(
@@ -89,7 +86,6 @@ class _RegisterTeacherScreenState extends State<RegisterTeacherScreen>
         lastName,
         cellphone,
       );
-      
       if (success && mounted) {
         // Mostrar mensaje de éxito
         ScaffoldMessenger.of(context).showSnackBar(
@@ -105,7 +101,6 @@ class _RegisterTeacherScreenState extends State<RegisterTeacherScreen>
             ),
           ),
         );
-        
         // Navegar al home directamente o al login según la configuración
         Future.delayed(const Duration(seconds: 2), () {
           if (mounted) {
@@ -179,175 +174,174 @@ class _RegisterTeacherScreenState extends State<RegisterTeacherScreen>
     return Scaffold(
       body: Stack(
         children: [
-          // Fondo espacial
-          _buildSpaceBackground(size),
-          
-          // Contenido principal
-          SafeArea(
-            child: SingleChildScrollView(
-              child: ConstrainedBox(
-                constraints: BoxConstraints(
-                  minHeight: size.height,
-                ),
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 20),
-                  child: Form(
-                    key: _formKey,
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        // Barra superior con botón atrás
-                        Padding(
-                          padding: const EdgeInsets.only(top: 16),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              // Botón atrás
-                              IconButton(
-                                onPressed: () {
-                                  if (_currentStep > 1) {
-                                    _previousStep();
-                                  } else {
-                                    Navigator.pop(context);
-                                  }
-                                },
-                                icon: const Icon(Icons.arrow_back_ios, color: Colors.white),
-                              ),
-                              // Indicador de pasos
-                              Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                                decoration: BoxDecoration(
-                                  color: Colors.white24,
-                                  borderRadius: BorderRadius.circular(20),
+          // Usamos el nuevo widget SpaceBackground
+          SpaceBackground.forTeacherRegister(
+            child: SafeArea(
+              child: SingleChildScrollView(
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(
+                    minHeight: size.height,
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    child: Form(
+                      key: _formKey,
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          // Barra superior con botón atrás
+                          Padding(
+                            padding: const EdgeInsets.only(top: 16),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                // Botón atrás
+                                IconButton(
+                                  onPressed: () {
+                                    if (_currentStep > 1) {
+                                      _previousStep();
+                                    } else {
+                                      Navigator.pop(context);
+                                    }
+                                  },
+                                  icon: const Icon(Icons.arrow_back_ios, color: Colors.white),
                                 ),
-                                child: Row(
-                                  children: [
-                                    Icon(
-                                      Icons.science_rounded,
-                                      color: Colors.white,
-                                      size: 16,
-                                    ),
-                                    const SizedBox(width: 5),
-                                    Text(
-                                      'Paso $_currentStep de $_totalSteps',
-                                      style: TextStyle(
-                                        fontFamily: 'Comic Sans MS',
+                                // Indicador de pasos
+                                Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                                  decoration: BoxDecoration(
+                                    color: Colors.white24,
+                                    borderRadius: BorderRadius.circular(20),
+                                  ),
+                                  child: Row(
+                                    children: [
+                                      Icon(
+                                        Icons.science_rounded,
                                         color: Colors.white,
-                                        fontWeight: FontWeight.bold,
+                                        size: 16,
                                       ),
-                                    ),
-                                  ],
+                                      const SizedBox(width: 5),
+                                      Text(
+                                        'Paso $_currentStep de $_totalSteps',
+                                        style: TextStyle(
+                                          fontFamily: 'Comic Sans MS',
+                                          color: Colors.white,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
                                 ),
-                              ),
-                              // Espaciador para mantener centrado el indicador
-                              const SizedBox(width: 48),
-                            ],
-                          ),
-                        ),
-                        const SizedBox(height: 20),
-                        // Logo pequeño
-                        Hero(
-                          tag: 'school_logo',
-                          child: Container(
-                            width: 100,
-                            height: 100,
-                            padding: const EdgeInsets.all(8),
-                            decoration: BoxDecoration(
-                              color: Colors.white,
-                              shape: BoxShape.circle,
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.black.withOpacity(0.2),
-                                  blurRadius: 10,
-                                  spreadRadius: 1,
-                                  offset: const Offset(0, 4),
-                                ),
+                                // Espaciador para mantener centrado el indicador
+                                const SizedBox(width: 48),
                               ],
                             ),
-                            child: Image.asset(
-                              AssetPaths.logo,
-                              fit: BoxFit.contain,
-                            ),
                           ),
-                        ),
-                        const SizedBox(height: 20),
-                        // Título con animación
-                        FadeAnimation(
-                          delay: const Duration(milliseconds: 200),
-                          child: Text(
-                            _getStepTitle(),
-                            style: TextStyle(
-                              fontFamily: 'Comic Sans MS',
-                              fontSize: 24,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.white,
-                              shadows: [
-                                Shadow(
-                                  color: Colors.black45,
-                                  blurRadius: 5,
-                                  offset: const Offset(1, 1),
-                                ),
-                              ],
-                            ),
-                            textAlign: TextAlign.center,
-                          ),
-                        ),
-                        const SizedBox(height: 10),
-                        // Subtítulo
-                        FadeAnimation(
-                          delay: const Duration(milliseconds: 300),
-                          child: Text(
-                            _getStepSubtitle(),
-                            style: TextStyle(
-                              fontFamily: 'Comic Sans MS',
-                              fontSize: 16,
-                              color: Colors.white,
-                              shadows: [
-                                Shadow(
-                                  color: Colors.black45,
-                                  blurRadius: 5,
-                                  offset: const Offset(1, 1),
-                                ),
-                              ],
-                            ),
-                            textAlign: TextAlign.center,
-                          ),
-                        ),
-                        const SizedBox(height: 30),
-                        // Tarjeta con formulario por pasos
-                        Flexible(
-                          fit: FlexFit.loose,
-                          child: FadeAnimation(
-                            delay: const Duration(milliseconds: 400),
-                            slideOffset: const Offset(0, 30),
+                          const SizedBox(height: 20),
+                          // Logo pequeño
+                          Hero(
+                            tag: 'school_logo',
                             child: Container(
-                              width: double.infinity,
-                              padding: const EdgeInsets.all(20),
+                              width: 100,
+                              height: 100,
+                              padding: const EdgeInsets.all(8),
                               decoration: BoxDecoration(
-                                color: isDarkMode
-                                    ? AppColors.darkSurface.withOpacity(0.95)
-                                    : Colors.white.withOpacity(0.95),
-                                borderRadius: const BorderRadius.only(
-                                  topLeft: Radius.circular(30),
-                                  topRight: Radius.circular(30),
-                                  bottomLeft: Radius.circular(30),
-                                  bottomRight: Radius.circular(30),
-                                ),
+                                color: Colors.white,
+                                shape: BoxShape.circle,
                                 boxShadow: [
                                   BoxShadow(
                                     color: Colors.black.withOpacity(0.2),
-                                    blurRadius: 15,
-                                    spreadRadius: 2,
-                                    offset: const Offset(0, 8),
+                                    blurRadius: 10,
+                                    spreadRadius: 1,
+                                    offset: const Offset(0, 4),
                                   ),
                                 ],
                               ),
-                              child: _buildCurrentStepContent(),
+                              child: Image.asset(
+                                AssetPaths.logo,
+                                fit: BoxFit.contain,
+                              ),
                             ),
                           ),
-                        ),
-                        const SizedBox(height: 20),
-                      ],
+                          const SizedBox(height: 20),
+                          // Título con animación
+                          FadeAnimation(
+                            delay: const Duration(milliseconds: 200),
+                            child: Text(
+                              _getStepTitle(),
+                              style: TextStyle(
+                                fontFamily: 'Comic Sans MS',
+                                fontSize: 24,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white,
+                                shadows: [
+                                  Shadow(
+                                    color: Colors.black45,
+                                    blurRadius: 5,
+                                    offset: const Offset(1, 1),
+                                  ),
+                                ],
+                              ),
+                              textAlign: TextAlign.center,
+                            ),
+                          ),
+                          const SizedBox(height: 10),
+                          // Subtítulo
+                          FadeAnimation(
+                            delay: const Duration(milliseconds: 300),
+                            child: Text(
+                              _getStepSubtitle(),
+                              style: TextStyle(
+                                fontFamily: 'Comic Sans MS',
+                                fontSize: 16,
+                                color: Colors.white,
+                                shadows: [
+                                  Shadow(
+                                    color: Colors.black45,
+                                    blurRadius: 5,
+                                    offset: const Offset(1, 1),
+                                  ),
+                                ],
+                              ),
+                              textAlign: TextAlign.center,
+                            ),
+                          ),
+                          const SizedBox(height: 30),
+                          // Tarjeta con formulario por pasos
+                          Flexible(
+                            fit: FlexFit.loose,
+                            child: FadeAnimation(
+                              delay: const Duration(milliseconds: 400),
+                              slideOffset: const Offset(0, 30),
+                              child: Container(
+                                width: double.infinity,
+                                padding: const EdgeInsets.all(20),
+                                decoration: BoxDecoration(
+                                  color: isDarkMode
+                                      ? AppColors.darkSurface.withOpacity(0.95)
+                                      : Colors.white.withOpacity(0.95),
+                                  borderRadius: const BorderRadius.only(
+                                    topLeft: Radius.circular(30),
+                                    topRight: Radius.circular(30),
+                                    bottomLeft: Radius.circular(30),
+                                    bottomRight: Radius.circular(30),
+                                  ),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Colors.black.withOpacity(0.2),
+                                      blurRadius: 15,
+                                      spreadRadius: 2,
+                                      offset: const Offset(0, 8),
+                                    ),
+                                  ],
+                                ),
+                                child: _buildCurrentStepContent(),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 20),
+                        ],
+                      ),
                     ),
                   ),
                 ),
@@ -502,7 +496,6 @@ class _RegisterTeacherScreenState extends State<RegisterTeacherScreen>
           ),
         ),
         const SizedBox(height: 30),
-        
         // Botón para materias que enseña (solo visual, para mantener el paso UI)
         FadeAnimation(
           delay: const Duration(milliseconds: 600),
@@ -560,7 +553,6 @@ class _RegisterTeacherScreenState extends State<RegisterTeacherScreen>
           ),
         ),
         const SizedBox(height: 30),
-        
         // Botones de navegación
         Row(
           children: [
@@ -774,8 +766,6 @@ class _RegisterTeacherScreenState extends State<RegisterTeacherScreen>
         // Botones de navegación
         Row(
           children: [
-            // Continuación de lib/screens/auth/register_teacher_screen.dart
-
             // Botón para regresar
             Expanded(
               flex: 1,
@@ -832,139 +822,6 @@ class _RegisterTeacherScreenState extends State<RegisterTeacherScreen>
             ),
           ),
         ],
-      ),
-    );
-  }
-
-  Widget _buildSpaceBackground(Size screenSize) {
-    return Container(
-      width: screenSize.width,
-      height: screenSize.height,
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [
-            const Color(0xFF8E24AA), // Púrpura más científico
-            const Color(0xFF7B1FA2), // Púrpura medio
-            const Color(0xFF6A1B9A), // Púrpura oscuro
-          ],
-        ),
-      ),
-      child: Stack(
-        children: [
-          // Estrellas parpadeantes (puntos blancos)
-          ..._generateStars(150, screenSize),
-          // Planeta decorativo
-          Positioned(
-            top: screenSize.height * 0.15,
-            left: -30,
-            child: Container(
-              width: 80,
-              height: 80,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                gradient: LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [
-                    Colors.deepPurple.shade300,
-                    Colors.deepPurple.shade900,
-                  ],
-                ),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.deepPurple.withOpacity(0.3),
-                    blurRadius: 15,
-                    spreadRadius: 3,
-                  ),
-                ],
-              ),
-            ),
-          ),
-          // "Laboratorio" espacial decorativo
-          Positioned(
-            bottom: screenSize.height * 0.3,
-            right: -20,
-            child: Container(
-              width: 80,
-              height: 80,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                gradient: LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [
-                    Colors.teal.shade300,
-                    Colors.teal.shade900,
-                  ],
-                ),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.teal.withOpacity(0.3),
-                    blurRadius: 15,
-                    spreadRadius: 3,
-                  ),
-                ],
-              ),
-              child: const Center(
-                child: Icon(
-                  Icons.science,
-                  color: Colors.white,
-                  size: 40,
-                ),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  // Función para generar estrellas aleatorias
-  List<Widget> _generateStars(int count, Size screenSize) {
-    final List<Widget> stars = [];
-    for (int i = 0; i < count; i++) {
-      final double left = (i * 17) % screenSize.width;
-      final double top = (i * 23) % screenSize.height;
-      final double starSize = (i % 3) * 0.5 + 1.0; // Tamaño entre 1.0 y 2.5
-      stars.add(
-        Positioned(
-          left: left,
-          top: top,
-          child: _buildStar(starSize),
-        ),
-      );
-    }
-    return stars;
-  }
-
-  // Construye una estrella con animación de brillo
-  Widget _buildStar(double size) {
-    return TweenAnimationBuilder<double>(
-      tween: Tween<double>(begin: 0.5, end: 1.0),
-      duration: Duration(milliseconds: 1000 + (size * 500).toInt()),
-      curve: Curves.easeInOut,
-      builder: (context, value, child) {
-        return Opacity(
-          opacity: value,
-          child: Container(
-            width: size,
-            height: size,
-            decoration: const BoxDecoration(
-              color: Colors.white,
-              shape: BoxShape.circle,
-            ),
-          ),
-        );
-      },
-      child: Container(
-        width: size,
-        height: size,
-        decoration: const BoxDecoration(
-          color: Colors.white,
-          shape: BoxShape.circle,
-        ),
       ),
     );
   }

@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:graphql_flutter/graphql_flutter.dart';
 import 'package:provider/provider.dart';
 import 'package:lottie/lottie.dart';
+import '../../config/routes.dart';
 import '../../constants/asset_paths.dart';
 import '../../models/classroom_model.dart';
 import '../../providers/auth_provider.dart';
@@ -565,16 +566,7 @@ class _TeacherHomeScreenState extends State<TeacherHomeScreen> {
                ),
              );
            } else if (index == 3) {
-             ScaffoldMessenger.of(context).showSnackBar(
-               SnackBar(
-                 content: Text(
-                   'Función en desarrollo: Perfil',
-                   style: TextStyle(fontFamily: 'Comic Sans MS'),
-                 ),
-                 backgroundColor: AppColors.info,
-                 behavior: SnackBarBehavior.floating,
-               ),
-             );
+             AppRoutes.navigateTo(context, AppRoutes.profile);
            }
          },
        ),
