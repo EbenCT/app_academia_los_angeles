@@ -14,6 +14,7 @@ import '../../../widgets/home/course_card_widget.dart';
 import '../../../widgets/home/achievement_preview_widget.dart';
 import '../../../widgets/home/daily_challenge_widget.dart';
 import '../../../widgets/home/progress_summary_widget.dart';
+import '../../widgets/common/custom_button.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -332,6 +333,57 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                       ),
                       
                       const SizedBox(height: 32),
+                      // Añadir esto a tu HomeScreen
+FadeAnimation(
+  delay: const Duration(milliseconds: 700),
+  child: Container(
+    width: double.infinity,
+    padding: const EdgeInsets.all(16),
+    decoration: BoxDecoration(
+      color: AppColors.primary.withOpacity(0.1),
+      borderRadius: BorderRadius.circular(20),
+      border: Border.all(
+        color: AppColors.primary.withOpacity(0.3),
+        width: 2,
+      ),
+    ),
+    child: Column(
+      children: [
+        Text(
+          'Mini-juego: Rescate de Alturas',
+          style: TextStyle(
+            fontFamily: 'Comic Sans MS',
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+            color: AppColors.primary,
+          ),
+        ),
+        SizedBox(height: 8),
+        Text(
+          'Aprende sobre números enteros rescatando amigos a diferentes alturas',
+          style: TextStyle(
+            fontFamily: 'Comic Sans MS',
+            fontSize: 14,
+            color: Theme.of(context).brightness == Brightness.dark
+                ? Colors.white70
+                : Colors.black87,
+          ),
+          textAlign: TextAlign.center,
+        ),
+        const SizedBox(height: 16),
+        CustomButton(
+          text: '¡Jugar ahora!',
+          onPressed: () {
+            AppRoutes.navigateTo(context, AppRoutes.integerRescueGame);
+          },
+          icon: Icons.videogame_asset,
+          backgroundColor: AppColors.secondary,
+          height: 50,
+        ),
+      ],
+    ),
+  ),
+),
                     ],
                   ),
                 ),

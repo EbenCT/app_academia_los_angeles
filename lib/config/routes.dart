@@ -6,6 +6,7 @@ import '../screens/auth/register_teacher_screen.dart';
 import '../screens/home/teacher_home_screen.dart';
 import '../screens/join_classroom_screen.dart';
 import '../../screens/profile_screen.dart';
+import '../screens/game/integer_rescue_game.dart';
 /*import '../../home/courses_screen.dart';
 import '../../screens/game/achievements_screen.dart';
 import '../../screens/game/leaderboard_screen.dart';*/
@@ -23,6 +24,7 @@ class AppRoutes {
   static const String registerTeacher = '/registerTeacher';
   static const String teacherHome = '/teacherHome';
   static const String joinClassroom = '/joinClassroom';
+  static const String integerRescueGame = '/games/integer-rescue';
 
   /// Mapa de rutas nombradas para la navegación en MaterialApp
   static Map<String, WidgetBuilder> get routes => {
@@ -33,6 +35,7 @@ class AppRoutes {
     teacherHome: (context) => const TeacherHomeScreen(),
     joinClassroom: (context) => const JoinClassroomScreen(),
     profile: (context) => const ProfileScreen(),
+    integerRescueGame: (context) => const IntegerRescueGame(),
     /*courses: (context) => const CoursesScreen(),
     achievements: (context) => const AchievementsScreen(),
     leaderboard: (context) => const LeaderboardScreen(),*/
