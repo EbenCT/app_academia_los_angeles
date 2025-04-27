@@ -8,7 +8,7 @@ class AssetPaths {
 
   // Animaciones
   static const String astronautAnimation = 'assets/animations/astronaut.json';
-  static const String astronautfly = 'assets/animations/astrovuela.json';
+  static const String astronautfly = 'assets/animations/fly.json';
   static const String loadingAnimation = 'assets/animations/loading.json';
   static const String successAnimation = 'assets/animations/success.json';
   static const String errorAnimation = 'assets/animations/error.json';

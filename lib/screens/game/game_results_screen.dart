@@ -1,8 +1,6 @@
 // lib/screens/game/game_results_screen.dart
 import 'package:flutter/material.dart';
 import 'package:lottie/lottie.dart';
-import '../../config/routes.dart';
-import '../../constants/asset_paths.dart';
 import '../../theme/app_colors.dart';
 import '../../widgets/animations/fade_animation.dart';
 import '../../widgets/common/custom_button.dart';
@@ -60,16 +58,33 @@ class GameResultsScreen extends StatelessWidget {
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text(
+                            victory ? '🚀' : '💥 ',
+                            style: TextStyle(
+                              fontSize: 25,
+                            ),
+                          ),
                       // Título
                       Text(
                         victory ? '¡MISIÓN CUMPLIDA!' : 'MISIÓN FALLIDA',
                         style: TextStyle(
                           fontFamily: 'Comic Sans MS',
-                          fontSize: 24,
+                          fontSize: 22,
                           fontWeight: FontWeight.bold,
                           color: victory ? AppColors.success : AppColors.error,
                         ),
-                        textAlign: TextAlign.center,
+                        textAlign: TextAlign.center, 
+                      ),
+                                                Text(
+                            victory ? '🚀' : ' 💥',
+                            style: TextStyle(
+                              fontSize: 25,
+                            ),
+                          ),
+                        ],
                       ),
                       SizedBox(height: 24),
                       

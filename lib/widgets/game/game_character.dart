@@ -19,11 +19,47 @@ class GameCharacter extends StatelessWidget {
     return AnimatedOpacity(
       opacity: isRescued ? 0.0 : 1.0,
       duration: Duration(milliseconds: 500),
-      child: Container(
-        width: 50,
-        height: 50,
+child: Stack(
+        alignment: Alignment.center,
+        children: [
+          // Círculo de destaque para hacer más visible al personaje
+          Container(
+            width: 80,
+            height: 80,
+            decoration: BoxDecoration(
+              color: _getHighlightColor().withOpacity(0.3),
+              shape: BoxShape.circle,
+            ),
+          ),Container(
+        width: 70,
+        height: 70,
         child: _getCharacterImage(),
       ),
+      Positioned(
+            bottom: -0.8,
+            child: Container(
+              padding: EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+              decoration: BoxDecoration(
+                color: Colors.black87,
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(
+                  color: _getHighlightColor(),
+                  width: 1.5,
+                ),
+              ),
+              child: Text(
+                '${altitude.toInt()} m',
+                style: TextStyle(
+                  fontFamily: 'Comic Sans MS',
+                  fontSize: 12,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                ),
+              ),
+            ),
+          ),
+        ],
+       ),
     );
   }
 
@@ -37,6 +73,18 @@ class GameCharacter extends StatelessWidget {
         return Lottie.asset('assets/animations/diver.json');
       case CharacterType.fish:
         return Lottie.asset('assets/animations/fish.json');
+    }
+  }
+Color _getHighlightColor() {
+    switch (type) {
+      case CharacterType.helicopter:
+        return Colors.red;
+      case CharacterType.swimmer:
+        return Colors.orange;
+      case CharacterType.diver:
+        return Colors.teal;
+      case CharacterType.fish:
+        return Colors.purpleAccent;
     }
   }
 }
