@@ -7,6 +7,7 @@ class UserModel {
   final int points;
   final List<String> achievements;
   final int level;
+  final int? classroomId;
   final String role; // estudiante, profesor, admin
 
   const UserModel({
@@ -17,6 +18,7 @@ class UserModel {
     this.points = 0,
     this.achievements = const [],
     this.level = 1,
+    this.classroomId,
     this.role = 'estudiante',
   });
 
@@ -30,6 +32,7 @@ class UserModel {
       points: json['points'] ?? 0,
       achievements: List<String>.from(json['achievements'] ?? []),
       level: json['level'] ?? 1,
+       classroomId: json['classroom_id'],
       role: json['role'] ?? 'estudiante',
     );
   }
@@ -45,6 +48,7 @@ class UserModel {
       'achievements': achievements,
       'level': level,
       'role': role,
+      'classroom_id': classroomId,
     };
   }
 
@@ -57,6 +61,7 @@ class UserModel {
     int? points,
     List<String>? achievements,
     int? level,
+    int? classroomId,
     String? role,
   }) {
     return UserModel(
@@ -67,6 +72,7 @@ class UserModel {
       points: points ?? this.points,
       achievements: achievements ?? this.achievements,
       level: level ?? this.level,
+      classroomId: classroomId ?? this.classroomId,
       role: role ?? this.role,
     );
   }

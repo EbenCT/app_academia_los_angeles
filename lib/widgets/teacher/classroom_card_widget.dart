@@ -272,7 +272,7 @@ void _viewStudents(BuildContext context, ClassroomModel classroom) {
   // Compartir código
   void _shareClassroomCode(BuildContext context, ClassroomModel classroom) {
     Share.share(
-      '¡Únete a mi aula "${classroom.name}" en Academia Los Ángeles! Usa el código: ${classroom.code}',
+      '¡Únete a mi aula "${classroom.name}" en Academia Los Ángeles! Usa el código: ${classroom.id}',
       subject: 'Invitación a aula - Academia Los Ángeles',
     );
   }
@@ -325,7 +325,7 @@ void _showQRCode(BuildContext context, ClassroomModel classroom) {
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       QrImageView(
-                        data: classroom.code,
+                        data: classroom.id.toString(),
                         version: QrVersions.auto,
                         size: 200,
                         backgroundColor: Colors.white,
@@ -462,8 +462,6 @@ Future<void> _captureAndShareQR(BuildContext context, GlobalKey key) async {
       );
     }
   }
-
-    final GlobalKey qrKey = GlobalKey();
     showDialog(
       context: context,
       builder: (BuildContext context) {

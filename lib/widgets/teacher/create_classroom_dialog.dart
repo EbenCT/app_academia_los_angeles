@@ -1,7 +1,6 @@
 // lib/widgets/teacher/create_classroom_dialog.dart
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../../models/course_model.dart';
 import '../../providers/classroom_provider.dart';
 import '../../theme/app_colors.dart';
 import '../animations/fade_animation.dart';

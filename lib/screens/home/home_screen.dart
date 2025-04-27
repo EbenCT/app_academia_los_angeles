@@ -2,6 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../providers/auth_provider.dart';
+import '../../../providers/student_provider.dart';
 import '../../../providers/theme_provider.dart';
 import '../../../widgets/animations/fade_animation.dart';
 import '../../../widgets/common/loading_indicator.dart';
@@ -63,7 +64,12 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
     final themeProvider = Provider.of<ThemeProvider>(context);
     final isDarkMode = themeProvider.isDarkMode;
     
-    if (_isLoading || user == null) {
+      // Si el usuario es estudiante, verificar si está en un aula
+  if (user != null && user.role == 'student') {
+    final studentProvider = Provider.of<StudentProvider>(context);
+    
+    // Si está cargando datos o no hay usuario, mostrar pantalla de carga
+    if (_isLoading || studentProvider.isLoading) {
       return Scaffold(
         body: LoadingIndicator(
           message: 'Cargando tu mundo de aventuras...',
@@ -72,6 +78,35 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
         ),
       );
     }
+    
+    // Si el estudiante no tiene aula, redirigir a la pantalla de unirse
+    if (!studentProvider.hasClassroom) {
+      // Usando Future.microtask para evitar errores de navegación durante el build
+      Future.microtask(() {
+        AppRoutes.navigateReplacementTo(context, AppRoutes.joinClassroom);
+      });
+      
+      // Mientras tanto, mostrar un loading
+      return Scaffold(
+        body: LoadingIndicator(
+          message: 'Preparando tu nave espacial...',
+          useAstronaut: true,
+          size: 150,
+        ),
+      );
+    }
+  }
+  
+  // Si no es estudiante o ya tiene aula, continuar con el HomeScreen normal
+  if (_isLoading || user == null) {
+    return Scaffold(
+      body: LoadingIndicator(
+        message: 'Cargando tu mundo de aventuras...',
+        useAstronaut: true,
+        size: 150,
+      ),
+    );
+  }
 
     return Scaffold(
       body: SafeArea(
