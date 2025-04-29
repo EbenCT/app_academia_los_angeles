@@ -19,6 +19,10 @@ class StudentService {
         id
         name
         code
+        course {
+          id
+          title
+        }
       }
       user {
         id
@@ -30,7 +34,7 @@ class StudentService {
   }
   ''';
 
-  // Obtener información del estudiante
+  // Obtener información del estudiante (ampliada)
   final String _getStudentQuery = r'''
   query GetStudent {
     student {
@@ -56,6 +60,23 @@ class StudentService {
   }
   ''';
 
+  // Obtener detalles de un curso
+  final String _getCourseQuery = r'''
+  query GetCourse($id: Int!) {
+    course(id: $id) {
+      id
+      title
+      description
+      subjects {
+        id
+        code
+        name
+        description
+      }
+    }
+  }
+  ''';
+
   // Método para obtener la información del estudiante
   Future<Map<String, dynamic>> getStudentInfo() async {
     try {
@@ -65,14 +86,33 @@ class StudentService {
           fetchPolicy: FetchPolicy.networkOnly,
         ),
       );
-
       if (result.hasException) {
         throw Exception(_getErrorMessage(result.exception));
       }
-
       return result.data?['student'] ?? {};
     } catch (e) {
       throw Exception('Error al obtener información del estudiante: $e');
+    }
+  }
+
+  // Método para obtener detalles de un curso
+  Future<Map<String, dynamic>?> getCourseDetails(int courseId) async {
+    try {
+      final result = await _client.query(
+        QueryOptions(
+          document: gql(_getCourseQuery),
+          variables: {
+            'id': courseId,
+          },
+          fetchPolicy: FetchPolicy.networkOnly,
+        ),
+      );
+      if (result.hasException) {
+        throw Exception(_getErrorMessage(result.exception));
+      }
+      return result.data?['course'];
+    } catch (e) {
+      throw Exception('Error al obtener detalles del curso: $e');
     }
   }
 
@@ -87,11 +127,9 @@ class StudentService {
           },
         ),
       );
-
       if (result.hasException) {
         throw Exception(_getErrorMessage(result.exception));
       }
-
       return result.data?['updateStudent'] ?? {};
     } catch (e) {
       throw Exception('Error al unirse al aula: $e');
@@ -99,23 +137,21 @@ class StudentService {
   }
 
   // Validar el código del aula y obtener su ID
-Future<int?> validateClassroomCode(String code) async {
-  try {
-    // Intentar convertir el código a un número entero
-    final classroomId = int.tryParse(code);
-    
-    if (classroomId != null && classroomId > 0) {
-      // Si es un número válido, lo devolvemos directamente
-      return classroomId;
+  Future<int?> validateClassroomCode(String code) async {
+    try {
+      // Intentar convertir el código a un número entero
+      final classroomId = int.tryParse(code);
+      if (classroomId != null && classroomId > 0) {
+        // Si es un número válido, lo devolvemos directamente
+        return classroomId;
+      }
+      // Si no es un número válido, retornamos null
+      return null;
+    } catch (e) {
+      print('Error al validar código: $e');
+      return null;
     }
-    
-    // Si no es un número válido, retornamos null
-    return null;
-  } catch (e) {
-    print('Error al validar código: $e');
-    return null;
   }
-}
 
   // Extraer mensaje de error
   String _getErrorMessage(OperationException? exception) {

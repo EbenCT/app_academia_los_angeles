@@ -7,12 +7,14 @@ class ProgressSummaryWidget extends StatelessWidget {
   final int points;
   final int level;
   final int streakDays;
+  final int nextLevelPoints; // Puntos para el siguiente nivel
 
   const ProgressSummaryWidget({
     super.key,
     required this.points,
     required this.level,
     required this.streakDays,
+    this.nextLevelPoints = 100, // Por defecto, 100 puntos
   });
 
   @override
@@ -20,6 +22,16 @@ class ProgressSummaryWidget extends StatelessWidget {
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
     final backgroundColor = isDarkMode ? AppColors.darkSurface : Colors.white;
     
+    // Calcular porcentaje de progreso hacia el siguiente nivel
+    final nextLevelTarget = level * nextLevelPoints;
+    final progressPercentage = points / nextLevelTarget;
+    // La barra no debe exceder el 100%
+    final normalizedProgress = progressPercentage > 1.0 ? 1.0 : progressPercentage;
+    // Formato del porcentaje para mostrar
+    final progressText = '${(progressPercentage * 100).toInt()}%';
+    // Puntos restantes para el siguiente nivel
+    final pointsRemaining = nextLevelTarget - points > 0 ? nextLevelTarget - points : 0;
+
     return Container(
       width: double.infinity,
       decoration: BoxDecoration(
@@ -64,7 +76,6 @@ class ProgressSummaryWidget extends StatelessWidget {
               ],
             ),
           ),
-          
           // Barra de progreso de nivel
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
@@ -84,7 +95,7 @@ class ProgressSummaryWidget extends StatelessWidget {
                       ),
                     ),
                     Text(
-                      '${60}%',
+                      progressText,
                       style: TextStyle(
                         fontFamily: 'Comic Sans MS',
                         fontSize: 14,
@@ -96,13 +107,12 @@ class ProgressSummaryWidget extends StatelessWidget {
                 ),
                 const SizedBox(height: 8),
                 _buildFancyProgressBar(
-                  progress: 0.6,
+                  progress: normalizedProgress,
                   color: AppColors.primary,
                 ),
-                
                 const SizedBox(height: 8),
                 Text(
-                  '¡Necesitas 400 puntos más para el nivel ${level + 1}!',
+                  '¡Necesitas $pointsRemaining puntos más para el nivel ${level + 1}!',
                   style: TextStyle(
                     fontFamily: 'Comic Sans MS',
                     fontSize: 12,
@@ -126,7 +136,6 @@ class ProgressSummaryWidget extends StatelessWidget {
     required Color color,
   }) {
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
-    
     return BounceAnimation(
       child: Container(
         width: 90,
@@ -209,7 +218,6 @@ class ProgressSummaryWidget extends StatelessWidget {
               ),
             ),
           ),
-          
           // Estrellas decorativas
           if (progress > 0.2)
             Positioned(
