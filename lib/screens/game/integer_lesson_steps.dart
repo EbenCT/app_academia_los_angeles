@@ -1,12 +1,11 @@
 // lib/screens/game/integer_lesson_steps.dart
 import 'package:flutter/material.dart';
 import '../../widgets/animations/fade_animation.dart';
-import '../../widgets/lessons/lesson_card_widget.dart';
 import '../../widgets/lessons/interactive_exercise_widget.dart';
 import '../../theme/app_colors.dart';
 import 'number_line_painter.dart';
 
-/// Paso 1: ¿Qué son los números enteros?
+/// Paso 1: ¿Qué son los números enteros? - Enfocado en práctica con teoría mínima
 class WhatAreIntegersStep extends StatelessWidget {
   const WhatAreIntegersStep({Key? key}) : super(key: key);
 
@@ -17,211 +16,212 @@ class WhatAreIntegersStep extends StatelessWidget {
       child: Column(
         children: [
           const SizedBox(height: 20),
+          // Título con tamaño reducido para evitar desbordamiento
+          _buildSimpleTitle('Los números enteros', context),
+          const SizedBox(height: 20),
           
-          // Título de la sección
+          // Breve introducción visual (mínima teoría)
           FadeAnimation(
-            delay: const Duration(milliseconds: 200),
-            child: Text(
-              '¿Qué son los números enteros?',
-              style: TextStyle(
-                fontFamily: 'Comic Sans MS',
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
-                color: Colors.white,
-                shadows: [
-                  Shadow(
-                    color: Colors.black45,
-                    offset: const Offset(1, 1),
-                    blurRadius: 3,
+            delay: const Duration(milliseconds: 300),
+            child: Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(15),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [Colors.blue.shade100, Colors.white],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+                borderRadius: BorderRadius.circular(15),
+                border: Border.all(color: Colors.blue.withOpacity(0.5)),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.1),
+                    blurRadius: 4,
+                    offset: const Offset(0, 2),
                   ),
                 ],
               ),
-              textAlign: TextAlign.center,
+              child: Row(
+                children: [
+                  // Símbolo
+                  Container(
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: AppColors.primary.withOpacity(0.2),
+                    ),
+                    child: const Text(
+                      'ℤ',
+                      style: TextStyle(
+                        fontFamily: 'Comic Sans MS',
+                        fontSize: 30,
+                        fontWeight: FontWeight.bold,
+                        color: Color(0xFF6200EA),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 15),
+                  // Breve explicación
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: const [
+                        Text(
+                          'Los enteros incluyen:',
+                          style: TextStyle(
+                            fontFamily: 'Comic Sans MS',
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        SizedBox(height: 5),
+                        Text(
+                          '• Negativos: -3, -2, -1\n• Cero: 0\n• Positivos: 1, 2, 3',
+                          style: TextStyle(
+                            fontFamily: 'Comic Sans MS',
+                            fontSize: 14,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
           
-          const SizedBox(height: 20),
+          const SizedBox(height: 25),
           
-          // Tarjeta explicativa con los tipos de números
-          LessonCardWidget(
-            title: 'Comparación de números',
-            content: Column(
-              children: [
-                // Explicación de números naturales vs. enteros
-                Row(
-                  children: [
-                    CircleAvatar(
-                      backgroundColor: AppColors.primary.withOpacity(0.3),
-                      radius: 24,
-                      child: Text(
-                        'ℕ',
-                        style: TextStyle(
-                          fontFamily: 'Comic Sans MS',
-                          fontSize: 26,
-                          fontWeight: FontWeight.bold,
-                          color: AppColors.primary,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 16),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Números Naturales',
-                            style: TextStyle(
-                              fontFamily: 'Comic Sans MS',
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                              color: AppColors.primary,
-                            ),
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            'Son los números que usamos para contar: 1, 2, 3, 4, 5...',
-                            style: TextStyle(
-                              fontFamily: 'Comic Sans MS',
-                              fontSize: 14,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-                
-                const Divider(height: 30),
-                
-                // Explicación de números enteros
-                Row(
-                  children: [
-                    CircleAvatar(
-                      backgroundColor: AppColors.secondary.withOpacity(0.3),
-                      radius: 24,
-                      child: Text(
-                        'ℤ',
-                        style: TextStyle(
-                          fontFamily: 'Comic Sans MS',
-                          fontSize: 26,
-                          fontWeight: FontWeight.bold,
-                          color: AppColors.secondary,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 16),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Números Enteros',
-                            style: TextStyle(
-                              fontFamily: 'Comic Sans MS',
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                              color: AppColors.secondary,
-                            ),
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            'Incluyen números negativos, el cero y positivos: -3, -2, -1, 0, 1, 2, 3...',
-                            style: TextStyle(
-                              fontFamily: 'Comic Sans MS',
-                              fontSize: 14,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
+          // MINI PRÁCTICA 1: Identificar enteros - Mejorada y destacada
+          Container(
+            width: double.infinity,
+            margin: const EdgeInsets.only(bottom: 10),
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [
+                  AppColors.primary.withOpacity(0.1),
+                  AppColors.secondary.withOpacity(0.05),
+                ],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              borderRadius: BorderRadius.circular(15),
+              border: Border.all(
+                color: AppColors.primary.withOpacity(0.3),
+                width: 2,
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.05),
+                  blurRadius: 5,
+                  offset: const Offset(0, 3),
                 ),
               ],
             ),
-          ),
-          
-          const SizedBox(height: 20),
-          
-          // Imagen explicativa
-          ImageExplanationWidget(
-            imagePath: 'assets/images/integers_diagram.png',
-            explanation: 'Los números enteros incluyen a los naturales y también a los negativos.',
-            fallbackWidget: Container(
-              height: 200,
-              decoration: BoxDecoration(
-                color: Colors.grey.shade200,
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Center(
-                child: Text(
-                  'Z = {..., -3, -2, -1, 0, 1, 2, 3, ...}',
-                  style: TextStyle(
-                    fontFamily: 'Comic Sans MS',
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                    color: AppColors.primary,
-                  ),
-                ),
-              ),
-            ),
-          ),
-          
-          const SizedBox(height: 20),
-          
-          // Conceptos clave
-          KeyConceptsWidget(
-            title: 'Conceptos Clave',
-            concepts: [
-              BulletPoint(
-                text: 'Los números enteros se representan con la letra ℤ (zeta mayúscula)',
-                icon: Icons.info_outline,
-              ),
-              BulletPoint(
-                text: 'ℤ = {... -3, -2, -1, 0, 1, 2, 3, ...}',
-                icon: Icons.format_list_numbered,
-              ),
-              BulletPoint(
-                text: 'El cero es un elemento neutro: no es positivo ni negativo',
-                icon: Icons.exposure_zero,
-              ),
-            ],
-          ),
-          
-          const SizedBox(height: 20),
-          
-          // Ejercicio interactivo
-          InteractiveExerciseWidget(
-            title: 'Identifica números enteros',
-            content: Column(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  'Marca todos los números que son enteros:',
-                  style: TextStyle(
-                    fontFamily: 'Comic Sans MS',
-                    fontSize: 14,
+                // Título de la práctica
+                Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: AppColors.primary,
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Text(
+                        '1',
+                        style: TextStyle(
+                          fontFamily: 'Comic Sans MS',
+                          fontSize: 14,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    const Text(
+                      'PRÁCTICA: Identificar números',
+                      style: TextStyle(
+                        fontFamily: 'Comic Sans MS',
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: Color(0xFF6200EA),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 15),
+                
+                // Instrucciones
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: const Text(
+                    '¡Toca todos los números que son enteros!',
+                    style: TextStyle(
+                      fontFamily: 'Comic Sans MS',
+                      fontSize: 14,
+                      fontWeight: FontWeight.bold,
+                    ),
+                    textAlign: TextAlign.center,
                   ),
                 ),
-                const SizedBox(height: 16),
                 
-                // Opciones seleccionables
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                const SizedBox(height: 20),
+                
+                // Opciones seleccionables en filas mejoradas
+                Wrap(
+                  spacing: 10,
+                  runSpacing: 10,
+                  alignment: WrapAlignment.center,
                   children: [
-                    SelectableOptionWidget(text: '-5', isCorrect: true),
-                    SelectableOptionWidget(text: '3.14', isCorrect: false),
-                    SelectableOptionWidget(text: '0', isCorrect: true),
-                    SelectableOptionWidget(text: '½', isCorrect: false),
+                    _buildSelectableNumber('-5', true),
+                    _buildSelectableNumber('3.14', false),
+                    _buildSelectableNumber('0', true),
+                    _buildSelectableNumber('10', true),
+                    _buildSelectableNumber('-2.5', false),
+                    _buildSelectableNumber('½', false),
+                    _buildSelectableNumber('-8', true),
+                    _buildSelectableNumber('√2', false),
+                    _buildSelectableNumber('6', true),
                   ],
                 ),
-                const SizedBox(height: 12),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                  children: [
-                    SelectableOptionWidget(text: '10', isCorrect: true),
-                    SelectableOptionWidget(text: '-2.5', isCorrect: false),
-                    SelectableOptionWidget(text: '-8', isCorrect: true),
-                    SelectableOptionWidget(text: '√2', isCorrect: false),
-                  ],
+                
+                const SizedBox(height: 15),
+                
+                // Pista
+                Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: AppColors.info.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(
+                      color: AppColors.info.withOpacity(0.3),
+                    ),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(Icons.lightbulb_outline, color: AppColors.info, size: 18),
+                      const SizedBox(width: 8),
+                      const Expanded(
+                        child: Text(
+                          'Los enteros no incluyen fracciones, decimales o raíces.',
+                          style: TextStyle(
+                            fontFamily: 'Comic Sans MS',
+                            fontSize: 12,
+                            fontStyle: FontStyle.italic,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ],
             ),
@@ -232,9 +232,113 @@ class WhatAreIntegersStep extends StatelessWidget {
       ),
     );
   }
+  
+  Widget _buildSimpleTitle(String title, BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 15),
+      decoration: BoxDecoration(
+        color: AppColors.primary,
+        borderRadius: BorderRadius.circular(10),
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.primary.withOpacity(0.3),
+            blurRadius: 4,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Text(
+        title,
+        style: const TextStyle(
+          fontFamily: 'Comic Sans MS',
+          fontSize: 18, // Reducido para evitar desbordamiento
+          fontWeight: FontWeight.bold,
+          color: Colors.white,
+        ),
+        textAlign: TextAlign.center,
+      ),
+    );
+  }
+  
+  Widget _buildSelectableNumber(String number, bool isCorrect) {
+    return StatefulBuilder(
+      builder: (context, setState) {
+        bool isSelected = false;
+        bool showFeedback = false;
+        
+        return GestureDetector(
+          onTap: () {
+            setState(() {
+              isSelected = !isSelected;
+              showFeedback = isSelected;
+            });
+          },
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 200),
+            width: 60,
+            height: 60,
+            decoration: BoxDecoration(
+              color: !isSelected
+                  ? Colors.white
+                  : (showFeedback
+                      ? (isCorrect
+                          ? AppColors.success.withOpacity(0.2)
+                          : AppColors.error.withOpacity(0.2))
+                      : AppColors.primary.withOpacity(0.2)),
+              shape: BoxShape.circle,
+              border: Border.all(
+                color: !isSelected
+                    ? Colors.grey.shade300
+                    : (showFeedback
+                        ? (isCorrect ? AppColors.success : AppColors.error)
+                        : AppColors.primary),
+                width: isSelected ? 2 : 1,
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.05),
+                  blurRadius: 3,
+                  offset: const Offset(0, 2),
+                ),
+              ],
+            ),
+            child: Stack(
+              alignment: Alignment.center,
+              children: [
+                Text(
+                  number,
+                  style: TextStyle(
+                    fontFamily: 'Comic Sans MS',
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: !isSelected
+                        ? Colors.black87
+                        : (showFeedback
+                            ? (isCorrect ? AppColors.success : AppColors.error)
+                            : AppColors.primary),
+                  ),
+                ),
+                if (showFeedback)
+                  Positioned(
+                    top: 5,
+                    right: 5,
+                    child: Icon(
+                      isCorrect ? Icons.check_circle : Icons.cancel,
+                      color: isCorrect ? AppColors.success : AppColors.error,
+                      size: 16,
+                    ),
+                  ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
 }
 
-/// Paso 2: Recta numérica
+/// Paso 2: Recta numérica - Enfocado en práctica con teoría mínima
 class NumberLineStep extends StatelessWidget {
   const NumberLineStep({Key? key}) : super(key: key);
 
@@ -245,76 +349,221 @@ class NumberLineStep extends StatelessWidget {
       child: Column(
         children: [
           const SizedBox(height: 20),
+          // Título simplificado para evitar desbordamiento
+          _buildSimpleTitle('La recta numérica', context),
+          const SizedBox(height: 20),
           
-          // Título de la sección
+          // Recta numérica (breve demostración visual)
           FadeAnimation(
-            delay: const Duration(milliseconds: 200),
-            child: Text(
-              'La recta numérica',
-              style: TextStyle(
-                fontFamily: 'Comic Sans MS',
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
+            delay: const Duration(milliseconds: 300),
+            child: Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(15),
+              decoration: BoxDecoration(
                 color: Colors.white,
-                shadows: [
-                  Shadow(
-                    color: Colors.black45,
-                    offset: const Offset(1, 1),
-                    blurRadius: 3,
+                borderRadius: BorderRadius.circular(15),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.1),
+                    blurRadius: 4,
+                    offset: const Offset(0, 2),
                   ),
                 ],
               ),
-              textAlign: TextAlign.center,
+              child: Column(
+                children: [
+                  // Recta numérica optimizada para evitar desbordamiento
+                  Container(
+                    height: 80,
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(10),
+                      child: CustomPaint(
+                        size: const Size(double.infinity, 80),
+                        painter: NumberLinePainter(
+                          textScaleFactor: 0.8, // Reducido para evitar desbordamiento
+                        ),
+                      ),
+                    ),
+                  ),
+                  
+                  const SizedBox(height: 10),
+                  
+                  // Mini-leyenda simplificada
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: [
+                      _buildDirectionLabel('Negativos', Colors.red),
+                      _buildDirectionLabel('Cero', Colors.purple),
+                      _buildDirectionLabel('Positivos', Colors.blue),
+                    ],
+                  ),
+                ],
+              ),
             ),
           ),
           
-          const SizedBox(height: 20),
+          const SizedBox(height: 25),
           
-          // Tarjeta explicativa de la recta numérica
-          LessonCardWidget(
-            title: 'Representación en la recta numérica',
-            content: Column(
+          // MINI PRÁCTICA 2: Ordenar números - Mejorada y destacada
+          Container(
+            width: double.infinity,
+            margin: const EdgeInsets.only(bottom: 10),
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [
+                  Colors.blue.withOpacity(0.1),
+                  Colors.blue.withOpacity(0.05),
+                ],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              borderRadius: BorderRadius.circular(15),
+              border: Border.all(
+                color: Colors.blue.withOpacity(0.3),
+                width: 2,
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.05),
+                  blurRadius: 5,
+                  offset: const Offset(0, 3),
+                ),
+              ],
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Recta numérica personalizada
+                // Título de la práctica
+                Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: const BoxDecoration(
+                        color: Colors.blue,
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Text(
+                        '2',
+                        style: TextStyle(
+                          fontFamily: 'Comic Sans MS',
+                          fontSize: 14,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    const Text(
+                      'PRÁCTICA: Ordenar números enteros',
+                      style: TextStyle(
+                        fontFamily: 'Comic Sans MS',
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.blue,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 15),
+                
+                // Instrucciones
                 Container(
-                  height: 100,
+                  padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
                     color: Colors.white,
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(10),
                   ),
-                  child: CustomPaint(
-                    size: const Size(double.infinity, 100),
-                    painter: NumberLinePainter(),
+                  child: const Text(
+                    '¡Arrastra los números para ordenarlos de menor a mayor!',
+                    style: TextStyle(
+                      fontFamily: 'Comic Sans MS',
+                      fontSize: 14,
+                      fontWeight: FontWeight.bold,
+                    ),
+                    textAlign: TextAlign.center,
                   ),
                 ),
                 
-                const SizedBox(height: 16),
+                const SizedBox(height: 20),
                 
-                // Explicación
-                Text(
-                  'En la recta numérica, los números se organizan de menor a mayor de izquierda a derecha:',
-                  style: TextStyle(
-                    fontFamily: 'Comic Sans MS',
-                    fontSize: 14,
+                // Números ordenables (con mejora visual)
+                Container(
+                  height: 80,
+                  padding: const EdgeInsets.symmetric(horizontal: 10),
+                  decoration: BoxDecoration(
+                    color: Colors.grey.shade100,
+                    borderRadius: BorderRadius.circular(15),
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: ['-7', '-3', '-1', '0', '5'].map((number) => 
+                      _buildDraggableNumber(number, context)
+                    ).toList(),
                   ),
                 ),
-                const SizedBox(height: 12),
                 
-                // Características
-                BulletPoint(
-                  text: 'Los números negativos están a la izquierda del cero',
-                  icon: Icons.arrow_back,
-                  color: Colors.red,
-                ),
-                BulletPoint(
-                  text: 'El cero es el punto central, el elemento neutro',
-                  icon: Icons.radio_button_checked,
-                  color: Colors.purple,
-                ),
-                BulletPoint(
-                  text: 'Los números positivos están a la derecha del cero',
-                  icon: Icons.arrow_forward,
-                  color: Colors.blue,
+                const SizedBox(height: 25),
+                
+                // Resultado esperado
+                Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: AppColors.success.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(
+                      color: AppColors.success.withOpacity(0.3),
+                    ),
+                  ),
+                  child: Column(
+                    children: [
+                      Row(
+                        children: [
+                          Icon(Icons.check_circle, color: AppColors.success, size: 18),
+                          const SizedBox(width: 8),
+                          const Text(
+                            'Solución correcta:',
+                            style: TextStyle(
+                              fontFamily: 'Comic Sans MS',
+                              fontSize: 14,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 10),
+                      Container(
+                        padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 15),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: const Text(
+                          '-7 < -3 < -1 < 0 < 5',
+                          style: TextStyle(
+                            fontFamily: 'Comic Sans MS',
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.blue,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                      ),
+                      const SizedBox(height: 5),
+                      const Text(
+                        'El menor está a la izquierda, el mayor a la derecha',
+                        style: TextStyle(
+                          fontFamily: 'Comic Sans MS',
+                          fontSize: 12,
+                          fontStyle: FontStyle.italic,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                    ],
+                  ),
                 ),
               ],
             ),
@@ -322,50 +571,713 @@ class NumberLineStep extends StatelessWidget {
           
           const SizedBox(height: 20),
           
-          // Tarjeta de comparación
-          LessonCardWidget(
-            title: 'Comparación de números enteros',
-            titleColor: AppColors.secondary,
-            cardColor: AppColors.secondary.withOpacity(0.1),
-            content: Column(
-              children: [
-                Text(
-                  'Para comparar números enteros, observa su posición en la recta numérica:',
-                  style: TextStyle(
-                    fontFamily: 'Comic Sans MS',
-                    fontSize: 14,
-                  ),
+          // MINI PRÁCTICA 3: Comparación de enteros
+          Container(
+            width: double.infinity,
+            margin: const EdgeInsets.only(bottom: 10),
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [
+                  Colors.purple.withOpacity(0.1),
+                  Colors.purple.withOpacity(0.05),
+                ],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              borderRadius: BorderRadius.circular(15),
+              border: Border.all(
+                color: Colors.purple.withOpacity(0.3),
+                width: 2,
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.05),
+                  blurRadius: 5,
+                  offset: const Offset(0, 3),
                 ),
-                const SizedBox(height: 16),
-                
-                // Ejemplos de comparación
+              ],
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Título de la práctica
                 Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   children: [
-                    _buildComparisonExample('-5 < -2', 'El -5 está más a la izquierda'),
-                    _buildComparisonExample('-1 < 0', 'El -1 está más a la izquierda'),
-                    _buildComparisonExample('0 < 3', 'El 0 está más a la izquierda'),
+                    Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: const BoxDecoration(
+                        color: Colors.purple,
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Text(
+                        '3',
+                        style: TextStyle(
+                          fontFamily: 'Comic Sans MS',
+                          fontSize: 14,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    const Text(
+                      'PRÁCTICA: Comparar números',
+                      style: TextStyle(
+                        fontFamily: 'Comic Sans MS',
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.purple,
+                      ),
+                    ),
                   ],
                 ),
+                const SizedBox(height: 15),
                 
-                const SizedBox(height: 16),
+                // Instrucciones
                 Container(
-                  padding: const EdgeInsets.all(8),
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: const Text(
+                    '¡Escoge el símbolo correcto (< ó >) para cada comparación!',
+                    style: TextStyle(
+                      fontFamily: 'Comic Sans MS',
+                      fontSize: 14,
+                      fontWeight: FontWeight.bold,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+                
+                const SizedBox(height: 20),
+                
+                // Comparaciones interactivas
+                _buildComparisonExercise('-5', '2', '<', context),
+                const SizedBox(height: 12),
+                _buildComparisonExercise('0', '-3', '>', context),
+                const SizedBox(height: 12),
+                _buildComparisonExercise('-2', '-7', '>', context),
+                
+                const SizedBox(height: 15),
+                
+                // Regla
+                Container(
+                  padding: const EdgeInsets.all(10),
                   decoration: BoxDecoration(
                     color: AppColors.info.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(8),
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(
+                      color: AppColors.info.withOpacity(0.3),
+                    ),
                   ),
                   child: Row(
                     children: [
-                      Icon(Icons.info_outline, color: AppColors.info),
+                      Icon(Icons.lightbulb_outline, color: AppColors.info, size: 18),
                       const SizedBox(width: 8),
-                      Expanded(
+                      const Expanded(
                         child: Text(
-                          'Recuerda: Cuanto más a la derecha está un número, mayor es su valor.',
+                          'Recuerda: Cuanto más a la derecha está un número en la recta, mayor es.',
                           style: TextStyle(
                             fontFamily: 'Comic Sans MS',
-                            fontSize: 14,
+                            fontSize: 12,
+                            fontStyle: FontStyle.italic,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+          
+          const SizedBox(height: 20),
+        ],
+      ),
+    );
+  }
+  
+  Widget _buildSimpleTitle(String title, BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 15),
+      decoration: BoxDecoration(
+        color: Colors.blue,
+        borderRadius: BorderRadius.circular(10),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.blue.withOpacity(0.3),
+            blurRadius: 4,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Text(
+        title,
+        style: const TextStyle(
+          fontFamily: 'Comic Sans MS',
+          fontSize: 18, // Reducido para evitar desbordamiento
+          fontWeight: FontWeight.bold,
+          color: Colors.white,
+        ),
+        textAlign: TextAlign.center,
+      ),
+    );
+  }
+  
+  Widget _buildDirectionLabel(String text, Color color) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Container(
+          width: 10,
+          height: 10,
+          decoration: BoxDecoration(
+            color: color,
+            shape: BoxShape.circle,
+          ),
+        ),
+        const SizedBox(width: 5),
+        Text(
+          text,
+          style: TextStyle(
+            fontFamily: 'Comic Sans MS',
+            fontSize: 12,
+            color: color,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+      ],
+    );
+  }
+  
+  Widget _buildDraggableNumber(String number, BuildContext context) {
+    // Color basado en el valor
+    Color numberColor;
+    if (number == '0') {
+      numberColor = Colors.purple;
+    } else if (number.startsWith('-')) {
+      numberColor = Colors.red;
+    } else {
+      numberColor = Colors.blue;
+    }
+    
+    return Draggable<String>(
+      data: number,
+      feedback: Container(
+        width: 50,
+        height: 50,
+        decoration: BoxDecoration(
+          color: numberColor.withOpacity(0.7),
+          shape: BoxShape.circle,
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.2),
+              blurRadius: 5,
+              offset: const Offset(0, 3),
+            ),
+          ],
+        ),
+        child: Center(
+          child: Text(
+            number,
+            style: const TextStyle(
+              fontFamily: 'Comic Sans MS',
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: Colors.white,
+            ),
+          ),
+        ),
+      ),
+      childWhenDragging: Container(
+        width: 50,
+        height: 50,
+        decoration: BoxDecoration(
+          color: Colors.grey.withOpacity(0.3),
+          shape: BoxShape.circle,
+        ),
+        child: const Center(
+          child: Icon(
+            Icons.swap_horiz,
+            color: Colors.grey,
+          ),
+        ),
+      ),
+      child: Container(
+        width: 50,
+        height: 50,
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [
+              numberColor.withOpacity(0.8),
+              numberColor.withOpacity(0.5),
+            ],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+          shape: BoxShape.circle,
+          boxShadow: [
+            BoxShadow(
+              color: numberColor.withOpacity(0.3),
+              blurRadius: 3,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        child: Center(
+          child: Text(
+            number,
+            style: const TextStyle(
+              fontFamily: 'Comic Sans MS',
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: Colors.white,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+  
+  Widget _buildComparisonExercise(String num1, String num2, String correctSymbol, BuildContext context) {
+    return StatefulBuilder(
+      builder: (context, setState) {
+        String selectedSymbol = '';
+        bool showFeedback = false;
+        
+        return Container(
+          padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 15),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(10),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.05),
+                blurRadius: 2,
+                offset: const Offset(0, 1),
+              ),
+            ],
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              // Primer número
+              Container(
+                width: 40,
+                height: 40,
+                decoration: BoxDecoration(
+                  color: _getNumberColor(num1).withOpacity(0.2),
+                  shape: BoxShape.circle,
+                ),
+                child: Center(
+                  child: Text(
+                    num1,
+                    style: TextStyle(
+                      fontFamily: 'Comic Sans MS',
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: _getNumberColor(num1),
+                    ),
+                  ),
+                ),
+              ),
+              
+              const SizedBox(width: 15),
+              
+              // Opciones de símbolos
+              Row(
+                children: [
+                  // Opción <
+                  GestureDetector(
+                    onTap: () {
+                      setState(() {
+                        selectedSymbol = '<';
+                        showFeedback = true;
+                      });
+                    },
+                    child: Container(
+                      width: 40,
+                      height: 40,
+                      decoration: BoxDecoration(
+                        color: selectedSymbol == '<'
+                            ? (showFeedback
+                                ? (correctSymbol == '<'
+                                    ? AppColors.success.withOpacity(0.2)
+                                    : AppColors.error.withOpacity(0.2))
+                                : Colors.purple.withOpacity(0.2))
+                            : Colors.grey.withOpacity(0.1),
+                        shape: BoxShape.circle,
+                        border: Border.all(
+                          color: selectedSymbol == '<'
+                              ? (showFeedback
+                                  ? (correctSymbol == '<'
+                                      ? AppColors.success
+                                      : AppColors.error)
+                                  : Colors.purple)
+                              : Colors.transparent,
+                        ),
+                      ),
+                      child: Center(
+                        child: Text(
+                          '<',
+                          style: TextStyle(
+                            fontFamily: 'Comic Sans MS',
+                            fontSize: 20,
                             fontWeight: FontWeight.bold,
+                            color: selectedSymbol == '<'
+                                ? (showFeedback
+                                    ? (correctSymbol == '<'
+                                        ? AppColors.success
+                                        : AppColors.error)
+                                    : Colors.purple)
+                                : Colors.black54,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                  
+                  const SizedBox(width: 10),
+                  
+                  // Opción >
+                  GestureDetector(
+                    onTap: () {
+                      setState(() {
+                        selectedSymbol = '>';
+                        showFeedback = true;
+                      });
+                    },
+                    child: Container(
+                      width: 40,
+                      height: 40,
+                      decoration: BoxDecoration(
+                        color: selectedSymbol == '>'
+                            ? (showFeedback
+                                ? (correctSymbol == '>'
+                                    ? AppColors.success.withOpacity(0.2)
+                                    : AppColors.error.withOpacity(0.2))
+                                : Colors.purple.withOpacity(0.2))
+                            : Colors.grey.withOpacity(0.1),
+                        shape: BoxShape.circle,
+                        border: Border.all(
+                          color: selectedSymbol == '>'
+                              ? (showFeedback
+                                  ? (correctSymbol == '>'
+                                      ? AppColors.success
+                                      : AppColors.error)
+                                  : Colors.purple)
+                              : Colors.transparent,
+                        ),
+                      ),
+                      child: Center(
+                        child: Text(
+                          '>',
+                          style: TextStyle(
+                            fontFamily: 'Comic Sans MS',
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                            color: selectedSymbol == '>'
+                                ? (showFeedback
+                                    ? (correctSymbol == '>'
+                                        ? AppColors.success
+                                        : AppColors.error)
+                                    : Colors.purple)
+                                : Colors.black54,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              
+              const SizedBox(width: 15),
+              
+              // Segundo número
+              Container(
+                width: 40,
+                height: 40,
+                decoration: BoxDecoration(
+                  color: _getNumberColor(num2).withOpacity(0.2),
+                  shape: BoxShape.circle,
+                ),
+                child: Center(
+                  child: Text(
+                    num2,
+                    style: TextStyle(
+                      fontFamily: 'Comic Sans MS',
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: _getNumberColor(num2),
+                    ),
+                  ),
+                ),
+              ),
+              
+              const SizedBox(width: 15),
+              
+              // Indicador de correcto/incorrecto
+              if (showFeedback)
+                Icon(
+                  selectedSymbol == correctSymbol
+                      ? Icons.check_circle_outline
+                      : Icons.cancel_outlined,
+                  color: selectedSymbol == correctSymbol
+                      ? AppColors.success
+                      : AppColors.error,
+                  size: 24,
+                ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+  
+  Color _getNumberColor(String number) {
+    if (number == '0') {
+      return Colors.purple;
+    } else if (number.startsWith('-')) {
+      return Colors.red;
+    } else {
+      return Colors.blue;
+    }
+  }
+}
+
+/// Paso 3: Aplicaciones - Enfocado en práctica con teoría mínima
+class ApplicationsStep extends StatelessWidget {
+  const ApplicationsStep({Key? key}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: Column(
+        children: [
+          const SizedBox(height: 20),
+          // Título simplificado para evitar desbordamiento
+          _buildSimpleTitle('Aplicaciones', context),
+          const SizedBox(height: 20),
+          
+          // Breve introducción (mínima teoría)
+          FadeAnimation(
+            delay: const Duration(milliseconds: 300),
+            child: Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(15),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [Colors.green.shade100, Colors.white],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+                borderRadius: BorderRadius.circular(15),
+                border: Border.all(color: Colors.green.withOpacity(0.5)),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.1),
+                    blurRadius: 4,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
+              ),
+              child: Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: AppColors.accent.withOpacity(0.2),
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(
+                      Icons.public,
+                      color: AppColors.accent,
+                      size: 24,
+                    ),
+                  ),
+                  const SizedBox(width: 15),
+                  const Expanded(
+                    child: Text(
+                      'Los números enteros están presentes en: temperaturas, altitudes, finanzas, sótanos y pisos, años pasados y futuros.',
+                      style: TextStyle(
+                        fontFamily: 'Comic Sans MS',
+                        fontSize: 14,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          
+          const SizedBox(height: 25),
+          
+          // MINI PRÁCTICA 4: Problema con temperaturas
+          Container(
+            width: double.infinity,
+            margin: const EdgeInsets.only(bottom: 10),
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [
+                  Colors.red.withOpacity(0.1),
+                  Colors.orange.withOpacity(0.05),
+                ],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              borderRadius: BorderRadius.circular(15),
+              border: Border.all(
+                color: Colors.red.withOpacity(0.3),
+                width: 2,
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.05),
+                  blurRadius: 5,
+                  offset: const Offset(0, 3),
+                ),
+              ],
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Título de la práctica
+                Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: const BoxDecoration(
+                        color: Colors.red,
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Text(
+                        '4',
+                        style: TextStyle(
+                          fontFamily: 'Comic Sans MS',
+                          fontSize: 14,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    const Text(
+                      'PRÁCTICA: Temperaturas',
+                      style: TextStyle(
+                        fontFamily: 'Comic Sans MS',
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.red,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 15),
+                
+                // Problema
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(10),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.05),
+                        blurRadius: 3,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
+                  ),
+                  child: Column(
+                    children: [
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Icon(
+                            Icons.thermostat,
+                            color: Colors.red,
+                            size: 24,
+                          ),
+                          const SizedBox(width: 10),
+                          const Expanded(
+                            child: Text(
+                              'En un día de invierno, la temperatura por la mañana era de -3°C, al mediodía subió 8 grados, y por la noche bajó 5 grados. ¿Cuál fue la temperatura final?',
+                              style: TextStyle(
+                                fontFamily: 'Comic Sans MS',
+                                fontSize: 14,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+                
+                const SizedBox(height: 20),
+                
+                // Opciones interactivas
+                Wrap(
+                  spacing: 10,
+                  runSpacing: 10,
+                  alignment: WrapAlignment.center,
+                  children: [
+                    _buildTemperatureOption('0°C', true, context),
+                    _buildTemperatureOption('-5°C', false, context),
+                    _buildTemperatureOption('5°C', false, context),
+                    _buildTemperatureOption('-10°C', false, context),
+                  ],
+                ),
+                
+                const SizedBox(height: 15),
+                
+                // Solución (inicialmente oculta - se mostraría al seleccionar)
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: AppColors.success.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(
+                      color: AppColors.success.withOpacity(0.3),
+                    ),
+                  ),
+                  child: Column(
+                    children: [
+                      Row(
+                        children: [
+                          Icon(Icons.check_circle, color: AppColors.success, size: 18),
+                          const SizedBox(width: 8),
+                          const Text(
+                            'Solución:',
+                            style: TextStyle(
+                              fontFamily: 'Comic Sans MS',
+                              fontSize: 14,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 10),
+                      Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.all(10),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: const Text(
+                          '-3°C + 8°C - 5°C = 0°C',
+                          style: TextStyle(
+                            fontFamily: 'Comic Sans MS',
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.red,
                           ),
                           textAlign: TextAlign.center,
                         ),
@@ -377,368 +1289,248 @@ class NumberLineStep extends StatelessWidget {
             ),
           ),
           
-          const SizedBox(height: 20),
+          const SizedBox(height: 25),
           
-          // Ejercicio interactivo
-          InteractiveExerciseWidget(
-            title: 'Ordena los números',
-            content: NumberOrderingWidget(
-              numbers: ['-3', '0', '-7', '5', '-1'],
-              correctOrder: ['-7', '-3', '-1', '0', '5'],
-              explanation: '-7 < -3 < -1 < 0 < 5',
+          // MINI PRÁCTICA 5: Problema con altitudes
+          Container(
+            width: double.infinity,
+            margin: const EdgeInsets.only(bottom: 10),
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [
+                  Colors.blue.withOpacity(0.1),
+                  Colors.teal.withOpacity(0.05),
+                ],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              borderRadius: BorderRadius.circular(15),
+              border: Border.all(
+                color: Colors.blue.withOpacity(0.3),
+                width: 2,
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.05),
+                  blurRadius: 5,
+                  offset: const Offset(0, 3),
+                ),
+              ],
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Título de la práctica
+                Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: const BoxDecoration(
+                        color: Colors.blue,
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Text(
+                        '5',
+                        style: TextStyle(
+                          fontFamily: 'Comic Sans MS',
+                          fontSize: 14,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    const Text(
+                      'PRÁCTICA: Altitudes',
+                      style: TextStyle(
+                        fontFamily: 'Comic Sans MS',
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.blue,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 15),
+                
+                // Problema
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(10),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.05),
+                        blurRadius: 3,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
+                  ),
+                  child: Column(
+                    children: [
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Icon(
+                            Icons.sailing,
+                            color: Colors.blue,
+                            size: 24,
+                          ),
+                          const SizedBox(width: 10),
+                          const Expanded(
+                            child: Text(
+                              'Un submarino estaba a -50 metros (bajo el nivel del mar). Luego descendió 30 metros más y finalmente subió 70 metros. ¿A qué altura quedó?',
+                              style: TextStyle(
+                                fontFamily: 'Comic Sans MS',
+                                fontSize: 14,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+                
+                const SizedBox(height: 20),
+                
+                // Opciones interactivas
+                Wrap(
+                  spacing: 10,
+                  runSpacing: 10,
+                  alignment: WrapAlignment.center,
+                  children: [
+                    _buildAltitudeOption('-80 metros', false, context),
+                    _buildAltitudeOption('-10 metros', true, context),
+                    _buildAltitudeOption('10 metros', false, context),
+                    _buildAltitudeOption('-20 metros', false, context),
+                  ],
+                ),
+                
+                const SizedBox(height: 15),
+                
+                // Solución (inicialmente oculta - se mostraría al seleccionar)
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: AppColors.success.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(
+                      color: AppColors.success.withOpacity(0.3),
+                    ),
+                  ),
+                  child: Column(
+                    children: [
+                      Row(
+                        children: [
+                          Icon(Icons.check_circle, color: AppColors.success, size: 18),
+                          const SizedBox(width: 8),
+                          const Text(
+                            'Solución:',
+                            style: TextStyle(
+                              fontFamily: 'Comic Sans MS',
+                              fontSize: 14,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 10),
+                      Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.all(10),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: const Text(
+                          '-50m - 30m + 70m = -10m',
+                          style: TextStyle(
+                            fontFamily: 'Comic Sans MS',
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.blue,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                      ),
+                      const SizedBox(height: 5),
+                      const Text(
+                        '10 metros bajo el nivel del mar',
+                        style: TextStyle(
+                          fontFamily: 'Comic Sans MS',
+                          fontSize: 12,
+                          fontStyle: FontStyle.italic,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                    ],
+                  ),
+                ),
+              ],
             ),
           ),
           
           const SizedBox(height: 20),
-        ],
-      ),
-    );
-  }
-  
-  Widget _buildComparisonExample(String comparison, String explanation) {
-    return Container(
-      padding: const EdgeInsets.all(8),
-      decoration: BoxDecoration(
-        color: Colors.grey.shade100,
-        borderRadius: BorderRadius.circular(10),
-      ),
-      child: Column(
-        children: [
-          Text(
-            comparison,
-            style: TextStyle(
-              fontFamily: 'Comic Sans MS',
-              fontSize: 16,
-              fontWeight: FontWeight.bold,
-              color: AppColors.primary,
-            ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            explanation,
-            style: TextStyle(
-              fontFamily: 'Comic Sans MS',
-              fontSize: 12,
-              color: Colors.grey.shade700,
-            ),
-            textAlign: TextAlign.center,
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-/// Paso 3: Aplicaciones
-class ApplicationsStep extends StatelessWidget {
-  const ApplicationsStep({Key? key}) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      child: Column(
-        children: [
-          const SizedBox(height: 20),
           
-          // Título de la sección
+          // Resumen visual mínimo
           FadeAnimation(
-            delay: const Duration(milliseconds: 200),
-            child: Text(
-              'Aplicaciones en la vida cotidiana',
-              style: TextStyle(
-                fontFamily: 'Comic Sans MS',
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
-                color: Colors.white,
-                shadows: [
-                  Shadow(
-                    color: Colors.black45,
-                    offset: const Offset(1, 1),
-                    blurRadius: 3,
+            delay: const Duration(milliseconds: 600),
+            child: Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(15),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [
+                    AppColors.success.withOpacity(0.7),
+                    AppColors.success.withOpacity(0.4),
+                  ],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+                borderRadius: BorderRadius.circular(15),
+                boxShadow: [
+                  BoxShadow(
+                    color: AppColors.success.withOpacity(0.2),
+                    blurRadius: 5,
+                    offset: const Offset(0, 3),
                   ),
                 ],
               ),
-              textAlign: TextAlign.center,
-            ),
-          ),
-          
-          const SizedBox(height: 20),
-          
-          // Aplicación 1: Temperatura
-          LessonCardWidget(
-            title: 'Temperaturas',
-            titleColor: Colors.red,
-            icon: Icons.thermostat,
-            animationDelay: const Duration(milliseconds: 300),
-            content: Column(
-              children: [
-                // Imagen o ilustración
-                ImageExplanationWidget(
-                  imagePath: 'assets/images/temperature.png',
-                  explanation: 'Las temperaturas se miden con números enteros:',
-                  fallbackWidget: Container(
-                    height: 120,
-                    color: Colors.grey.shade200,
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                      children: [
-                        Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(Icons.thermostat, color: Colors.blue, size: 40),
-                            const SizedBox(height: 4),
-                            Text(
-                              '-5°C',
-                              style: TextStyle(
-                                fontFamily: 'Comic Sans MS',
-                                fontWeight: FontWeight.bold,
-                                color: Colors.blue,
-                              ),
-                            ),
-                          ],
-                        ),
-                        Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(Icons.thermostat, color: Colors.red, size: 40),
-                            const SizedBox(height: 4),
-                            Text(
-                              '+30°C',
-                              style: TextStyle(
-                                fontFamily: 'Comic Sans MS',
-                                fontWeight: FontWeight.bold,
-                                color: Colors.red,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-                
-                const SizedBox(height: 16),
-                
-                // Ejemplos
-                BulletPoint(
-                  text: 'Temperaturas bajo cero: -5°C, -10°C (números negativos)',
-                  icon: Icons.ac_unit,
-                  color: Colors.blue,
-                ),
-                BulletPoint(
-                  text: 'Temperatura de congelación: 0°C (cero)',
-                  icon: Icons.water,
-                  color: Colors.teal,
-                ),
-                BulletPoint(
-                  text: 'Temperaturas sobre cero: 25°C, 30°C (números positivos)',
-                  icon: Icons.wb_sunny,
-                  color: Colors.orange,
-                ),
-              ],
-            ),
-          ),
-          
-          const SizedBox(height: 20),
-          
-          // Aplicación 2: Altitudes
-          LessonCardWidget(
-            title: 'Altitudes y profundidades',
-            titleColor: Colors.blue,
-            icon: Icons.terrain,
-            animationDelay: const Duration(milliseconds: 400),
-            content: Column(
-              children: [
-                // Visualización de altitudes
-                Container(
-                  height: 150,
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: CustomPaint(
-                    size: const Size(double.infinity, 150),
-                    painter: AltitudePainter(),
-                  ),
-                ),
-                
-                const SizedBox(height: 16),
-                
-                // Explicación
-                Text(
-                  'Las altitudes se miden respecto al nivel del mar:',
-                  style: TextStyle(
-                    fontFamily: 'Comic Sans MS',
-                    fontSize: 14,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                
-                // Ejemplos
-                BulletPoint(
-                  text: 'Altitudes bajo el nivel del mar: -120m, -50m (números negativos)',
-                  icon: Icons.waves,
-                  color: Colors.blue,
-                ),
-                BulletPoint(
-                  text: 'Nivel del mar: 0m (cero)',
-                  icon: Icons.water,
-                  color: Colors.teal,
-                ),
-                BulletPoint(
-                  text: 'Altitudes sobre el nivel del mar: 200m, 500m (números positivos)',
-                  icon: Icons.landscape,
-                  color: Colors.green,
-                ),
-              ],
-            ),
-          ),
-          
-          const SizedBox(height: 20),
-          
-          // Aplicación 3: Otras aplicaciones
-          LessonCardWidget(
-            title: 'Otras aplicaciones cotidianas',
-            titleColor: AppColors.accent,
-            animationDelay: const Duration(milliseconds: 500),
-            content: Column(
-              children: [
-                // Ejemplos en tarjetas
-                Row(
-                  children: [
-                    Expanded(
-                      child: _buildApplicationCard(
-                        context,
-                        'Finanzas',
-                        Icons.account_balance_wallet,
-                        Colors.purple,
-                        '+100€: Ingreso\n-50€: Gasto',
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: _buildApplicationCard(
-                        context,
-                        'Ascensores',
-                        Icons.elevator,
-                        Colors.brown,
-                        '+3: 3er piso\n-2: 2° sótano',
-                      ),
-                    ),
-                  ],
-                ),
-                
-                const SizedBox(height: 12),
-                
-                Row(
-                  children: [
-                    Expanded(
-                      child: _buildApplicationCard(
-                        context,
-                        'Historia',
-                        Icons.history_edu,
-                        Colors.amber,
-                        '+2023: Actualidad\n-753: Fundación de Roma',
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: _buildApplicationCard(
-                        context,
-                        'Deportes',
-                        Icons.sports_soccer,
-                        Colors.green,
-                        '+1: Punto ganado\n-2: Penalización',
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-          
-          const SizedBox(height: 20),
-          
-          // Ejercicio interactivo
-          InteractiveExerciseWidget(
-            title: 'Problemas de la vida real',
-            content: Column(
-              children: [
-                // Problema 1
-                ApplicationProblemWidget(
-                  problemText: 'En un día de invierno, la temperatura por la mañana era de -3°C, al mediodía subió 8 grados, y por la noche bajó 5 grados. ¿Cuál fue la temperatura final?',
-                  options: ['0°C', '-5°C', '5°C', '-10°C'],
-                  correctOptionIndex: 0,
-                  explanation: 'Solución: -3°C + 8°C - 5°C = 0°C',
-                ),
-                
-                const SizedBox(height: 16),
-                
-                // Problema 2
-                ApplicationProblemWidget(
-                  problemText: 'Un submarino estaba a -50 metros (bajo el nivel del mar). Luego descendió 30 metros más y finalmente subió 70 metros. ¿A qué altura quedó?',
-                  options: ['-80 metros', '-10 metros', '10 metros', '-20 metros'],
-                  correctOptionIndex: 1,
-                  explanation: 'Solución: -50m - 30m + 70m = -10m (10 metros bajo el nivel del mar)',
-                ),
-              ],
-            ),
-          ),
-          
-          const SizedBox(height: 30),
-          
-          // Resumen final
-          FadeAnimation(
-            delay: const Duration(milliseconds: 700),
-            child: Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: AppColors.primary.withOpacity(0.2),
-                borderRadius: BorderRadius.circular(20),
-                border: Border.all(
-                  color: AppColors.primary.withOpacity(0.5),
-                  width: 2,
-                ),
-              ),
               child: Column(
                 children: [
-                  Text(
-                    '¡Muy bien! Ya conoces los números enteros',
-                    style: TextStyle(
-                      fontFamily: 'Comic Sans MS',
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color: AppColors.primary,
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                  const SizedBox(height: 12),
-                  Text(
-                    'Ahora estás listo para poner a prueba tus conocimientos en el juego "Rescate de Alturas", donde usarás números enteros para rescatar amigos a diferentes altitudes.',
-                    style: TextStyle(
-                      fontFamily: 'Comic Sans MS',
-                      fontSize: 14,
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                  const SizedBox(height: 16),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Icon(Icons.check_circle, color: AppColors.success),
-                      const SizedBox(width: 8),
-                      Text(
-                        'Completaste la lección. ¡A jugar!',
+                      Icon(
+                        Icons.check_circle,
+                        color: Colors.white,
+                        size: 24,
+                      ),
+                      const SizedBox(width: 10),
+                      const Text(
+                        '¡Ya estás listo para jugar!',
                         style: TextStyle(
                           fontFamily: 'Comic Sans MS',
-                          fontSize: 16,
+                          fontSize: 18,
                           fontWeight: FontWeight.bold,
-                          color: AppColors.success,
+                          color: Colors.white,
                         ),
                       ),
                     ],
                   ),
+                  const SizedBox(height: 10),
+                  const Text(
+                    'En el juego "Rescate de Alturas" usarás números enteros para rescatar amigos a diferentes altitudes.',
+                    style: TextStyle(
+                      fontFamily: 'Comic Sans MS',
+                      fontSize: 14,
+                      color: Colors.white,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
                 ],
               ),
             ),
@@ -750,41 +1542,226 @@ class ApplicationsStep extends StatelessWidget {
     );
   }
   
-  Widget _buildApplicationCard(BuildContext context, String title, IconData icon, Color color, String examples) {
+  Widget _buildSimpleTitle(String title, BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(12),
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 15),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: color.withOpacity(0.3),
-          width: 1,
-        ),
-      ),
-      child: Column(
-        children: [
-          Icon(icon, color: color, size: 32),
-          const SizedBox(height: 8),
-          Text(
-            title,
-            style: TextStyle(
-              fontFamily: 'Comic Sans MS',
-              fontSize: 14,
-              fontWeight: FontWeight.bold,
-              color: color,
-            ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            examples,
-            style: TextStyle(
-              fontFamily: 'Comic Sans MS',
-              fontSize: 12,
-            ),
-            textAlign: TextAlign.center,
+        color: AppColors.accent,
+        borderRadius: BorderRadius.circular(10),
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.accent.withOpacity(0.3),
+            blurRadius: 4,
+            offset: const Offset(0, 2),
           ),
         ],
       ),
+      child: Text(
+        title,
+        style: const TextStyle(
+          fontFamily: 'Comic Sans MS',
+          fontSize: 18, // Reducido para evitar desbordamiento
+          fontWeight: FontWeight.bold,
+          color: Colors.white,
+        ),
+        textAlign: TextAlign.center,
+      ),
+    );
+  }
+  
+  Widget _buildTemperatureOption(String text, bool isCorrect, BuildContext context) {
+    return StatefulBuilder(
+      builder: (context, setState) {
+        bool isSelected = false;
+        bool showFeedback = false;
+        
+        return GestureDetector(
+          onTap: () {
+            setState(() {
+              isSelected = !isSelected;
+              showFeedback = isSelected;
+            });
+          },
+          child: Container(
+            width: 70,
+            height: 70,
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [
+                  isSelected
+                      ? (showFeedback
+                          ? (isCorrect
+                              ? AppColors.success.withOpacity(0.7)
+                              : AppColors.error.withOpacity(0.7))
+                          : Colors.red.withOpacity(0.7))
+                      : Colors.red.withOpacity(0.3),
+                  isSelected
+                      ? (showFeedback
+                          ? (isCorrect
+                              ? AppColors.success.withOpacity(0.4)
+                              : AppColors.error.withOpacity(0.4))
+                          : Colors.red.withOpacity(0.4))
+                      : Colors.red.withOpacity(0.1),
+                ],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              shape: BoxShape.circle,
+              boxShadow: isSelected
+                  ? [
+                      BoxShadow(
+                        color: showFeedback
+                            ? (isCorrect
+                                ? AppColors.success.withOpacity(0.5)
+                                : AppColors.error.withOpacity(0.5))
+                            : Colors.red.withOpacity(0.3),
+                        blurRadius: 8,
+                        offset: const Offset(0, 3),
+                      ),
+                    ]
+                  : [],
+              border: Border.all(
+                color: isSelected
+                    ? (showFeedback
+                        ? (isCorrect ? AppColors.success : AppColors.error)
+                        : Colors.red)
+                    : Colors.transparent,
+                width: 2,
+              ),
+            ),
+            child: Stack(
+              alignment: Alignment.center,
+              children: [
+                Text(
+                  text,
+                  style: TextStyle(
+                    fontFamily: 'Comic Sans MS',
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
+                ),
+                if (showFeedback && isCorrect)
+                  Positioned(
+                    top: 10,
+                    right: 10,
+                    child: Container(
+                      padding: const EdgeInsets.all(2),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        shape: BoxShape.circle,
+                      ),
+                      child: Icon(
+                        Icons.check,
+                        color: AppColors.success,
+                        size: 14,
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+  
+  Widget _buildAltitudeOption(String text, bool isCorrect, BuildContext context) {
+    return StatefulBuilder(
+      builder: (context, setState) {
+        bool isSelected = false;
+        bool showFeedback = false;
+        
+        return GestureDetector(
+          onTap: () {
+            setState(() {
+              isSelected = !isSelected;
+              showFeedback = isSelected;
+            });
+          },
+          child: Container(
+            width: 80,
+            height: 70,
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [
+                  isSelected
+                      ? (showFeedback
+                          ? (isCorrect
+                              ? AppColors.success.withOpacity(0.7)
+                              : AppColors.error.withOpacity(0.7))
+                          : Colors.blue.withOpacity(0.7))
+                      : Colors.blue.withOpacity(0.3),
+                  isSelected
+                      ? (showFeedback
+                          ? (isCorrect
+                              ? AppColors.success.withOpacity(0.4)
+                              : AppColors.error.withOpacity(0.4))
+                          : Colors.blue.withOpacity(0.4))
+                      : Colors.blue.withOpacity(0.1),
+                ],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              borderRadius: BorderRadius.circular(15),
+              boxShadow: isSelected
+                  ? [
+                      BoxShadow(
+                        color: showFeedback
+                            ? (isCorrect
+                                ? AppColors.success.withOpacity(0.5)
+                                : AppColors.error.withOpacity(0.5))
+                            : Colors.blue.withOpacity(0.3),
+                        blurRadius: 8,
+                        offset: const Offset(0, 3),
+                      ),
+                    ]
+                  : [],
+              border: Border.all(
+                color: isSelected
+                    ? (showFeedback
+                        ? (isCorrect ? AppColors.success : AppColors.error)
+                        : Colors.blue)
+                    : Colors.transparent,
+                width: 2,
+              ),
+            ),
+            child: Stack(
+              alignment: Alignment.center,
+              children: [
+                Text(
+                  text,
+                  style: TextStyle(
+                    fontFamily: 'Comic Sans MS',
+                    fontSize: 14,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                if (showFeedback && isCorrect)
+                  Positioned(
+                    top: 10,
+                    right: 10,
+                    child: Container(
+                      padding: const EdgeInsets.all(2),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        shape: BoxShape.circle,
+                      ),
+                      child: Icon(
+                        Icons.check,
+                        color: AppColors.success,
+                        size: 14,
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
 }
