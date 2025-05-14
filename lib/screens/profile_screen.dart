@@ -1,19 +1,17 @@
-// lib/screens/home/profile_screen.dart
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:lottie/lottie.dart';
-
 import '../../config/routes.dart';
 import '../../constants/asset_paths.dart';
 import '../../models/user_model.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/theme_provider.dart';
 import '../../theme/app_colors.dart';
-import '../../theme/app_text_styles.dart';
 import '../../widgets/animations/fade_animation.dart';
-import '../../widgets/common/custom_button.dart';
+import '../../widgets/common/app_card.dart';
 import '../../widgets/common/loading_indicator.dart';
 import '../../widgets/game/avatar_widget.dart';
+import '../../widgets/navigation/app_bottom_navigation.dart';
+import '../../utils/app_dialogs.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -70,53 +68,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
             physics: const BouncingScrollPhysics(),
             slivers: [
               // App Bar personalizada
-              SliverAppBar(
-                expandedHeight: 120,
-                floating: true,
-                pinned: true,
-                backgroundColor: isDarkMode 
-                  ? AppColors.darkPrimary 
-                  : (user.role == 'teacher' ? AppColors.secondary : AppColors.primary),
-                flexibleSpace: FlexibleSpaceBar(
-                  title: FadeAnimation(
-                    child: Text(
-                      'Mi Perfil Espacial',
-                      style: AppTextStyles.textTheme.headlineMedium?.copyWith(
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-                  background: Container(
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        begin: Alignment.topRight,
-                        end: Alignment.bottomLeft,
-                        colors: user.role == 'teacher'
-                            ? [
-                                AppColors.secondary,
-                                AppColors.primary.withOpacity(0.7),
-                              ]
-                            : [
-                                AppColors.primary,
-                                AppColors.secondary.withOpacity(0.7),
-                              ],
-                      ),
-                    ),
-                  ),
-                ),
-                actions: [
-                  IconButton(
-                    icon: Icon(
-                      isDarkMode ? Icons.wb_sunny : Icons.nightlight_round,
-                      color: Colors.white,
-                    ),
-                    onPressed: () {
-                      themeProvider.toggleTheme();
-                    },
-                  ),
-                ],
-              ),
+              _buildAppBar(context, user, isDarkMode, themeProvider),
+              
               // Contenido principal
               SliverToBoxAdapter(
                 child: Padding(
@@ -140,25 +93,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       const SizedBox(height: 10),
                       
                       // Rol del usuario
-                      FadeAnimation(
-                        delay: const Duration(milliseconds: 300),
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-                          decoration: BoxDecoration(
-                            color: (user.role == 'teacher' ? AppColors.secondary : AppColors.primary).withOpacity(0.2),
-                            borderRadius: BorderRadius.circular(20),
-                          ),
-                          child: Text(
-                            user.role == 'teacher' ? 'Profesor Guía' : 'Estudiante Explorador',
-                            style: TextStyle(
-                              fontFamily: 'Comic Sans MS',
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                              color: user.role == 'teacher' ? AppColors.secondary : AppColors.primary,
-                            ),
-                          ),
-                        ),
-                      ),
+                      _buildRoleBadge(user, isDarkMode),
+                      
                       const SizedBox(height: 30),
                       
                       // Tarjeta de información personal
@@ -186,13 +122,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       const SizedBox(height: 30),
                       FadeAnimation(
                         delay: const Duration(milliseconds: 700),
-                        child: CustomButton(
-                          text: 'Cerrar Sesión',
-                          onPressed: () => _showLogoutConfirmation(context),
-                          icon: Icons.exit_to_app_rounded,
-                          backgroundColor: Colors.redAccent,
-                          height: 55,
-                        ),
+                        child: _buildLogoutButton(context, authProvider),
                       ),
                       const SizedBox(height: 40),
                     ],
@@ -203,27 +133,91 @@ class _ProfileScreenState extends State<ProfileScreen> {
           ),
         ),
       ),
-      bottomNavigationBar: _buildBottomNavigationBar(user.role),
+      bottomNavigationBar: AppBottomNavigation(
+        currentIndex: 3,
+        userRole: user.role,
+      ),
+    );
+  }
+
+  Widget _buildAppBar(BuildContext context, UserModel user, bool isDarkMode, ThemeProvider themeProvider) {
+    return SliverAppBar(
+      expandedHeight: 120,
+      floating: true,
+      pinned: true,
+      backgroundColor: isDarkMode 
+        ? AppColors.darkPrimary 
+        : (user.role == 'teacher' ? AppColors.secondary : AppColors.primary),
+      flexibleSpace: FlexibleSpaceBar(
+        title: FadeAnimation(
+          child: Text(
+            'Mi Perfil Espacial',
+            style: TextStyle(
+              fontFamily: 'Comic Sans MS',
+              fontSize: 22,
+              fontWeight: FontWeight.bold,
+              color: Colors.white,
+            ),
+          ),
+        ),
+        background: Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topRight,
+              end: Alignment.bottomLeft,
+              colors: user.role == 'teacher'
+                  ? [
+                      AppColors.secondary,
+                      AppColors.primary.withOpacity(0.7),
+                    ]
+                  : [
+                      AppColors.primary,
+                      AppColors.secondary.withOpacity(0.7),
+                    ],
+            ),
+          ),
+        ),
+      ),
+      actions: [
+        IconButton(
+          icon: Icon(
+            isDarkMode ? Icons.wb_sunny : Icons.nightlight_round,
+            color: Colors.white,
+          ),
+          onPressed: () {
+            themeProvider.toggleTheme();
+          },
+        ),
+      ],
+    );
+  }
+  
+  Widget _buildRoleBadge(UserModel user, bool isDarkMode) {
+    return FadeAnimation(
+      delay: const Duration(milliseconds: 300),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+        decoration: BoxDecoration(
+          color: (user.role == 'teacher' ? AppColors.secondary : AppColors.primary).withOpacity(0.2),
+          borderRadius: BorderRadius.circular(20),
+        ),
+        child: Text(
+          user.role == 'teacher' ? 'Profesor Guía' : 'Estudiante Explorador',
+          style: TextStyle(
+            fontFamily: 'Comic Sans MS',
+            fontSize: 16,
+            fontWeight: FontWeight.bold,
+            color: user.role == 'teacher' ? AppColors.secondary : AppColors.primary,
+          ),
+        ),
+      ),
     );
   }
 
   Widget _buildInfoCard(BuildContext context, UserModel user) {
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
     
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: isDarkMode ? AppColors.darkSurface : Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.1),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
+    return AppCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -250,20 +244,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Widget _buildStatsCard(BuildContext context, UserModel user) {
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
     
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: isDarkMode ? AppColors.darkSurface : Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.1),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
+    return AppCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -287,65 +268,56 @@ class _ProfileScreenState extends State<ProfileScreen> {
           ),
           const SizedBox(height: 15),
           // Barra de progreso para el siguiente nivel
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    'Progreso al nivel ${user.level + 1}',
-                    style: TextStyle(
-                      fontFamily: 'Comic Sans MS',
-                      fontSize: 14,
-                      color: isDarkMode ? Colors.white70 : Colors.black54,
-                    ),
-                  ),
-                  Text(
-                    '60%',
-                    style: TextStyle(
-                      fontFamily: 'Comic Sans MS',
-                      fontSize: 14,
-                      fontWeight: FontWeight.bold,
-                      color: AppColors.primary,
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 8),
-              ClipRRect(
-                borderRadius: BorderRadius.circular(10),
-                child: LinearProgressIndicator(
-                  value: 0.6,
-                  backgroundColor: AppColors.primary.withOpacity(0.2),
-                  valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
-                  minHeight: 10,
-                ),
-              ),
-            ],
-          ),
+          _buildLevelProgressBar(user.level, context, isDarkMode),
         ],
       ),
+    );
+  }
+
+  Widget _buildLevelProgressBar(int level, BuildContext context, bool isDarkMode) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              'Progreso al nivel ${level + 1}',
+              style: TextStyle(
+                fontFamily: 'Comic Sans MS',
+                fontSize: 14,
+                color: isDarkMode ? Colors.white70 : Colors.black54,
+              ),
+            ),
+            Text(
+              '60%',
+              style: TextStyle(
+                fontFamily: 'Comic Sans MS',
+                fontSize: 14,
+                fontWeight: FontWeight.bold,
+                color: AppColors.primary,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 8),
+        ClipRRect(
+          borderRadius: BorderRadius.circular(10),
+          child: LinearProgressIndicator(
+            value: 0.6,
+            backgroundColor: AppColors.primary.withOpacity(0.2),
+            valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
+            minHeight: 10,
+          ),
+        ),
+      ],
     );
   }
 
   Widget _buildSettingsCard(BuildContext context, ThemeProvider themeProvider) {
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
     
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: isDarkMode ? AppColors.darkSurface : Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.1),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
+    return AppCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -360,84 +332,27 @@ class _ProfileScreenState extends State<ProfileScreen> {
           ),
           const SizedBox(height: 15),
           // Cambiar tema
-          InkWell(
-            onTap: () {
-              themeProvider.toggleTheme();
-            },
-            borderRadius: BorderRadius.circular(10),
-            child: Padding(
-              padding: const EdgeInsets.symmetric(vertical: 10),
-              child: Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color: AppColors.accent.withOpacity(0.2),
-                      shape: BoxShape.circle,
-                    ),
-                    child: Icon(
-                      isDarkMode ? Icons.wb_sunny : Icons.nightlight_round,
-                      color: AppColors.accent,
-                    ),
-                  ),
-                  const SizedBox(width: 15),
-                  Expanded(
-                    child: Text(
-                      'Cambiar Tema',
-                      style: TextStyle(
-                        fontFamily: 'Comic Sans MS',
-                        fontSize: 16,
-                        color: isDarkMode ? Colors.white : Colors.black87,
-                      ),
-                    ),
-                  ),
-                  Switch(
-                    value: isDarkMode,
-                    onChanged: (value) {
-                      themeProvider.toggleTheme();
-                    },
-                    activeColor: AppColors.accent,
-                  ),
-                ],
-              ),
+          _buildSettingRow(
+            icon: isDarkMode ? Icons.wb_sunny : Icons.nightlight_round,
+            label: 'Cambiar Tema',
+            color: AppColors.accent,
+            trailingWidget: Switch(
+              value: isDarkMode,
+              onChanged: (_) => themeProvider.toggleTheme(),
+              activeColor: AppColors.accent,
             ),
+            onTap: () => themeProvider.toggleTheme(),
           ),
           const Divider(),
           // Opción de notificaciones (solo visual)
-          Padding(
-            padding: const EdgeInsets.symmetric(vertical: 10),
-            child: Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: AppColors.accent.withOpacity(0.2),
-                    shape: BoxShape.circle,
-                  ),
-                  child: Icon(
-                    Icons.notifications,
-                    color: AppColors.accent,
-                  ),
-                ),
-                const SizedBox(width: 15),
-                Expanded(
-                  child: Text(
-                    'Notificaciones',
-                    style: TextStyle(
-                      fontFamily: 'Comic Sans MS',
-                      fontSize: 16,
-                      color: isDarkMode ? Colors.white : Colors.black87,
-                    ),
-                  ),
-                ),
-                Switch(
-                  value: true,
-                  onChanged: (value) {
-                    // No hacer nada, solo visual
-                  },
-                  activeColor: AppColors.accent,
-                ),
-              ],
+          _buildSettingRow(
+            icon: Icons.notifications,
+            label: 'Notificaciones',
+            color: AppColors.accent,
+            trailingWidget: Switch(
+              value: true,
+              onChanged: null,
+              activeColor: AppColors.accent,
             ),
           ),
         ],
@@ -529,198 +444,94 @@ class _ProfileScreenState extends State<ProfileScreen> {
       ],
     );
   }
-
-  Widget _buildBottomNavigationBar(String userRole) {
-    bool isTeacher = userRole == 'teacher';
-    
-    return Container(
-      decoration: BoxDecoration(
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.1),
-            blurRadius: 10,
-            offset: const Offset(0, -5),
-          ),
-        ],
-      ),
-      child: ClipRRect(
-        borderRadius: const BorderRadius.only(
-          topLeft: Radius.circular(20),
-          topRight: Radius.circular(20),
+  
+  Widget _buildSettingRow({
+    required IconData icon,
+    required String label,
+    required Color color,
+    Widget? trailingWidget,
+    VoidCallback? onTap,
+  }) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(10),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 10),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: color.withOpacity(0.2),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                icon,
+                color: color,
+              ),
+            ),
+            const SizedBox(width: 15),
+            Expanded(
+              child: Text(
+                label,
+                style: TextStyle(
+                  fontFamily: 'Comic Sans MS',
+                  fontSize: 16,
+                  color: Theme.of(context).brightness == Brightness.dark
+                      ? Colors.white
+                      : Colors.black87,
+                ),
+              ),
+            ),
+            if (trailingWidget != null) trailingWidget,
+          ],
         ),
-        child: BottomNavigationBar(
-          currentIndex: 3, // Perfil es la cuarta opción (índice 3)
-          type: BottomNavigationBarType.fixed,
-          backgroundColor: Theme.of(context).brightness == Brightness.dark
-              ? AppColors.darkSurface
-              : Colors.white,
-          selectedItemColor: isTeacher ? AppColors.secondary : AppColors.primary,
-          unselectedItemColor: Colors.grey,
-          selectedLabelStyle: TextStyle(
+      ),
+    );
+  }
+  
+  Widget _buildLogoutButton(BuildContext context, AuthProvider authProvider) {
+    return SizedBox(
+      width: double.infinity,
+      child: ElevatedButton.icon(
+        onPressed: () => _showLogoutConfirmation(context, authProvider),
+        icon: Icon(Icons.exit_to_app_rounded),
+        label: Text(
+          'Cerrar Sesión',
+          style: TextStyle(
+            fontFamily: 'Comic Sans MS',
+            fontSize: 16,
             fontWeight: FontWeight.bold,
-            fontFamily: 'Comic Sans MS',
           ),
-          unselectedLabelStyle: TextStyle(
-            fontFamily: 'Comic Sans MS',
+        ),
+        style: ElevatedButton.styleFrom(
+          backgroundColor: Colors.redAccent,
+          foregroundColor: Colors.white,
+          padding: const EdgeInsets.symmetric(vertical: 15),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(15),
           ),
-          items: isTeacher
-              ? const [
-                  BottomNavigationBarItem(
-                    icon: Icon(Icons.dashboard_rounded),
-                    label: 'Mis Aulas',
-                  ),
-                  BottomNavigationBarItem(
-                    icon: Icon(Icons.school_rounded),
-                    label: 'Estudiantes',
-                  ),
-                  BottomNavigationBarItem(
-                    icon: Icon(Icons.assignment_rounded),
-                    label: 'Evaluaciones',
-                  ),
-                  BottomNavigationBarItem(
-                    icon: Icon(Icons.person_rounded),
-                    label: 'Perfil',
-                  ),
-                ]
-              : const [
-                  BottomNavigationBarItem(
-                    icon: Icon(Icons.home_rounded),
-                    label: 'Inicio',
-                  ),
-                  BottomNavigationBarItem(
-                    icon: Icon(Icons.auto_stories_rounded),
-                    label: 'Cursos',
-                  ),
-                  BottomNavigationBarItem(
-                    icon: Icon(Icons.emoji_events_rounded),
-                    label: 'Logros',
-                  ),
-                  BottomNavigationBarItem(
-                    icon: Icon(Icons.person_rounded),
-                    label: 'Perfil',
-                  ),
-                ],
-          onTap: (index) {
-            if (isTeacher) {
-              if (index == 0) {
-                AppRoutes.navigateReplacementTo(context, AppRoutes.teacherHome);
-              } else if (index == 3) {
-                // Ya estamos en perfil
-              } else {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text(
-                      'Función en desarrollo',
-                      style: TextStyle(fontFamily: 'Comic Sans MS'),
-                    ),
-                    backgroundColor: AppColors.info,
-                    behavior: SnackBarBehavior.floating,
-                  ),
-                );
-              }
-            } else {
-              if (index == 0) {
-                AppRoutes.navigateReplacementTo(context, AppRoutes.home);
-              } else if (index == 1) {
-                AppRoutes.navigateTo(context, AppRoutes.courses);
-              } else if (index == 2) {
-                AppRoutes.navigateTo(context, AppRoutes.achievements);
-              } else if (index == 3) {
-                // Ya estamos en perfil
-              }
-            }
-          },
         ),
       ),
     );
   }
 
-  void _showLogoutConfirmation(BuildContext context) {
-    showDialog(
+  void _showLogoutConfirmation(BuildContext context, AuthProvider authProvider) async {
+    final confirm = await AppDialogs.showConfirmationDialog(
       context: context,
-      builder: (BuildContext context) {
-        return Dialog(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(20),
-          ),
-          child: Padding(
-            padding: const EdgeInsets.all(20),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Lottie.asset(
-                  AssetPaths.astronautAnimation,
-                  width: 100,
-                  height: 100,
-                ),
-                const SizedBox(height: 16),
-                Text(
-                  '¿Seguro que quieres salir de la nave espacial?',
-                  style: TextStyle(
-                    fontFamily: 'Comic Sans MS',
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  'Tu misión espacial quedará pausada',
-                  style: TextStyle(
-                    fontFamily: 'Comic Sans MS',
-                    fontSize: 14,
-                    color: Colors.grey,
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: 24),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                  children: [
-                    TextButton(
-                      onPressed: () {
-                        Navigator.pop(context);
-                      },
-                      child: Text(
-                        'Cancelar',
-                        style: TextStyle(
-                          fontFamily: 'Comic Sans MS',
-                          fontSize: 16,
-                          color: Colors.grey,
-                        ),
-                      ),
-                    ),
-                    ElevatedButton(
-                      onPressed: () async {
-                        Navigator.pop(context);
-                        await Provider.of<AuthProvider>(context, listen: false).logout();
-                        if (context.mounted) {
-                          AppRoutes.navigateReplacementTo(context, AppRoutes.login);
-                        }
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.redAccent,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(20),
-                        ),
-                        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-                      ),
-                      child: Text(
-                        'Salir',
-                        style: TextStyle(
-                          fontFamily: 'Comic Sans MS',
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-        );
-      },
+      title: '¿Seguro que quieres salir de la nave espacial?',
+      message: 'Tu misión espacial quedará pausada',
+      confirmText: 'Salir',
+      cancelText: 'Cancelar',
+      confirmColor: Colors.redAccent,
+      assetAnimation: AssetPaths.astronautAnimation,
     );
+    
+    if (confirm && context.mounted) {
+      await authProvider.logout();
+      if (context.mounted) {
+        AppRoutes.navigateReplacementTo(context, AppRoutes.login);
+      }
+    }
   }
 }

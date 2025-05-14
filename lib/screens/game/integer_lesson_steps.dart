@@ -1,7 +1,6 @@
 // lib/screens/game/integer_lesson_steps.dart
 import 'package:flutter/material.dart';
 import '../../widgets/animations/fade_animation.dart';
-import '../../widgets/lessons/interactive_exercise_widget.dart';
 import '../../theme/app_colors.dart';
 import 'number_line_painter.dart';
 
@@ -63,10 +62,10 @@ class WhatAreIntegersStep extends StatelessWidget {
                   ),
                   const SizedBox(width: 15),
                   // Breve explicación
-                  Expanded(
+                  const Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
-                      children: const [
+                      children: [
                         Text(
                           'Los enteros incluyen:',
                           style: TextStyle(
@@ -128,7 +127,7 @@ class WhatAreIntegersStep extends StatelessWidget {
                   children: [
                     Container(
                       padding: const EdgeInsets.all(8),
-                      decoration: BoxDecoration(
+                      decoration: const BoxDecoration(
                         color: AppColors.primary,
                         shape: BoxShape.circle,
                       ),
@@ -206,11 +205,11 @@ class WhatAreIntegersStep extends StatelessWidget {
                       color: AppColors.info.withOpacity(0.3),
                     ),
                   ),
-                  child: Row(
+                  child: const Row(
                     children: [
                       Icon(Icons.lightbulb_outline, color: AppColors.info, size: 18),
-                      const SizedBox(width: 8),
-                      const Expanded(
+                      SizedBox(width: 8),
+                      Expanded(
                         child: Text(
                           'Los enteros no incluyen fracciones, decimales o raíces.',
                           style: TextStyle(
@@ -520,11 +519,11 @@ class NumberLineStep extends StatelessWidget {
                   ),
                   child: Column(
                     children: [
-                      Row(
+                      const Row(
                         children: [
                           Icon(Icons.check_circle, color: AppColors.success, size: 18),
-                          const SizedBox(width: 8),
-                          const Text(
+                          SizedBox(width: 8),
+                          Text(
                             'Solución correcta:',
                             style: TextStyle(
                               fontFamily: 'Comic Sans MS',
@@ -673,11 +672,11 @@ class NumberLineStep extends StatelessWidget {
                       color: AppColors.info.withOpacity(0.3),
                     ),
                   ),
-                  child: Row(
+                  child: const Row(
                     children: [
                       Icon(Icons.lightbulb_outline, color: AppColors.info, size: 18),
-                      const SizedBox(width: 8),
-                      const Expanded(
+                      SizedBox(width: 8),
+                      Expanded(
                         child: Text(
                           'Recuerda: Cuanto más a la derecha está un número en la recta, mayor es.',
                           style: TextStyle(
@@ -1094,7 +1093,7 @@ class ApplicationsStep extends StatelessWidget {
                       color: AppColors.accent.withOpacity(0.2),
                       shape: BoxShape.circle,
                     ),
-                    child: Icon(
+                    child: const Icon(
                       Icons.public,
                       color: AppColors.accent,
                       size: 24,
@@ -1194,7 +1193,7 @@ class ApplicationsStep extends StatelessWidget {
                       ),
                     ],
                   ),
-                  child: Column(
+                  child: const Column(
                     children: [
                       Row(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -1204,8 +1203,8 @@ class ApplicationsStep extends StatelessWidget {
                             color: Colors.red,
                             size: 24,
                           ),
-                          const SizedBox(width: 10),
-                          const Expanded(
+                          SizedBox(width: 10),
+                          Expanded(
                             child: Text(
                               'En un día de invierno, la temperatura por la mañana era de -3°C, al mediodía subió 8 grados, y por la noche bajó 5 grados. ¿Cuál fue la temperatura final?',
                               style: TextStyle(
@@ -1249,11 +1248,11 @@ class ApplicationsStep extends StatelessWidget {
                   ),
                   child: Column(
                     children: [
-                      Row(
+                      const Row(
                         children: [
                           Icon(Icons.check_circle, color: AppColors.success, size: 18),
-                          const SizedBox(width: 8),
-                          const Text(
+                          SizedBox(width: 8),
+                          Text(
                             'Solución:',
                             style: TextStyle(
                               fontFamily: 'Comic Sans MS',
@@ -1368,7 +1367,7 @@ class ApplicationsStep extends StatelessWidget {
                       ),
                     ],
                   ),
-                  child: Column(
+                  child: const Column(
                     children: [
                       Row(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -1378,8 +1377,8 @@ class ApplicationsStep extends StatelessWidget {
                             color: Colors.blue,
                             size: 24,
                           ),
-                          const SizedBox(width: 10),
-                          const Expanded(
+                          SizedBox(width: 10),
+                          Expanded(
                             child: Text(
                               'Un submarino estaba a -50 metros (bajo el nivel del mar). Luego descendió 30 metros más y finalmente subió 70 metros. ¿A qué altura quedó?',
                               style: TextStyle(
@@ -1423,11 +1422,11 @@ class ApplicationsStep extends StatelessWidget {
                   ),
                   child: Column(
                     children: [
-                      Row(
+                      const Row(
                         children: [
                           Icon(Icons.check_circle, color: AppColors.success, size: 18),
-                          const SizedBox(width: 8),
-                          const Text(
+                          SizedBox(width: 8),
+                          Text(
                             'Solución:',
                             style: TextStyle(
                               fontFamily: 'Comic Sans MS',
@@ -1499,7 +1498,7 @@ class ApplicationsStep extends StatelessWidget {
                   ),
                 ],
               ),
-              child: Column(
+              child: const Column(
                 children: [
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
@@ -1509,8 +1508,8 @@ class ApplicationsStep extends StatelessWidget {
                         color: Colors.white,
                         size: 24,
                       ),
-                      const SizedBox(width: 10),
-                      const Text(
+                      SizedBox(width: 10),
+                      Text(
                         '¡Ya estás listo para jugar!',
                         style: TextStyle(
                           fontFamily: 'Comic Sans MS',
@@ -1521,8 +1520,8 @@ class ApplicationsStep extends StatelessWidget {
                       ),
                     ],
                   ),
-                  const SizedBox(height: 10),
-                  const Text(
+                  SizedBox(height: 10),
+                  Text(
                     'En el juego "Rescate de Alturas" usarás números enteros para rescatar amigos a diferentes altitudes.',
                     style: TextStyle(
                       fontFamily: 'Comic Sans MS',
@@ -1635,7 +1634,7 @@ class ApplicationsStep extends StatelessWidget {
               children: [
                 Text(
                   text,
-                  style: TextStyle(
+                  style: const TextStyle(
                     fontFamily: 'Comic Sans MS',
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
@@ -1648,11 +1647,11 @@ class ApplicationsStep extends StatelessWidget {
                     right: 10,
                     child: Container(
                       padding: const EdgeInsets.all(2),
-                      decoration: BoxDecoration(
+                      decoration: const BoxDecoration(
                         color: Colors.white,
                         shape: BoxShape.circle,
                       ),
-                      child: Icon(
+                      child: const Icon(
                         Icons.check,
                         color: AppColors.success,
                         size: 14,
@@ -1732,7 +1731,7 @@ class ApplicationsStep extends StatelessWidget {
               children: [
                 Text(
                   text,
-                  style: TextStyle(
+                  style: const TextStyle(
                     fontFamily: 'Comic Sans MS',
                     fontSize: 14,
                     fontWeight: FontWeight.bold,
@@ -1746,11 +1745,11 @@ class ApplicationsStep extends StatelessWidget {
                     right: 10,
                     child: Container(
                       padding: const EdgeInsets.all(2),
-                      decoration: BoxDecoration(
+                      decoration: const BoxDecoration(
                         color: Colors.white,
                         shape: BoxShape.circle,
                       ),
-                      child: Icon(
+                      child: const Icon(
                         Icons.check,
                         color: AppColors.success,
                         size: 14,

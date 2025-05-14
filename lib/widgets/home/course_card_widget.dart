@@ -1,4 +1,3 @@
-// lib/widgets/home/course_card_widget.dart
 import 'package:flutter/material.dart';
 import '../../theme/app_colors.dart';
 import '../animations/bounce_animation.dart';
@@ -22,7 +21,6 @@ class CourseCardWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
-    final backgroundColor = isDarkMode ? AppColors.darkSurface : Colors.white;
     
     return BounceAnimation(
       child: GestureDetector(
@@ -31,7 +29,7 @@ class CourseCardWidget extends StatelessWidget {
           width: 160,
           margin: const EdgeInsets.only(right: 16),
           decoration: BoxDecoration(
-            color: backgroundColor,
+            color: isDarkMode ? AppColors.darkSurface : Colors.white,
             borderRadius: BorderRadius.circular(20),
             boxShadow: [
               BoxShadow(
@@ -45,85 +43,101 @@ class CourseCardWidget extends StatelessWidget {
               width: 2,
             ),
           ),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
+          child: _buildCardContent(context, isDarkMode),
+        ),
+      ),
+    );
+  }
+  
+  Widget _buildCardContent(BuildContext context, bool isDarkMode) {
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        // Círculo con icono
+        _buildIconCircle(),
+        const SizedBox(height: 12),
+        
+        // Título del curso
+        _buildTitle(isDarkMode),
+        const SizedBox(height: 12),
+        
+        // Barra de progreso
+        _buildProgress(isDarkMode),
+      ],
+    );
+  }
+  
+  Widget _buildIconCircle() {
+    return Container(
+      width: 70,
+      height: 70,
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.2),
+        shape: BoxShape.circle,
+      ),
+      child: Icon(
+        icon,
+        color: color,
+        size: 36,
+      ),
+    );
+  }
+  
+  Widget _buildTitle(bool isDarkMode) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 10),
+      child: Text(
+        title,
+        style: TextStyle(
+          fontFamily: 'Comic Sans MS',
+          fontSize: 16,
+          fontWeight: FontWeight.bold,
+          color: isDarkMode ? Colors.white : Colors.black87,
+        ),
+        textAlign: TextAlign.center,
+      ),
+    );
+  }
+  
+  Widget _buildProgress(bool isDarkMode) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 15),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              // Círculo con icono
-              Container(
-                width: 70,
-                height: 70,
-                decoration: BoxDecoration(
-                  color: color.withOpacity(0.2),
-                  shape: BoxShape.circle,
+              Text(
+                'Progreso',
+                style: TextStyle(
+                  fontFamily: 'Comic Sans MS',
+                  fontSize: 12,
+                  color: isDarkMode ? Colors.white70 : Colors.black54,
                 ),
-                child: Icon(
-                  icon,
+              ),
+              Text(
+                '${(progress * 100).toInt()}%',
+                style: TextStyle(
+                  fontFamily: 'Comic Sans MS',
+                  fontSize: 12,
+                  fontWeight: FontWeight.bold,
                   color: color,
-                  size: 36,
-                ),
-              ),
-              const SizedBox(height: 12),
-              
-              // Título del curso
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 10),
-                child: Text(
-                  title,
-                  style: TextStyle(
-                    fontFamily: 'Comic Sans MS',
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                    color: isDarkMode ? Colors.white : Colors.black87,
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-              ),
-              const SizedBox(height: 12),
-              
-              // Barra de progreso
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 15),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(
-                          'Progreso',
-                          style: TextStyle(
-                            fontFamily: 'Comic Sans MS',
-                            fontSize: 12,
-                            color: isDarkMode ? Colors.white70 : Colors.black54,
-                          ),
-                        ),
-                        Text(
-                          '${(progress * 100).toInt()}%',
-                          style: TextStyle(
-                            fontFamily: 'Comic Sans MS',
-                            fontSize: 12,
-                            fontWeight: FontWeight.bold,
-                            color: color,
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 5),
-                    ClipRRect(
-                      borderRadius: BorderRadius.circular(10),
-                      child: LinearProgressIndicator(
-                        value: progress,
-                        backgroundColor: color.withOpacity(0.2),
-                        valueColor: AlwaysStoppedAnimation<Color>(color),
-                        minHeight: 10,
-                      ),
-                    ),
-                  ],
                 ),
               ),
             ],
           ),
-        ),
+          const SizedBox(height: 5),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(10),
+            child: LinearProgressIndicator(
+              value: progress,
+              backgroundColor: color.withOpacity(0.2),
+              valueColor: AlwaysStoppedAnimation<Color>(color),
+              minHeight: 10,
+            ),
+          ),
+        ],
       ),
     );
   }

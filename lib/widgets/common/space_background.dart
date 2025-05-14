@@ -27,158 +27,48 @@ class SpaceBackground extends StatelessWidget {
   });
 
   /// Constructor con colores específicos para la pantalla de login
-  factory SpaceBackground.forLogin({required Widget child}) {
-    return SpaceBackground(
-      child: child,
-      gradientColors: const [
-        Color(0xFF1A237E), // Azul oscuro espacial
-        Color(0xFF311B92), // Púrpura espacial
-        Color(0xFF4A148C), // Morado espacial
-      ],
-      decorations: [
-        // Planeta decorativo grande
-        SpaceDecoration(
-          top: 0.1,
-          right: -40,
-          width: 100,
-          height: 100,
-          colors: [
-            Colors.orange.shade300,
-            Colors.orange.shade700,
-          ],
-          icon: null,
-        ),
-        // Planeta pequeño decorativo
-        SpaceDecoration(
-          bottom: 0.15,
-          left: -20,
-          width: 60,
-          height: 60,
-          colors: [
-            Colors.lightBlue.shade300,
-            Colors.lightBlue.shade700,
-          ],
-          icon: null,
-        ),
-      ],
-    );
-  }
+  factory SpaceBackground.forLogin({required Widget child}) => SpaceBackground(
+    child: child,
+    gradientColors: const [
+      Color(0xFF1A237E), // Azul oscuro espacial
+      Color(0xFF311B92), // Púrpura espacial
+      Color(0xFF4A148C), // Morado espacial
+    ],
+    decorations: _createLoginDecorations(),
+  );
 
   /// Constructor con colores específicos para la pantalla de registro
-  factory SpaceBackground.forRegister({required Widget child}) {
-    return SpaceBackground(
-      child: child,
-      gradientColors: const [
-        Color(0xFF6A1B9A), // Púrpura oscuro espacial
-        Color(0xFF4527A0), // Púrpura espacial
-        Color(0xFF283593), // Azul espacial
-      ],
-      decorations: [
-        // Planeta decorativo
-        SpaceDecoration(
-          top: 0.15,
-          left: -30,
-          width: 80,
-          height: 80,
-          colors: [
-            Colors.deepPurple.shade300,
-            Colors.deepPurple.shade900,
-          ],
-          icon: null,
-        ),
-        // Planeta pequeño decorativo
-        SpaceDecoration(
-          bottom: 0.3,
-          right: -20,
-          width: 60,
-          height: 60,
-          colors: [
-            Colors.teal.shade300,
-            Colors.teal.shade900,
-          ],
-          icon: null,
-        ),
-      ],
-    );
-  }
+  factory SpaceBackground.forRegister({required Widget child}) => SpaceBackground(
+    child: child,
+    gradientColors: const [
+      Color(0xFF6A1B9A), // Púrpura oscuro espacial
+      Color(0xFF4527A0), // Púrpura espacial
+      Color(0xFF283593), // Azul espacial
+    ],
+    decorations: _createRegisterDecorations(),
+  );
 
   /// Constructor con colores específicos para la pantalla de registro de profesores
-  factory SpaceBackground.forTeacherRegister({required Widget child}) {
-    return SpaceBackground(
-      child: child,
-      gradientColors: const [
-        Color(0xFF8E24AA), // Púrpura más científico
-        Color(0xFF7B1FA2), // Púrpura medio
-        Color(0xFF6A1B9A), // Púrpura oscuro
-      ],
-      decorations: [
-        // Planeta decorativo
-        SpaceDecoration(
-          top: 0.15,
-          left: -30,
-          width: 80,
-          height: 80,
-          colors: [
-            Colors.deepPurple.shade300,
-            Colors.deepPurple.shade900,
-          ],
-          icon: null,
-        ),
-        // "Laboratorio" espacial decorativo
-        SpaceDecoration(
-          bottom: 0.3,
-          right: -20,
-          width: 80,
-          height: 80,
-          colors: [
-            Colors.teal.shade300,
-            Colors.teal.shade900,
-          ],
-          icon: Icons.science,
-          iconColor: Colors.white,
-          iconSize: 40,
-        ),
-      ],
-    );
-  }
+  factory SpaceBackground.forTeacherRegister({required Widget child}) => SpaceBackground(
+    child: child,
+    gradientColors: const [
+      Color(0xFF8E24AA), // Púrpura más científico
+      Color(0xFF7B1FA2), // Púrpura medio
+      Color(0xFF6A1B9A), // Púrpura oscuro
+    ],
+    decorations: _createTeacherRegisterDecorations(),
+  );
 
   /// Constructor con colores específicos para la pantalla de unirse a un aula
-  factory SpaceBackground.forJoinClassroom({required Widget child}) {
-    return SpaceBackground(
-      child: child,
-      gradientColors: const [
-        Color(0xFF1A237E), // Azul oscuro espacial
-        Color(0xFF311B92), // Púrpura espacial
-        Color(0xFF4A148C), // Morado espacial
-      ],
-      decorations: [
-        // Planeta decorativo
-        SpaceDecoration(
-          top: 0.1,
-          right: -40,
-          width: 100,
-          height: 100,
-          colors: [
-            Colors.orange.shade300,
-            Colors.orange.shade700,
-          ],
-          icon: null,
-        ),
-        // Planeta pequeño decorativo
-        SpaceDecoration(
-          bottom: 0.15,
-          left: -20,
-          width: 60,
-          height: 60,
-          colors: [
-            Colors.lightBlue.shade300,
-            Colors.lightBlue.shade700,
-          ],
-          icon: null,
-        ),
-      ],
-    );
-  }
+  factory SpaceBackground.forJoinClassroom({required Widget child}) => SpaceBackground(
+    child: child,
+    gradientColors: const [
+      Color(0xFF1A237E), // Azul oscuro espacial
+      Color(0xFF311B92), // Púrpura espacial
+      Color(0xFF4A148C), // Morado espacial
+    ],
+    decorations: _createJoinClassroomDecorations(),
+  );
 
   @override
   Widget build(BuildContext context) {
@@ -294,6 +184,110 @@ class SpaceBackground extends StatelessWidget {
       ),
     );
   }
+  
+  // Métodos para crear decoraciones específicas extraídos en métodos estáticos
+  static List<SpaceDecoration> _createLoginDecorations() => [
+    // Planeta decorativo grande
+    SpaceDecoration(
+      top: 0.1,
+      right: -40,
+      width: 100,
+      height: 100,
+      colors: [
+        Colors.orange.shade300,
+        Colors.orange.shade700,
+      ],
+    ),
+    // Planeta pequeño decorativo
+    SpaceDecoration(
+      bottom: 0.15,
+      left: -20,
+      width: 60,
+      height: 60,
+      colors: [
+        Colors.lightBlue.shade300,
+        Colors.lightBlue.shade700,
+      ],
+    ),
+  ];
+  
+  static List<SpaceDecoration> _createRegisterDecorations() => [
+    // Planeta decorativo
+    SpaceDecoration(
+      top: 0.15,
+      left: -30,
+      width: 80,
+      height: 80,
+      colors: [
+        Colors.deepPurple.shade300,
+        Colors.deepPurple.shade900,
+      ],
+    ),
+    // Planeta pequeño decorativo
+    SpaceDecoration(
+      bottom: 0.3,
+      right: -20,
+      width: 60,
+      height: 60,
+      colors: [
+        Colors.teal.shade300,
+        Colors.teal.shade900,
+      ],
+    ),
+  ];
+  
+  static List<SpaceDecoration> _createTeacherRegisterDecorations() => [
+    // Planeta decorativo
+    SpaceDecoration(
+      top: 0.15,
+      left: -30,
+      width: 80,
+      height: 80,
+      colors: [
+        Colors.deepPurple.shade300,
+        Colors.deepPurple.shade900,
+      ],
+    ),
+    // "Laboratorio" espacial decorativo
+    SpaceDecoration(
+      bottom: 0.3,
+      right: -20,
+      width: 80,
+      height: 80,
+      colors: [
+        Colors.teal.shade300,
+        Colors.teal.shade900,
+      ],
+      icon: Icons.science,
+      iconColor: Colors.white,
+      iconSize: 40,
+    ),
+  ];
+  
+  static List<SpaceDecoration> _createJoinClassroomDecorations() => [
+    // Planeta decorativo
+    SpaceDecoration(
+      top: 0.1,
+      right: -40,
+      width: 100,
+      height: 100,
+      colors: [
+        Colors.orange.shade300,
+        Colors.orange.shade700,
+      ],
+    ),
+    // Planeta pequeño decorativo
+    SpaceDecoration(
+      bottom: 0.15,
+      left: -20,
+      width: 60,
+      height: 60,
+      colors: [
+        Colors.lightBlue.shade300,
+        Colors.lightBlue.shade700,
+      ],
+    ),
+  ];
 }
 
 /// Clase que define una decoración espacial (planeta, etc.)

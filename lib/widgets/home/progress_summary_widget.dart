@@ -1,7 +1,7 @@
-// lib/widgets/home/progress_summary_widget.dart
 import 'package:flutter/material.dart';
 import '../../theme/app_colors.dart';
-import '../animations/bounce_animation.dart';
+import '../common/app_card.dart';
+import '../common/stat_card.dart';
 
 class ProgressSummaryWidget extends StatelessWidget {
   final int points;
@@ -20,7 +20,6 @@ class ProgressSummaryWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
-    final backgroundColor = isDarkMode ? AppColors.darkSurface : Colors.white;
     
     // Calcular porcentaje de progreso hacia el siguiente nivel
     final nextLevelTarget = level * nextLevelPoints;
@@ -32,19 +31,7 @@ class ProgressSummaryWidget extends StatelessWidget {
     // Puntos restantes para el siguiente nivel
     final pointsRemaining = nextLevelTarget - points > 0 ? nextLevelTarget - points : 0;
 
-    return Container(
-      width: double.infinity,
-      decoration: BoxDecoration(
-        color: backgroundColor,
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.1),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
+    return AppCard(
       child: Column(
         children: [
           Padding(
@@ -52,22 +39,19 @@ class ProgressSummaryWidget extends StatelessWidget {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
-                _buildProgressCard(
-                  context: context,
+                StatCard.progressItem(
                   title: 'Puntos',
                   value: '$points',
                   icon: Icons.star,
                   color: AppColors.star,
                 ),
-                _buildProgressCard(
-                  context: context,
+                StatCard.progressItem(
                   title: 'Nivel',
                   value: '$level',
                   icon: Icons.rocket_launch,
                   color: AppColors.primary,
                 ),
-                _buildProgressCard(
-                  context: context,
+                StatCard.progressItem(
                   title: 'Racha',
                   value: '$streakDays días',
                   icon: Icons.local_fire_department,
@@ -106,10 +90,7 @@ class ProgressSummaryWidget extends StatelessWidget {
                   ],
                 ),
                 const SizedBox(height: 8),
-                _buildFancyProgressBar(
-                  progress: normalizedProgress,
-                  color: AppColors.primary,
-                ),
+                _buildProgressBar(normalizedProgress),
                 const SizedBox(height: 8),
                 Text(
                   '¡Necesitas $pointsRemaining puntos más para el nivel ${level + 1}!',
@@ -128,68 +109,12 @@ class ProgressSummaryWidget extends StatelessWidget {
     );
   }
 
-  Widget _buildProgressCard({
-    required BuildContext context,
-    required String title,
-    required String value,
-    required IconData icon,
-    required Color color,
-  }) {
-    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
-    return BounceAnimation(
-      child: Container(
-        width: 90,
-        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
-        decoration: BoxDecoration(
-          color: color.withOpacity(0.1),
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(
-            color: color.withOpacity(0.3),
-            width: 2,
-          ),
-        ),
-        child: Column(
-          children: [
-            Icon(
-              icon,
-              color: color,
-              size: 28,
-            ),
-            const SizedBox(height: 8),
-            Text(
-              value,
-              style: TextStyle(
-                fontFamily: 'Comic Sans MS',
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: color,
-              ),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              title,
-              style: TextStyle(
-                fontFamily: 'Comic Sans MS',
-                fontSize: 12,
-                color: isDarkMode ? Colors.white70 : Colors.black54,
-              ),
-              textAlign: TextAlign.center,
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildFancyProgressBar({
-    required double progress,
-    required Color color,
-  }) {
+  Widget _buildProgressBar(double progress) {
     return Container(
       height: 20,
       width: double.infinity,
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
+        color: AppColors.primary.withOpacity(0.1),
         borderRadius: BorderRadius.circular(10),
       ),
       child: Stack(
@@ -201,8 +126,8 @@ class ProgressSummaryWidget extends StatelessWidget {
               decoration: BoxDecoration(
                 gradient: LinearGradient(
                   colors: [
-                    color.withOpacity(0.7),
-                    color,
+                    AppColors.primary.withOpacity(0.7),
+                    AppColors.primary,
                   ],
                   begin: Alignment.centerLeft,
                   end: Alignment.centerRight,
@@ -210,7 +135,7 @@ class ProgressSummaryWidget extends StatelessWidget {
                 borderRadius: BorderRadius.circular(10),
                 boxShadow: [
                   BoxShadow(
-                    color: color.withOpacity(0.3),
+                    color: AppColors.primary.withOpacity(0.3),
                     blurRadius: 4,
                     offset: const Offset(0, 2),
                   ),
@@ -218,38 +143,24 @@ class ProgressSummaryWidget extends StatelessWidget {
               ),
             ),
           ),
-          // Estrellas decorativas
-          if (progress > 0.2)
-            Positioned(
-              left: 20,
-              top: 3,
-              child: Icon(
-                Icons.star,
-                color: Colors.white,
-                size: 14,
-              ),
-            ),
-          if (progress > 0.5)
-            Positioned(
-              left: 50,
-              top: 3,
-              child: Icon(
-                Icons.star,
-                color: Colors.white,
-                size: 14,
-              ),
-            ),
-          if (progress > 0.8)
-            Positioned(
-              left: 80,
-              top: 3,
-              child: Icon(
-                Icons.star,
-                color: Colors.white,
-                size: 14,
-              ),
-            ),
+          
+          // Estrellas decorativas que se muestran según el progreso
+          if (progress > 0.2) _buildProgressStar(20),
+          if (progress > 0.5) _buildProgressStar(50),
+          if (progress > 0.8) _buildProgressStar(80),
         ],
+      ),
+    );
+  }
+  
+  Widget _buildProgressStar(double position) {
+    return Positioned(
+      left: position,
+      top: 3,
+      child: Icon(
+        Icons.star,
+        color: Colors.white,
+        size: 14,
       ),
     );
   }

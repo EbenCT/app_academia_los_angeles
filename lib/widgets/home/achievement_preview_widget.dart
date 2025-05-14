@@ -1,7 +1,7 @@
-// lib/widgets/home/achievement_preview_widget.dart
 import 'package:flutter/material.dart';
 import '../../theme/app_colors.dart';
 import '../animations/fade_animation.dart';
+import '../common/app_card.dart';
 
 class AchievementPreviewWidget extends StatelessWidget {
   final List<Map<String, dynamic>> achievements;
@@ -15,22 +15,8 @@ class AchievementPreviewWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
-    final backgroundColor = isDarkMode ? AppColors.darkSurface : Colors.white;
-
-    return Container(
-      width: double.infinity,
-      decoration: BoxDecoration(
-        color: backgroundColor,
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.1),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
+    return AppCard(
+      padding: EdgeInsets.zero,
       child: Column(
         children: [
           // Lista de logros
@@ -53,40 +39,7 @@ class AchievementPreviewWidget extends StatelessWidget {
           }).toList(),
           
           // Botón "Ver más"
-          Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: InkWell(
-              onTap: onSeeMoreTap,
-              borderRadius: BorderRadius.circular(30),
-              child: Container(
-                padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 24),
-                decoration: BoxDecoration(
-                  color: AppColors.primary.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(30),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      'Ver todos los logros',
-                      style: TextStyle(
-                        fontFamily: 'Comic Sans MS',
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                        color: AppColors.primary,
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    Icon(
-                      Icons.arrow_forward_rounded,
-                      color: AppColors.primary,
-                      size: 18,
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ),
+          _buildSeeMoreButton(),
         ],
       ),
     );
@@ -172,18 +125,58 @@ class AchievementPreviewWidget extends StatelessWidget {
         ),
         
         // Separador
-        if (!isLast)
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16.0),
-            child: Divider(
-              height: 1,
-              thickness: 1,
-              color: isDarkMode 
-                  ? Colors.grey.withOpacity(0.2) 
-                  : Colors.grey.withOpacity(0.1),
-            ),
-          ),
+        if (!isLast) _buildDivider(isDarkMode),
       ],
+    );
+  }
+  
+  Widget _buildDivider(bool isDarkMode) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16.0),
+      child: Divider(
+        height: 1,
+        thickness: 1,
+        color: isDarkMode 
+            ? Colors.grey.withOpacity(0.2) 
+            : Colors.grey.withOpacity(0.1),
+      ),
+    );
+  }
+  
+  Widget _buildSeeMoreButton() {
+    return Padding(
+      padding: const EdgeInsets.all(16.0),
+      child: InkWell(
+        onTap: onSeeMoreTap,
+        borderRadius: BorderRadius.circular(30),
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 24),
+          decoration: BoxDecoration(
+            color: AppColors.primary.withOpacity(0.1),
+            borderRadius: BorderRadius.circular(30),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                'Ver todos los logros',
+                style: TextStyle(
+                  fontFamily: 'Comic Sans MS',
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.primary,
+                ),
+              ),
+              const SizedBox(width: 8),
+              Icon(
+                Icons.arrow_forward_rounded,
+                color: AppColors.primary,
+                size: 18,
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }
