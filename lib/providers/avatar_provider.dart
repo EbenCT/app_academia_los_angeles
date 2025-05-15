@@ -3,7 +3,7 @@ import 'package:flutter/foundation.dart';
 import '../models/avatar_model.dart';
 import '../services/avatar_service.dart';
 
-/// Provider que maneja el estado del avatar en la aplicación
+/// Provider mejorado que maneja el estado del avatar en la aplicación
 class AvatarProvider extends ChangeNotifier {
   final AvatarService _avatarService = AvatarService();
   
@@ -53,16 +53,172 @@ class AvatarProvider extends ChangeNotifier {
     }
   }
   
-  /// Actualiza campos específicos del avatar
-  Future<bool> updateAvatar(String userId, Map<String, dynamic> fields) async {
+  /// Actualiza el género del avatar
+  Future<bool> updateGender(String userId, String gender) async {
     _setLoading(true);
     _error = null;
     
     try {
-      final success = await _avatarService.updateAvatarFields(userId, fields);
+      final success = await _avatarService.updateGender(userId, gender);
       
       if (success) {
-        // Recargar el avatar actualizado
+        await loadAvatar(userId); // Recargar el avatar actualizado
+      } else {
+        _error = 'No se pudo actualizar el género';
+      }
+      
+      _setLoading(false);
+      return success;
+    } catch (e) {
+      _error = e.toString();
+      _setLoading(false);
+      return false;
+    }
+  }
+  
+  /// Actualiza el tono de piel
+  Future<bool> updateSkinTone(String userId, int skinToneIndex) async {
+    _setLoading(true);
+    _error = null;
+    
+    try {
+      final success = await _avatarService.updateSkinTone(userId, skinToneIndex);
+      
+      if (success) {
+        await loadAvatar(userId);
+      } else {
+        _error = 'No se pudo actualizar el tono de piel';
+      }
+      
+      _setLoading(false);
+      return success;
+    } catch (e) {
+      _error = e.toString();
+      _setLoading(false);
+      return false;
+    }
+  }
+  
+  /// Actualiza características faciales
+  Future<bool> updateFacialFeatures(String userId, {int? eyesIndex, int? noseIndex, int? mouthIndex}) async {
+    _setLoading(true);
+    _error = null;
+    
+    try {
+      final success = await _avatarService.updateFacialFeatures(
+        userId, 
+        eyesIndex: eyesIndex, 
+        noseIndex: noseIndex, 
+        mouthIndex: mouthIndex
+      );
+      
+      if (success) {
+        await loadAvatar(userId);
+      } else {
+        _error = 'No se pudo actualizar las características faciales';
+      }
+      
+      _setLoading(false);
+      return success;
+    } catch (e) {
+      _error = e.toString();
+      _setLoading(false);
+      return false;
+    }
+  }
+  
+  /// Actualiza el cabello
+  Future<bool> updateHair(String userId, {int? styleIndex, int? colorIndex}) async {
+    _setLoading(true);
+    _error = null;
+    
+    try {
+      final success = await _avatarService.updateHair(
+        userId, 
+        styleIndex: styleIndex, 
+        colorIndex: colorIndex
+      );
+      
+      if (success) {
+        await loadAvatar(userId);
+      } else {
+        _error = 'No se pudo actualizar el cabello';
+      }
+      
+      _setLoading(false);
+      return success;
+    } catch (e) {
+      _error = e.toString();
+      _setLoading(false);
+      return false;
+    }
+  }
+  
+  /// Actualiza la ropa
+  Future<bool> updateOutfit(String userId, {int? topIndex, int? bottomIndex, int? shoesIndex}) async {
+    _setLoading(true);
+    _error = null;
+    
+    try {
+      final success = await _avatarService.updateOutfit(
+        userId, 
+        topIndex: topIndex, 
+        bottomIndex: bottomIndex, 
+        shoesIndex: shoesIndex
+      );
+      
+      if (success) {
+        await loadAvatar(userId);
+      } else {
+        _error = 'No se pudo actualizar la ropa';
+      }
+      
+      _setLoading(false);
+      return success;
+    } catch (e) {
+      _error = e.toString();
+      _setLoading(false);
+      return false;
+    }
+  }
+  
+  /// Actualiza los accesorios
+  Future<bool> updateAccessories(String userId, {bool? hasGlasses, bool? hasHat, bool? hasBackpack}) async {
+    _setLoading(true);
+    _error = null;
+    
+    try {
+      final success = await _avatarService.updateAccessories(
+        userId, 
+        hasGlasses: hasGlasses, 
+        hasHat: hasHat, 
+        hasBackpack: hasBackpack
+      );
+      
+      if (success) {
+        await loadAvatar(userId);
+      } else {
+        _error = 'No se pudo actualizar los accesorios';
+      }
+      
+      _setLoading(false);
+      return success;
+    } catch (e) {
+      _error = e.toString();
+      _setLoading(false);
+      return false;
+    }
+  }
+  
+  /// Actualiza múltiples campos a la vez
+  Future<bool> updateMultipleFields(String userId, Map<String, dynamic> updates) async {
+    _setLoading(true);
+    _error = null;
+    
+    try {
+      final success = await _avatarService.updateMultipleFields(userId, updates);
+      
+      if (success) {
         await loadAvatar(userId);
       } else {
         _error = 'No se pudo actualizar el avatar';
