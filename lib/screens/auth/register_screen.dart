@@ -28,25 +28,7 @@ class _RegisterScreenState extends State<RegisterScreen> with SingleTickerProvid
   bool _isConfirmPasswordVisible = false;
   bool _acceptTerms = false;
   int _currentStep = 1;
-  int _totalSteps = 3;
-  List<Color> _avatarColors = [
-    Colors.blue,
-    Colors.purple,
-    Colors.orange,
-    Colors.green,
-    Colors.red,
-    Colors.teal,
-    Colors.pink,
-    Colors.amber,
-  ];
-  int _selectedColorIndex = 0;
-  int _selectedAvatarType = 0;
-  List<String> _characterTypes = [
-    'Astronauta',
-    'Explorador',
-    'Científico',
-    'Alienígena',
-  ];
+  int _totalSteps = 2; // Reducido de 3 a 2 pasos al eliminar la personalización de avatar
 
   @override
   void initState() {
@@ -192,7 +174,7 @@ class _RegisterScreenState extends State<RegisterScreen> with SingleTickerProvid
     return Scaffold(
       body: Stack(
         children: [
-          // Usamos el nuevo widget SpaceBackground
+          // Usamos el widget SpaceBackground
           SpaceBackground.forRegister(
             child: SafeArea(
               child: SingleChildScrollView(
@@ -387,8 +369,6 @@ class _RegisterScreenState extends State<RegisterScreen> with SingleTickerProvid
       case 1:
         return '¡Únete a la Aventura!';
       case 2:
-        return '¡Crea tu Personaje!';
-      case 3:
         return '¡Última Misión!';
       default:
         return '¡Regístrate!';
@@ -400,8 +380,6 @@ class _RegisterScreenState extends State<RegisterScreen> with SingleTickerProvid
       case 1:
         return 'Cuéntanos sobre ti para comenzar';
       case 2:
-        return 'Personaliza tu avatar espacial';
-      case 3:
         return 'Establece tu contraseña secreta';
       default:
         return 'Ingresa tus datos';
@@ -413,8 +391,6 @@ class _RegisterScreenState extends State<RegisterScreen> with SingleTickerProvid
       case 1:
         return _buildPersonalInfoStep();
       case 2:
-        return _buildAvatarStep();
-      case 3:
         return _buildPasswordStep();
       default:
         return Container();
@@ -609,246 +585,12 @@ class _RegisterScreenState extends State<RegisterScreen> with SingleTickerProvid
         FadeAnimation(
           delay: const Duration(milliseconds: 900),
           child: CustomButton(
-            text: 'Continuar a personalización',
+            text: 'Continuar a contraseña',
             onPressed: _nextStep,
             icon: Icons.arrow_forward_rounded,
             backgroundColor: const Color(0xFF00C853), // Verde
             height: 55,
           ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildAvatarStep() {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        // Previsualización del avatar
-        FadeAnimation(
-          delay: const Duration(milliseconds: 500),
-          child: Container(
-            width: 150,
-            height: 150,
-            decoration: BoxDecoration(
-              color: _avatarColors[_selectedColorIndex].withOpacity(0.2),
-              shape: BoxShape.circle,
-              border: Border.all(
-                color: _avatarColors[_selectedColorIndex],
-                width: 4,
-              ),
-              boxShadow: [
-                BoxShadow(
-                  color: _avatarColors[_selectedColorIndex].withOpacity(0.3),
-                  blurRadius: 10,
-                  offset: const Offset(0, 5),
-                ),
-              ],
-            ),
-            child: Center(
-              child: Icon(
-                _getAvatarIcon(),
-                color: _avatarColors[_selectedColorIndex],
-                size: 80,
-              ),
-            ),
-          ),
-        ),
-        const SizedBox(height: 24),
-        // Selección de tipo de personaje
-        FadeAnimation(
-          delay: const Duration(milliseconds: 600),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Padding(
-                padding: const EdgeInsets.only(left: 12, bottom: 8),
-                child: Text(
-                  'Elige tu tipo de personaje',
-                  style: TextStyle(
-                    fontFamily: 'Comic Sans MS',
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                    color: Theme.of(context).brightness == Brightness.dark
-                        ? Colors.white70
-                        : Colors.black87,
-                  ),
-                ),
-              ),
-              SizedBox(
-                height: 80,
-                child: ListView.builder(
-                  scrollDirection: Axis.horizontal,
-                  itemCount: _characterTypes.length,
-                  itemBuilder: (context, index) {
-                    return GestureDetector(
-                      onTap: () {
-                        setState(() {
-                          _selectedAvatarType = index;
-                        });
-                      },
-                      child: Container(
-                        width: 100,
-                        margin: const EdgeInsets.symmetric(horizontal: 8),
-                        decoration: BoxDecoration(
-                          color: _selectedAvatarType == index
-                              ? _avatarColors[_selectedColorIndex].withOpacity(0.2)
-                              : Theme.of(context).brightness == Brightness.dark
-                                  ? Colors.black26
-                                  : Colors.white,
-                          borderRadius: BorderRadius.circular(15),
-                          border: Border.all(
-                            color: _selectedAvatarType == index
-                                ? _avatarColors[_selectedColorIndex]
-                                : Colors.transparent,
-                            width: 2,
-                          ),
-                          boxShadow: _selectedAvatarType == index
-                              ? [
-                                  BoxShadow(
-                                    color:
-                                        _avatarColors[_selectedColorIndex].withOpacity(0.3),
-                                    blurRadius: 8,
-                                    offset: const Offset(0, 3),
-                                  ),
-                                ]
-                              : null,
-                        ),
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(
-                              _getCharacterIcon(index),
-                              color: _selectedAvatarType == index
-                                  ? _avatarColors[_selectedColorIndex]
-                                  : Colors.grey,
-                              size: 36,
-                            ),
-                            const SizedBox(height: 8),
-                            Text(
-                              _characterTypes[index],
-                              style: TextStyle(
-                                fontFamily: 'Comic Sans MS',
-                                fontSize: 12,
-                                fontWeight: FontWeight.bold,
-                                color: _selectedAvatarType == index
-                                    ? _avatarColors[_selectedColorIndex]
-                                    : Colors.grey,
-                              ),
-                              textAlign: TextAlign.center,
-                            ),
-                          ],
-                        ),
-                      ),
-                    );
-                  },
-                ),
-              ),
-            ],
-          ),
-        ),
-        const SizedBox(height: 24),
-        // Selección de color
-        FadeAnimation(
-          delay: const Duration(milliseconds: 700),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Padding(
-                padding: const EdgeInsets.only(left: 12, bottom: 8),
-                child: Text(
-                  'Elige tu color favorito',
-                  style: TextStyle(
-                    fontFamily: 'Comic Sans MS',
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                    color: Theme.of(context).brightness == Brightness.dark
-                        ? Colors.white70
-                        : Colors.black87,
-                  ),
-                ),
-              ),
-              SizedBox(
-                height: 60,
-                child: ListView.builder(
-                  scrollDirection: Axis.horizontal,
-                  itemCount: _avatarColors.length,
-                  itemBuilder: (context, index) {
-                    return GestureDetector(
-                      onTap: () {
-                        setState(() {
-                          _selectedColorIndex = index;
-                        });
-                      },
-                      child: Container(
-                        width: 50,
-                        height: 50,
-                        margin: const EdgeInsets.symmetric(horizontal: 8),
-                        decoration: BoxDecoration(
-                          color: _avatarColors[index],
-                          shape: BoxShape.circle,
-                          border: Border.all(
-                            color: _selectedColorIndex == index
-                                ? Colors.white
-                                : Colors.transparent,
-                            width: 3,
-                          ),
-                          boxShadow: [
-                            BoxShadow(
-                              color: _avatarColors[index].withOpacity(0.3),
-                              blurRadius: 8,
-                              offset: const Offset(0, 3),
-                            ),
-                          ],
-                        ),
-                        child: _selectedColorIndex == index
-                            ? const Icon(
-                                Icons.check,
-                                color: Colors.white,
-                                size: 30,
-                              )
-                            : null,
-                      ),
-                    );
-                  },
-                ),
-              ),
-            ],
-          ),
-        ),
-        const SizedBox(height: 30),
-        // Botones de navegación
-        Row(
-          children: [
-            // Botón para regresar
-            Expanded(
-              flex: 1,
-              child: FadeAnimation(
-                delay: const Duration(milliseconds: 800),
-                child: CustomButton(
-                  text: 'Atrás',
-                  onPressed: _previousStep,
-                  isOutlined: true,
-                  height: 55,
-                ),
-              ),
-            ),
-            const SizedBox(width: 16),
-            // Botón para continuar
-            Expanded(
-              flex: 2,
-              child: FadeAnimation(
-                delay: const Duration(milliseconds: 900),
-                child: CustomButton(
-                  text: 'Continuar',
-                  onPressed: _nextStep,
-                  icon: Icons.arrow_forward_rounded,
-                  backgroundColor: const Color(0xFF00C853), // Verde
-                  height: 55,
-                ),
-              ),
-            ),
-          ],
         ),
       ],
     );
@@ -1062,35 +804,5 @@ class _RegisterScreenState extends State<RegisterScreen> with SingleTickerProvid
         ],
       ),
     );
-  }
-
-  IconData _getAvatarIcon() {
-    switch (_selectedAvatarType) {
-      case 0: // Astronauta
-        return Icons.rocket_launch;
-      case 1: // Explorador
-        return Icons.explore;
-      case 2: // Científico
-        return Icons.science;
-      case 3: // Alienígena
-        return Icons.android;
-      default:
-        return Icons.person;
-    }
-  }
-
-  IconData _getCharacterIcon(int index) {
-    switch (index) {
-      case 0: // Astronauta
-        return Icons.rocket_launch;
-      case 1: // Explorador
-        return Icons.explore;
-      case 2: // Científico
-        return Icons.science;
-      case 3: // Alienígena
-        return Icons.android;
-      default:
-        return Icons.person;
-    }
   }
 }

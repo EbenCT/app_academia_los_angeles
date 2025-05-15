@@ -10,6 +10,7 @@ class AvatarWidget extends StatelessWidget {
   final double size;
   final VoidCallback? onTap;
   final bool animateBounce;
+  final Map<String, dynamic>? avatarData;
 
   const AvatarWidget({
     super.key,
@@ -20,6 +21,7 @@ class AvatarWidget extends StatelessWidget {
     this.size = 80,
     this.onTap,
     this.animateBounce = false,
+    this.avatarData,
   });
 
   @override
@@ -51,6 +53,11 @@ class AvatarWidget extends StatelessWidget {
   Widget _buildAvatar(BuildContext context) {
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
     final avatarColor = _getAvatarColor();
+    
+    if (avatarData != null) {
+      // Si hay datos de avatar personalizados, los usamos
+      return _buildCustomAvatar(context, avatarColor);
+    }
     
     return Stack(
       children: [
@@ -90,6 +97,161 @@ class AvatarWidget extends StatelessWidget {
         
         // Insignia para nivel avanzado
         if (level >= 5) _buildAdvancedBadge(isDarkMode),
+      ],
+    );
+  }
+  
+  Widget _buildCustomAvatar(BuildContext context, Color avatarColor) {
+    final gender = avatarData!['gender'] ?? 'boy';
+    final skinToneIndex = avatarData!['skinToneIndex'] ?? 0;
+    final hairStyleIndex = avatarData!['hairStyleIndex'] ?? 0;
+    final hairColorIndex = avatarData!['hairColorIndex'] ?? 0;
+    final outfitIndex = avatarData!['outfitIndex'] ?? 0;
+    final accessoryIndex = avatarData!['accessoryIndex'] ?? 0;
+    
+    // Lista de colores de piel disponibles
+    final List<Color> skinTones = [
+      const Color(0xFFFADCBC), // Light
+      const Color(0xFFF1C27D), // Medium
+      const Color(0xFFE0AC69), // Tan
+      const Color(0xFFC68642), // Brown
+      const Color(0xFF8D5524), // Dark
+    ];
+    
+    // Lista de colores de cabello disponibles
+    final List<Color> hairColors = [
+      Colors.black,
+      Colors.brown,
+      Colors.amberAccent,
+      Colors.red,
+      Colors.orange,
+      Colors.blue,
+      Colors.purple,
+      Colors.pink,
+    ];
+    
+    // Colores para la ropa basados en el índice
+    final List<Color> outfitColors = [
+      Colors.blue,
+      Colors.green,
+      Colors.purple,
+      Colors.red,
+      Colors.orange,
+    ];
+    
+    // Obtener el color de piel según el índice
+    final skinTone = skinToneIndex < skinTones.length 
+        ? skinTones[skinToneIndex]
+        : skinTones[0];
+    
+    // Obtener el color del cabello según el índice
+    final hairColor = hairColorIndex < hairColors.length
+        ? hairColors[hairColorIndex]
+        : hairColors[0];
+    
+    // Obtener el color de la ropa según el índice
+    final outfitColor = outfitIndex < outfitColors.length
+        ? outfitColors[outfitIndex]
+        : outfitColors[0];
+    
+    return Stack(
+      children: [
+        // Avatar base con color de piel seleccionado
+        Container(
+          width: size,
+          height: size,
+          decoration: BoxDecoration(
+            color: skinTone,
+            shape: BoxShape.circle,
+            border: Border.all(
+              color: avatarColor,
+              width: 3,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: avatarColor.withOpacity(0.3),
+                blurRadius: 10,
+                spreadRadius: 0,
+                offset: const Offset(0, 4),
+              ),
+            ],
+          ),
+          child: Center(
+            child: Icon(
+              gender == 'boy' ? Icons.face : Icons.face_3,
+              color: avatarColor,
+              size: size * 0.6,
+            ),
+          ),
+        ),
+        
+        // Representación del "cabello" usando un overlay
+        Positioned.fill(
+          child: Align(
+            alignment: Alignment.topCenter,
+            child: Container(
+              width: size * 0.85,
+              height: size * 0.45,
+              decoration: BoxDecoration(
+                color: hairColor,
+                borderRadius: BorderRadius.only(
+                  topLeft: Radius.circular(size * 0.4),
+                  topRight: Radius.circular(size * 0.4),
+                ),
+              ),
+            ),
+          ),
+        ),
+        
+        // Representación de la "ropa" usando un overlay
+        Positioned(
+          bottom: 0,
+          left: 0,
+          right: 0,
+          child: Container(
+            height: size * 0.35,
+            decoration: BoxDecoration(
+              color: outfitColor,
+              borderRadius: BorderRadius.only(
+                bottomLeft: Radius.circular(size * 0.5),
+                bottomRight: Radius.circular(size * 0.5),
+              ),
+            ),
+          ),
+        ),
+        
+        // Accesorios (por ejemplo, gafas)
+        if (accessoryIndex == 1) // Gafas
+          Positioned(
+            top: size * 0.35,
+            left: size * 0.2,
+            child: Container(
+              width: size * 0.6,
+              height: size * 0.2,
+              decoration: BoxDecoration(
+                border: Border.all(color: Colors.black, width: 2),
+                borderRadius: BorderRadius.circular(size * 0.1),
+              ),
+            ),
+          ),
+        
+        // Casco espacial
+        if (accessoryIndex == 4)
+          Positioned.fill(
+            child: Container(
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.4),
+                shape: BoxShape.circle,
+                border: Border.all(
+                  color: Colors.grey,
+                  width: 2,
+                ),
+              ),
+            ),
+          ),
+          
+        // Etiqueta de nivel
+        _buildLevelIndicator(Theme.of(context).brightness == Brightness.dark, avatarColor),
       ],
     );
   }

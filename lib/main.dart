@@ -7,7 +7,8 @@ import 'config/themes.dart';
 import 'providers/auth_provider.dart';
 import 'providers/classroom_provider.dart';
 import 'providers/theme_provider.dart';
-import 'providers/student_provider.dart'; // Añade esta importación
+import 'providers/student_provider.dart';
+import 'providers/avatar_provider.dart'; // Nuevo proveedor
 import 'screens/auth/login_screen.dart';
 import 'services/graphql_service.dart';
 
@@ -57,6 +58,10 @@ class MyApp extends StatelessWidget {
             // Accedemos directamente al GraphQLClient que expusimos arriba
             final client = Provider.of<GraphQLClient>(context, listen: false);
             return StudentProvider(client);
+          }),
+          // Añade el AvatarProvider (nuevo)
+          ChangeNotifierProvider(create: (context) {
+            return AvatarProvider();
           }),
         ],
         child: Consumer<ThemeProvider>(

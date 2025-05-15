@@ -1,17 +1,21 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../../config/routes.dart';
-import '../../constants/asset_paths.dart';
-import '../../models/user_model.dart';
-import '../../providers/auth_provider.dart';
-import '../../providers/theme_provider.dart';
-import '../../theme/app_colors.dart';
-import '../../widgets/animations/fade_animation.dart';
-import '../../widgets/common/app_card.dart';
-import '../../widgets/common/loading_indicator.dart';
-import '../../widgets/game/avatar_widget.dart';
-import '../../widgets/navigation/app_bottom_navigation.dart';
-import '../../utils/app_dialogs.dart';
+import '../config/routes.dart';
+import '../constants/asset_paths.dart';
+import '../models/user_model.dart';
+import '../providers/auth_provider.dart';
+import '../providers/theme_provider.dart';
+import '../providers/avatar_provider.dart';
+import '../theme/app_colors.dart';
+import '../widgets/animations/fade_animation.dart';
+import '../widgets/common/app_card.dart';
+import '../widgets/common/loading_indicator.dart';
+import '../widgets/common/custom_button.dart';
+import '../widgets/game/avatar_widget.dart';
+import '../widgets/navigation/app_bottom_navigation.dart';
+import '../widgets/profile/avatar_customization_widget.dart';
+import '../utils/app_dialogs.dart';
+import '../utils/app_snackbars.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -33,8 +37,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
     setState(() {
       _isLoading = true;
     });
-    // Simulamos una carga de datos
-    await Future.delayed(const Duration(milliseconds: 1000));
+    
+    // Cargar datos del usuario y del avatar
+    final authProvider = Provider.of<AuthProvider>(context, listen: false);
+    final avatarProvider = Provider.of<AvatarProvider>(context, listen: false);
+    
+    if (authProvider.currentUser != null) {
+      // Cargar el avatar del usuario
+      await avatarProvider.loadAvatar(authProvider.currentUser!.id);
+    }
+    
     if (mounted) {
       setState(() {
         _isLoading = false;
@@ -42,12 +54,57 @@ class _ProfileScreenState extends State<ProfileScreen> {
     }
   }
 
+  void _openAvatarCustomization() {
+    final avatarProvider = Provider.of<AvatarProvider>(context, listen: false);
+    final authProvider = Provider.of<AuthProvider>(context, listen: false);
+    
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        return Dialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
+          child: SingleChildScrollView(
+            child: AvatarCustomizationWidget(
+              initialAvatar: avatarProvider.avatar?.toJson(),
+              onAvatarUpdated: (avatarData) async {
+                // Guardar los cambios del avatar
+                if (authProvider.currentUser != null) {
+                  final success = await avatarProvider.updateAvatar(
+                    authProvider.currentUser!.id, 
+                    avatarData
+                  );
+                  
+                  if (success && mounted) {
+                    AppSnackbars.showSuccessSnackBar(
+                      context, 
+                      message: '¡Avatar actualizado con éxito!'
+                    );
+                  } else if (mounted) {
+                    AppSnackbars.showErrorSnackBar(
+                      context, 
+                      message: avatarProvider.error ?? 'Error al actualizar el avatar'
+                    );
+                  }
+                }
+              },
+            ),
+          ),
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final authProvider = Provider.of<AuthProvider>(context);
     final themeProvider = Provider.of<ThemeProvider>(context);
+    final avatarProvider = Provider.of<AvatarProvider>(context);
     final user = authProvider.currentUser;
     final isDarkMode = themeProvider.isDarkMode;
+    final avatar = avatarProvider.avatar;
 
     if (_isLoading || user == null) {
       return Scaffold(
@@ -78,15 +135,33 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
                       const SizedBox(height: 30),
+                      
                       // Avatar y nombre
                       FadeAnimation(
                         delay: const Duration(milliseconds: 200),
                         child: Center(
-                          child: AvatarWidget(
-                            username: user.username,
-                            level: user.level,
-                            size: 120,
-                            showLevel: user.role == 'student', // Solo mostrar nivel para estudiantes
+                          child: Column(
+                            children: [
+                              AvatarWidget(
+                                username: user.username,
+                                level: user.level,
+                                size: 140,
+                                showLevel: user.role == 'student',
+                                avatarData: avatar?.toJson(),
+                              ),
+                              const SizedBox(height: 16),
+                              
+                              // Botón para personalizar avatar
+                              CustomButton(
+                                text: avatar == null 
+                                    ? 'Crear Avatar' 
+                                    : 'Personalizar Avatar',
+                                onPressed: _openAvatarCustomization,
+                                icon: avatar == null ? Icons.add : Icons.edit,
+                                backgroundColor: AppColors.secondary,
+                                width: 200,
+                              ),
+                            ],
                           ),
                         ),
                       ),
