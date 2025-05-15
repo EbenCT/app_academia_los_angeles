@@ -1,6 +1,7 @@
 // lib/screens/profile_screen.dart
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:fluttermoji/fluttermoji.dart';
 import '../config/routes.dart';
 import '../constants/asset_paths.dart';
 import '../providers/auth_provider.dart';
@@ -10,8 +11,6 @@ import '../widgets/animations/fade_animation.dart';
 import '../widgets/common/app_card.dart';
 import '../widgets/common/loading_indicator.dart';
 import '../widgets/common/custom_button.dart';
-import '../widgets/game/advanced_avatar_widget.dart';
-import '../widgets/profile/advanced_avatar_customization_widget.dart';
 import '../utils/app_dialogs.dart';
 
 class ProfileScreen extends StatefulWidget {
@@ -52,9 +51,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   void _openAvatarCustomization() {
-    final avatarProvider = Provider.of<AvatarProvider>(context, listen: false);
-    final authProvider = Provider.of<AuthProvider>(context, listen: false);
-    
     showDialog(
       context: context,
       barrierDismissible: false,
@@ -64,27 +60,125 @@ class _ProfileScreenState extends State<ProfileScreen> {
             borderRadius: BorderRadius.circular(20),
           ),
           insetPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
-          child: AdvancedAvatarCustomizationWidget(
-            initialAvatar: avatarProvider.avatar,
-            onAvatarUpdated: (avatarData) async {
-              // Guardar los cambios del avatar
-              if (authProvider.currentUser != null) {
-                final success = await avatarProvider.updateMultipleFields(
-                  authProvider.currentUser!.id, 
-                  avatarData
-                );
+          child: Container(
+            height: MediaQuery.of(context).size.height * 0.85,
+            width: double.infinity,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(20),
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [
+                  Theme.of(context).brightness == Brightness.dark
+                      ? AppColors.darkPrimary
+                      : AppColors.primary.withOpacity(0.9),
+                  Theme.of(context).brightness == Brightness.dark
+                      ? AppColors.darkSurface
+                      : Colors.white,
+                ],
+              ),
+            ),
+            child: Column(
+              children: [
+                // Título y botón de cerrar
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 20, 20, 10),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        '¡Personaliza tu avatar espacial!',
+                        style: TextStyle(
+                          fontFamily: 'Comic Sans MS',
+                          fontSize: 22,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.close, color: Colors.white),
+                        onPressed: () => Navigator.pop(context),
+                      ),
+                    ],
+                  ),
+                ),
                 
-                if (success && mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('¡Avatar actualizado con éxito!')),
-                  );
-                } else if (mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('Error al actualizar el avatar')),
-                  );
-                }
-              }
-            },
+                // Vista previa del avatar
+                Expanded(
+                  flex: 3,
+                  child: FadeAnimation(
+                    delay: const Duration(milliseconds: 200),
+                    child: Container(
+                      margin: const EdgeInsets.symmetric(vertical: 15),
+                      child: FluttermojiCircleAvatar(
+                        radius: 100,
+                        backgroundColor: Colors.grey[200],
+                      ),
+                    ),
+                  ),
+                ),
+                
+                // Customización del avatar
+                Expanded(
+                  flex: 5,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
+                    decoration: BoxDecoration(
+                      color: Theme.of(context).brightness == Brightness.dark
+                          ? AppColors.darkSurface
+                          : Colors.white,
+                      borderRadius: const BorderRadius.only(
+                        bottomLeft: Radius.circular(20),
+                        bottomRight: Radius.circular(20),
+                      ),
+                    ),
+                    child: FluttermojiCustomizer(
+                      scaffoldHeight: MediaQuery.of(context).size.height * 0.5,
+                      scaffoldWidth: MediaQuery.of(context).size.width * 0.9,
+                      autosave: true,
+                      theme: FluttermojiThemeData(
+                        primaryBgColor: Theme.of(context).brightness == Brightness.dark
+                            ? AppColors.darkSurface
+                            : Colors.white,
+                        secondaryBgColor: Theme.of(context).brightness == Brightness.dark
+                            ? AppColors.darkPrimary.withOpacity(0.2)
+                            : AppColors.primary.withOpacity(0.1),
+                        iconColor: AppColors.primary,
+                        selectedIconColor: AppColors.secondary,
+                        labelTextStyle: TextStyle(
+                          fontFamily: 'Comic Sans MS',
+                          fontSize: 14,
+                          color: Theme.of(context).brightness == Brightness.dark
+                              ? Colors.white70
+                              : Colors.black87,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+                
+                // Botón guardar
+                Padding(
+                  padding: const EdgeInsets.all(20),
+                  child: CustomButton(
+                    text: 'Guardar mi Avatar Espacial',
+                    onPressed: () async {
+                      final avatarProvider = Provider.of<AvatarProvider>(context, listen: false);
+                      await avatarProvider.saveAvatar();
+                      
+                      if (context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text('¡Avatar actualizado con éxito!')),
+                        );
+                        Navigator.pop(context);
+                      }
+                    },
+                    backgroundColor: AppColors.secondary,
+                    icon: Icons.save_alt,
+                  ),
+                ),
+              ],
+            ),
           ),
         );
       },
@@ -94,9 +188,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   @override
   Widget build(BuildContext context) {
     final authProvider = Provider.of<AuthProvider>(context);
-    final avatarProvider = Provider.of<AvatarProvider>(context);
     final user = authProvider.currentUser;
-    final avatar = avatarProvider.avatar;
 
     if (_isLoading || user == null) {
       return Scaffold(
@@ -135,13 +227,52 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 child: Center(
                   child: Column(
                     children: [
-                      // Avatar
-                      AdvancedAvatarWidget(
-                        username: user.username,
-                        level: user.level,
-                        size: 140,
-                        showLevel: false,
-                        avatarData: avatar?.toJson(),
+                      // Avatar con Fluttermoji
+                      Stack(
+                        alignment: Alignment.center,
+                        children: [
+                          Container(
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              border: Border.all(
+                                color: AppColors.primary.withOpacity(0.5),
+                                width: 3,
+                              ),
+                            ),
+                            child: FluttermojiCircleAvatar(
+                              radius: 70,
+                              backgroundColor: Theme.of(context).brightness == Brightness.dark
+                                ? AppColors.darkPrimary.withOpacity(0.2)
+                                : AppColors.primary.withOpacity(0.1),
+                            ),
+                          ),
+                          
+                          // Indicador de nivel (opcional)
+                          if (user.level > 0)
+                            Positioned(
+                              right: 0,
+                              bottom: 0,
+                              child: Container(
+                                padding: const EdgeInsets.all(4),
+                                decoration: BoxDecoration(
+                                  color: AppColors.primary,
+                                  shape: BoxShape.circle,
+                                  border: Border.all(
+                                    color: Colors.white,
+                                    width: 2,
+                                  ),
+                                ),
+                                child: Text(
+                                  user.level.toString(),
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 12,
+                                  ),
+                                ),
+                              ),
+                            ),
+                        ],
                       ),
                       const SizedBox(height: 16),
                       
@@ -159,11 +290,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       
                       // Botón para personalizar avatar
                       CustomButton(
-                        text: avatar == null 
-                            ? 'Crear Avatar' 
-                            : 'Personalizar Avatar',
+                        text: 'Personalizar Avatar',
                         onPressed: _openAvatarCustomization,
-                        icon: avatar == null ? Icons.add : Icons.edit,
+                        icon: Icons.edit,
                         backgroundColor: AppColors.secondary,
                         width: 240,
                       ),
