@@ -1,4 +1,3 @@
-// lib/screens/game/lesson_screen_base.dart
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:lottie/lottie.dart';
@@ -7,9 +6,8 @@ import '../../theme/app_colors.dart';
 import '../../widgets/common/loading_indicator.dart';
 import '../../constants/asset_paths.dart';
 
-/// Pantalla base mejorada para lecciones interactivas
-/// Esta clase puede ser extendida por diferentes lecciones
-class LessonScreenBase extends StatefulWidget {
+/// Versión interactiva de la base de la pantalla de lección
+class LessonScreenBaseInteractive extends StatefulWidget {
   final String title;
   final IconData? icon;
   final LinearGradient? titleGradient;
@@ -22,7 +20,7 @@ class LessonScreenBase extends StatefulWidget {
   final Color? nextButtonColor;
   final Color? previousButtonColor;
 
-  const LessonScreenBase({
+  const LessonScreenBaseInteractive({
     Key? key,
     required this.title,
     this.icon,
@@ -38,10 +36,10 @@ class LessonScreenBase extends StatefulWidget {
   }) : super(key: key);
 
   @override
-  State<LessonScreenBase> createState() => _LessonScreenBaseState();
+  State<LessonScreenBaseInteractive> createState() => _LessonScreenBaseInteractiveState();
 }
 
-class _LessonScreenBaseState extends State<LessonScreenBase> with SingleTickerProviderStateMixin {
+class _LessonScreenBaseInteractiveState extends State<LessonScreenBaseInteractive> with SingleTickerProviderStateMixin {
   // Controlador para las páginas de la lección
   late final PageController _pageController;
   // Controlador para animaciones
@@ -52,6 +50,10 @@ class _LessonScreenBaseState extends State<LessonScreenBase> with SingleTickerPr
   
   // Para el efecto de página al dar siguiente o anterior
   bool _isNavigatingForward = true;
+  
+  // Estado de ayuda AI
+  bool _showingAIHelp = false;
+  String _aiHelpQuery = "";
 
   @override
   void initState() {
@@ -246,6 +248,34 @@ class _LessonScreenBaseState extends State<LessonScreenBase> with SingleTickerPr
       },
     );
   }
+  
+  // Mostrar el diálogo de ayuda AI
+  void _showAIHelpDialog(String query) {
+    setState(() {
+      _showingAIHelp = true;
+      _aiHelpQuery = query;
+    });
+    
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20),
+        ),
+        contentPadding: EdgeInsets.zero,
+        content: _AIHelpDialog(
+          query: query,
+          onDismiss: () {
+            setState(() {
+              _showingAIHelp = false;
+              _aiHelpQuery = "";
+            });
+            Navigator.pop(context);
+          },
+        ),
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -270,33 +300,53 @@ class _LessonScreenBaseState extends State<LessonScreenBase> with SingleTickerPr
                 
                 // Contenido de la lección con efecto de transición
                 Expanded(
-                  child: PageView(
-                    controller: _pageController,
-                    onPageChanged: (index) {
-                      setState(() {
-                        _currentPage = index;
-                      });
-                    },
-                    children: widget.steps.map((step) {
-                      return AnimatedSwitcher(
-                        duration: const Duration(milliseconds: 300),
-                        transitionBuilder: (Widget child, Animation<double> animation) {
-                          return FadeTransition(
-                            opacity: animation,
-                            child: SlideTransition(
-                              position: Tween<Offset>(
-                                begin: _isNavigatingForward 
-                                    ? const Offset(0.2, 0.0) 
-                                    : const Offset(-0.2, 0.0),
-                                end: Offset.zero,
-                              ).animate(animation),
-                              child: child,
-                            ),
-                          );
+                  child: Stack(
+                    children: [
+                      PageView(
+                        controller: _pageController,
+                        onPageChanged: (index) {
+                          setState(() {
+                            _currentPage = index;
+                          });
                         },
-                        child: step,
-                      );
-                    }).toList(),
+                        children: widget.steps.map((step) {
+                          return AnimatedSwitcher(
+                            duration: const Duration(milliseconds: 300),
+                            transitionBuilder: (Widget child, Animation<double> animation) {
+                              return FadeTransition(
+                                opacity: animation,
+                                child: SlideTransition(
+                                  position: Tween<Offset>(
+                                    begin: _isNavigatingForward 
+                                        ? const Offset(0.2, 0.0) 
+                                        : const Offset(-0.2, 0.0),
+                                    end: Offset.zero,
+                                  ).animate(animation),
+                                  child: child,
+                                ),
+                              );
+                            },
+                            child: step,
+                          );
+                        }).toList(),
+                      ),
+                      
+                      // Botón de ayuda flotante
+                      Positioned(
+                        bottom: 10,
+                        right: 10,
+                        child: FloatingActionButton(
+                          mini: true,
+                          backgroundColor: AppColors.info,
+                          onPressed: () => _showAIHelpDialog("Necesito ayuda con los números enteros"),
+                          tooltip: "Pedir ayuda a Gemini",
+                          child: Icon(
+                            Icons.help_outline,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
                 
@@ -556,6 +606,242 @@ class _LessonScreenBaseState extends State<LessonScreenBase> with SingleTickerPr
               ),
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
               elevation: 3,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Widget para el diálogo de ayuda con IA
+class _AIHelpDialog extends StatefulWidget {
+  final String query;
+  final VoidCallback onDismiss;
+
+  const _AIHelpDialog({
+    Key? key,
+    required this.query,
+    required this.onDismiss,
+  }) : super(key: key);
+
+  @override
+  State<_AIHelpDialog> createState() => _AIHelpDialogState();
+}
+
+class _AIHelpDialogState extends State<_AIHelpDialog> {
+  String _response = "";
+  bool _isLoading = true;
+  final TextEditingController _queryController = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    _queryController.text = widget.query;
+    _getExplanation();
+  }
+
+  Future<void> _getExplanation() async {
+    try {
+      // En un entorno real, esto usaría GeminiService.getErrorExplanation
+      // Aquí simulamos una respuesta para evitar dependencias de API
+      await Future.delayed(Duration(seconds: 2)); // Simular tiempo de respuesta
+      final response = _generateFakeResponse(widget.query);
+      
+      setState(() {
+        _response = response;
+        _isLoading = false;
+      });
+    } catch (e) {
+      setState(() {
+        _response = "Lo siento, no pude generar una explicación en este momento. Prueba nuevamente más tarde.";
+        _isLoading = false;
+      });
+    }
+  }
+
+  String _generateFakeResponse(String query) {
+    // Esta es una simulación de lo que haría la API de Gemini
+    // En una implementación real, esta llamada sería a la API
+    if (query.contains("enteros")) {
+      return "Los números enteros son el conjunto que incluye los números negativos, el cero y los positivos. Se representan con la letra 'Z'.\n\nPueden usarse para representar situaciones como temperaturas bajo cero, elevaciones sobre o bajo el nivel del mar, o fechas antes y después de un punto de referencia.\n\nRecuerda que cualquier número sin parte decimal o fraccionaria es un entero.";
+    } else if (query.contains("comparación")) {
+      return "Para comparar números enteros:\n\n1. Los números positivos son mayores que los negativos y que el cero.\n2. El cero es mayor que cualquier número negativo.\n3. Entre negativos, el que tiene menor valor absoluto es mayor (−3 > −7).\n\nPuedes visualizarlo en la recta numérica: los números aumentan de izquierda a derecha.";
+    } else if (query.contains("operación") || query.contains("operaciones")) {
+      return "Para operar con números enteros:\n\n• Suma: si tienen el mismo signo, sumas los valores y mantienes el signo. Si tienen signos diferentes, restas el menor del mayor y usas el signo del mayor.\n\n• Resta: convertir la resta en suma del primer número con el opuesto del segundo. Ej: 5 - (-3) = 5 + 3 = 8\n\n• Multiplicación: multiplicas los valores absolutos. Si ambos tienen el mismo signo, el resultado es positivo. Si tienen signos diferentes, el resultado es negativo.";
+    } else {
+      return "Los números enteros son una parte fundamental de las matemáticas. Incluyen los positivos (1, 2, 3...), los negativos (-1, -2, -3...) y el cero.\n\nEstos números nos ayudan a representar situaciones cotidianas como temperaturas, altitudes o deudas y ganancias.\n\n¿Hay algo específico sobre los números enteros que te gustaría entender mejor?";
+    }
+  }
+
+  void _askNewQuestion() {
+    setState(() {
+      _isLoading = true;
+    });
+    _getExplanation();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+    
+    return Container(
+      width: double.maxFinite,
+      padding: EdgeInsets.zero,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          // Encabezado
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: AppColors.primary,
+              borderRadius: BorderRadius.only(
+                topLeft: Radius.circular(20),
+                topRight: Radius.circular(20),
+              ),
+            ),
+            child: Row(
+              children: [
+                Icon(Icons.smart_toy, color: Colors.white),
+                SizedBox(width: 8),
+                Text(
+                  'Asistente de Matemáticas',
+                  style: TextStyle(
+                    fontFamily: 'Comic Sans MS',
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
+                ),
+                Spacer(),
+                IconButton(
+                  icon: Icon(Icons.close, color: Colors.white),
+                  onPressed: widget.onDismiss,
+                ),
+              ],
+            ),
+          ),
+          
+          // Contenido
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: isDarkMode ? AppColors.darkSurface : Colors.white,
+              borderRadius: BorderRadius.only(
+                bottomLeft: Radius.circular(20),
+                bottomRight: Radius.circular(20),
+              ),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Campo de consulta
+                TextField(
+                  controller: _queryController,
+                  decoration: InputDecoration(
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    labelText: 'Tu pregunta',
+                    prefixIcon: Icon(Icons.question_answer),
+                    suffixIcon: IconButton(
+                      icon: Icon(Icons.send),
+                      onPressed: () {
+                        if (_queryController.text.isNotEmpty) {
+                          _askNewQuestion();
+                        }
+                      },
+                    ),
+                  ),
+                  maxLines: 2,
+                  minLines: 1,
+                  onSubmitted: (_) {
+                    if (_queryController.text.isNotEmpty) {
+                      _askNewQuestion();
+                    }
+                  },
+                ),
+                
+                SizedBox(height: 16),
+                
+                // Respuesta o cargando
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: isDarkMode 
+                        ? Colors.grey.shade800 
+                        : Colors.grey.shade100,
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(
+                      color: isDarkMode 
+                          ? Colors.grey.shade700 
+                          : Colors.grey.shade300,
+                    ),
+                  ),
+                  constraints: BoxConstraints(
+                    minHeight: 100,
+                    maxHeight: 300,
+                  ),
+                  child: _isLoading 
+                      ? Center(
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              SizedBox(
+                                width: 50,
+                                height: 50,
+                                child: CircularProgressIndicator(),
+                              ),
+                              SizedBox(height: 16),
+                              Text(
+                                'Pensando...',
+                                style: TextStyle(
+                                  fontFamily: 'Comic Sans MS',
+                                  fontSize: 16,
+                                ),
+                              ),
+                            ],
+                          ),
+                        )
+                      : SingleChildScrollView(
+                          child: Text(
+                            _response,
+                            style: TextStyle(
+                              fontFamily: 'Comic Sans MS',
+                              fontSize: 16,
+                            ),
+                          ),
+                        ),
+                ),
+                
+                // Botones de acción
+                SizedBox(height: 16),
+                Row(
+                  children: [
+                    ElevatedButton.icon(
+                      onPressed: () {
+                        _queryController.text = "Dame un ejemplo de operaciones con números enteros";
+                        _askNewQuestion();
+                      },
+                      icon: Icon(Icons.lightbulb_outline),
+                      label: Text('Ejemplos'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.info,
+                        foregroundColor: Colors.white,
+                      ),
+                    ),
+                    Spacer(),
+                    TextButton.icon(
+                      onPressed: widget.onDismiss,
+                      icon: Icon(Icons.check_circle),
+                      label: Text('¡Entendido!'),
+                    ),
+                  ],
+                ),
+              ],
             ),
           ),
         ],

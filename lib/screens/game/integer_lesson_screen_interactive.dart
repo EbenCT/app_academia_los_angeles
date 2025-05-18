@@ -1,16 +1,15 @@
-// lib/screens/game/integer_lesson_screen.dart
 import 'package:flutter/material.dart';
 import '../../config/routes.dart';
-import 'lesson_screen_base.dart';
-import 'integer_lesson_steps.dart';
+import 'integer_lesson_steps_interactive.dart';
+import 'lesson_screen_base_interactive.dart';
 
-/// Pantalla principal para la lección sobre números enteros con mejoras visuales
-class IntegerLessonScreen extends StatelessWidget {
-  const IntegerLessonScreen({Key? key}) : super(key: key);
+/// Pantalla principal interactiva para la lección sobre números enteros
+class IntegerLessonScreenInteractive extends StatelessWidget {
+  const IntegerLessonScreenInteractive({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
-    return LessonScreenBase(
+    return LessonScreenBaseInteractive(
       title: 'Números Enteros',
       icon: Icons.exposure_zero,
       titleGradient: const LinearGradient(
@@ -23,12 +22,12 @@ class IntegerLessonScreen extends StatelessWidget {
       ),
       totalSteps: 3,
       steps: const [
-        // Paso 1: ¿Qué son los números enteros?
-        WhatAreIntegersStep(),
-        // Paso 2: Recta numérica
-        NumberLineStep(),
-        // Paso 3: Aplicaciones en la vida cotidiana
-        ApplicationsStep(),
+        // Paso 1: ¿Qué son los números enteros? - Interactivo
+        WhatAreIntegersStepInteractive(),
+        // Paso 2: Recta numérica - Interactivo
+        NumberLineStepInteractive(),
+        // Paso 3: Aplicaciones en la vida cotidiana - Interactivo
+        ApplicationsStepInteractive(),
       ],
       completionRoute: AppRoutes.integerRescueGame,
       completionPoints: 30,

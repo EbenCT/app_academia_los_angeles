@@ -2,13 +2,13 @@
 import 'package:flutter/material.dart';
 import '../../screens/auth/login_screen.dart';
 import '../../screens/auth/register_screen.dart';
+import '../screens/game/integer_lesson_screen_interactive.dart';
 import '../screens/home/home_screen.dart';
 import '../screens/auth/register_teacher_screen.dart';
 import '../screens/home/teacher_home_screen.dart';
 import '../screens/join_classroom_screen.dart';
 import '../../screens/profile_screen.dart';
 import '../screens/game/integer_rescue_game.dart';
-import '../screens/game/integer_lesson_screen.dart'; // Importación de la lección de números enteros
 
 /// Contiene todas las rutas de navegación de la aplicación
 class AppRoutes {
@@ -25,7 +25,7 @@ class AppRoutes {
   static const String teacherHome = '/teacherHome';
   static const String joinClassroom = '/joinClassroom';
   static const String integerRescueGame = '/games/integer-rescue';
-  static const String integerLesson = '/lessons/integer-lesson'; // Nueva ruta para la lección
+static const String integerLesson = '/integer_lesson'; // Nueva ruta para la lección
 
   /// Mapa de rutas nombradas para la navegación en MaterialApp
   static Map<String, WidgetBuilder> get routes => {
@@ -37,7 +37,7 @@ class AppRoutes {
     joinClassroom: (context) => const JoinClassroomScreen(),
     profile: (context) => const ProfileScreen(),
     integerRescueGame: (context) => const IntegerRescueGame(),
-    integerLesson: (context) => const IntegerLessonScreen(), // Añadida la nueva ruta
+    integerLesson: (context) => const IntegerLessonScreenInteractive(), // Añadida la nueva ruta
     /*courses: (context) => const CoursesScreen(),
     achievements: (context) => const AchievementsScreen(),
     leaderboard: (context) => const LeaderboardScreen(),*/
