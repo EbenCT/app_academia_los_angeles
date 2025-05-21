@@ -171,7 +171,7 @@ class _InteractiveProblemWidgetState extends State<InteractiveProblemWidget> {
                     });
                   },
                   icon: Icon(Icons.lightbulb_outline),
-                  label: Text("Ver explicación"),
+                  label: Text("Explícame"),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppColors.info,
                     foregroundColor: Colors.white,

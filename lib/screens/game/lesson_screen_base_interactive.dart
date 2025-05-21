@@ -706,7 +706,7 @@ class _AIHelpDialogState extends State<_AIHelpDialog> {
                 Icon(Icons.smart_toy, color: Colors.white),
                 SizedBox(width: 8),
                 Text(
-                  'Asistente de Matemáticas',
+                  'Asistente personal',
                   style: TextStyle(
                     fontFamily: 'Comic Sans MS',
                     fontSize: 18,

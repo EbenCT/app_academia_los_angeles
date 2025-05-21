@@ -87,7 +87,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(
-                        '¡Personaliza tu avatar espacial!',
+                        '¡Personaliza tu avatar!',
                         style: TextStyle(
                           fontFamily: 'Comic Sans MS',
                           fontSize: 22,

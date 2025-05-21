@@ -132,7 +132,7 @@ class _InteractiveNumberOrderingWidgetState extends State<InteractiveNumberOrder
                     Icon(Icons.check),
                     SizedBox(width: 8),
                     Text(
-                      "Verificar respuesta",
+                      "Comprobar",
                       style: TextStyle(fontFamily: 'Comic Sans MS'),
                     ),
                   ],

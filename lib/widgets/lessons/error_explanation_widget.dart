@@ -115,7 +115,7 @@ class _ErrorExplanationWidgetState extends State<ErrorExplanationWidget> with Si
                 ),
                 const SizedBox(width: 12),
                 Text(
-                  "Entendamos esto juntos",
+                  "Explicacion",
                   style: TextStyle(
                     fontFamily: 'Comic Sans MS',
                     fontSize: 18,
