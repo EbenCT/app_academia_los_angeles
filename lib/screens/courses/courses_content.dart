@@ -1,24 +1,21 @@
-// lib/screens/courses/courses_screen.dart
+// lib/screens/courses/courses_content.dart
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../providers/student_provider.dart';
 import '../../widgets/common/loading_indicator.dart';
-import '../../widgets/screens/screen_base.dart';
 import '../../widgets/animations/fade_animation.dart';
 import '../../widgets/common/app_card.dart';
 import '../../theme/app_colors.dart';
 import '../../utils/app_icons.dart';
-import '../../widgets/navigation/app_bottom_navigation.dart';
-import '../../providers/auth_provider.dart';
 
-class CoursesScreen extends StatefulWidget {
-  const CoursesScreen({super.key});
+class CoursesContent extends StatefulWidget {
+  const CoursesContent({super.key});
 
   @override
-  State<CoursesScreen> createState() => _CoursesScreenState();
+  State<CoursesContent> createState() => _CoursesContentState();
 }
 
-class _CoursesScreenState extends State<CoursesScreen> {
+class _CoursesContentState extends State<CoursesContent> {
   @override
   void initState() {
     super.initState();
@@ -33,32 +30,72 @@ class _CoursesScreenState extends State<CoursesScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final user = Provider.of<AuthProvider>(context).currentUser;
     final studentProvider = Provider.of<StudentProvider>(context);
     
-    if (studentProvider.isLoading) {
-      return ScreenBase.forStudent(
-        title: 'Mis Materias',
-        body: LoadingIndicator(
-          message: 'Cargando tus materias...',
-          useAstronaut: true,
+    return SafeArea(
+      child: Column(
+        children: [
+          // App Bar personalizada
+          _buildAppBar(),
+          
+          // Contenido
+          Expanded(
+            child: studentProvider.isLoading
+                ? LoadingIndicator(
+                    message: 'Cargando tus materias...',
+                    useAstronaut: true,
+                  )
+                : studentProvider.error != null
+                    ? _buildErrorState(studentProvider.error!)
+                    : _buildSubjectsGrid(studentProvider),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildAppBar() {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [
+            AppColors.primary,
+            AppColors.primary.withOpacity(0.7),
+          ],
+          begin: Alignment.centerLeft,
+          end: Alignment.centerRight,
         ),
-      );
-    }
-
-    if (studentProvider.error != null) {
-      return ScreenBase.forStudent(
-        title: 'Mis Materias',
-        body: _buildErrorState(studentProvider.error!),
-      );
-    }
-
-    return ScreenBase.forStudent(
-      title: 'Mis Materias',
-      body: _buildSubjectsGrid(studentProvider),
-      bottomNavigationBar: AppBottomNavigation(
-        currentIndex: 1,
-        userRole: user?.role ?? 'student',
+        borderRadius: const BorderRadius.only(
+          bottomLeft: Radius.circular(20),
+          bottomRight: Radius.circular(20),
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.1),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          Icon(
+            Icons.auto_stories_rounded,
+            color: Colors.white,
+            size: 24,
+          ),
+          const SizedBox(width: 12),
+          Text(
+            'Mis Materias',
+            style: TextStyle(
+              fontFamily: 'Comic Sans MS',
+              fontSize: 22,
+              fontWeight: FontWeight.bold,
+              color: Colors.white,
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -183,7 +220,7 @@ class _CoursesScreenState extends State<CoursesScreen> {
               physics: const NeverScrollableScrollPhysics(),
               gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                 crossAxisCount: 2,
-                childAspectRatio: 0.9, // Ajustado para mejor proporción
+                childAspectRatio: 0.9,
                 crossAxisSpacing: 16,
                 mainAxisSpacing: 16,
               ),
@@ -196,6 +233,8 @@ class _CoursesScreenState extends State<CoursesScreen> {
                 );
               },
             ),
+            
+            const SizedBox(height: 100), // Espacio para el bottom navigation
           ],
         ),
       ),

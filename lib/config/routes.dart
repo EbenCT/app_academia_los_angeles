@@ -3,50 +3,43 @@ import 'package:flutter/material.dart';
 import '../../screens/auth/login_screen.dart';
 import '../../screens/auth/register_screen.dart';
 import '../screens/game/integer_lesson_screen_interactive.dart';
-import '../screens/home/home_screen.dart';
+import '../screens/main/main_screen.dart';
+import '../screens/main/main_teacher_screen.dart';
 import '../screens/auth/register_teacher_screen.dart';
-import '../screens/home/teacher_home_screen.dart';
 import '../screens/join_classroom_screen.dart';
-import '../screens/courses/courses_screen.dart';
 import '../screens/courses/subject_lessons_screen.dart';
-import '../../screens/profile_screen.dart';
 import '../screens/game/integer_rescue_game.dart';
+import '../screens/profile/profile_screen.dart';
 
 /// Contiene todas las rutas de navegación de la aplicación
 class AppRoutes {
   // Nombres de rutas estáticas para fácil referencia
   static const String login = '/login';
   static const String register = '/register';
-  static const String home = '/home';
+  static const String main = '/main'; // Nueva ruta principal para estudiantes
+  static const String mainTeacher = '/main-teacher'; // Nueva ruta principal para profesores
   static const String profile = '/profile';
-  static const String courses = '/courses';
   static const String subjectLessons = '/subject-lessons';
-  static const String achievements = '/achievements';
-  static const String leaderboard = '/leaderboard';
   static const String registerTeacher = '/registerTeacher';
-  static const String teacherHome = '/teacherHome';
   static const String joinClassroom = '/joinClassroom';
   static const String integerRescueGame = '/games/integer-rescue';
-  static const String integerLesson = '/integer_lesson'; // Nueva ruta para la lección
+  static const String integerLesson = '/integer_lesson';
 
   /// Mapa de rutas nombradas para la navegación en MaterialApp
   static Map<String, WidgetBuilder> get routes => {
     login: (context) => const LoginScreen(),
     register: (context) => const RegisterScreen(),
     registerTeacher: (context) => const RegisterTeacherScreen(),
-    home: (context) => const HomeScreen(),
-    teacherHome: (context) => const TeacherHomeScreen(),
+    main: (context) => const MainScreen(), // Pantalla principal para estudiantes
+    mainTeacher: (context) => const MainTeacherScreen(), // Pantalla principal para profesores
     joinClassroom: (context) => const JoinClassroomScreen(),
-    courses: (context) => const CoursesScreen(),
     subjectLessons: (context) {
       final subject = ModalRoute.of(context)!.settings.arguments;
       return SubjectLessonsScreen(subject: subject);
     },
     profile: (context) => const ProfileScreen(),
     integerRescueGame: (context) => const IntegerRescueGame(),
-    integerLesson: (context) => const IntegerLessonScreenInteractive(), // Añadida la nueva ruta
-    /*achievements: (context) => const AchievementsScreen(),
-    leaderboard: (context) => const LeaderboardScreen(),*/
+    integerLesson: (context) => const IntegerLessonScreenInteractive(),
   };
 
   /// Navega a una ruta nombrada
@@ -60,18 +53,18 @@ class AppRoutes {
   }
 
   /// Navega al inicio y limpia todo el stack de navegación
-  static void navigateToHomeAndClearStack(BuildContext context) {
+  static void navigateToMainAndClearStack(BuildContext context) {
     Navigator.pushNamedAndRemoveUntil(
       context,
-      home,
+      main,
       (Route<dynamic> route) => false,
     );
   }
 
-  static void navigateToTeacherHomeAndClearStack(BuildContext context) {
+  static void navigateToTeacherMainAndClearStack(BuildContext context) {
     Navigator.pushNamedAndRemoveUntil(
       context,
-      teacherHome,
+      mainTeacher,
       (Route<dynamic> route) => false,
     );
   }

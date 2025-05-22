@@ -64,11 +64,11 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
       if (success && mounted) {
         // Navegar a la pantalla principal según el rol
         final user = authProvider.currentUser;
-        if (user?.role == 'teacher') {
-          AppRoutes.navigateToTeacherHomeAndClearStack(context);
-        } else {
-          AppRoutes.navigateToHomeAndClearStack(context);
-        }
+      if (user?.role == 'teacher') {
+        AppRoutes.navigateToTeacherMainAndClearStack(context);
+      } else {
+        AppRoutes.navigateToMainAndClearStack(context);
+      }
       }
     }
   }

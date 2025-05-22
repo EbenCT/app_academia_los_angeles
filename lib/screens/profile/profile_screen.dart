@@ -2,16 +2,16 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:fluttermoji/fluttermoji.dart';
-import '../config/routes.dart';
-import '../constants/asset_paths.dart';
-import '../providers/auth_provider.dart';
-import '../providers/avatar_provider.dart';
-import '../theme/app_colors.dart';
-import '../widgets/animations/fade_animation.dart';
-import '../widgets/common/app_card.dart';
-import '../widgets/common/loading_indicator.dart';
-import '../widgets/common/custom_button.dart';
-import '../utils/app_dialogs.dart';
+import '../../config/routes.dart';
+import '../../constants/asset_paths.dart';
+import '../../providers/auth_provider.dart';
+import '../../providers/avatar_provider.dart';
+import '../../theme/app_colors.dart';
+import '../../widgets/animations/fade_animation.dart';
+import '../../widgets/common/app_card.dart';
+import '../../widgets/common/loading_indicator.dart';
+import '../../widgets/common/custom_button.dart';
+import '../../utils/app_dialogs.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});

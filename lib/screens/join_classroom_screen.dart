@@ -93,7 +93,7 @@ class _JoinClassroomScreenState extends State<JoinClassroomScreen> with SingleTi
       Future.delayed(const Duration(seconds: 2), () {
         if (mounted) {
           print('Navegando a HomeScreen');
-          AppRoutes.navigateToHomeAndClearStack(context);
+          AppRoutes.navigateToMainAndClearStack(context);
         }
       });
     } else if (mounted) {

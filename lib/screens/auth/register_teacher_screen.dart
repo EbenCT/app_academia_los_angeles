@@ -106,7 +106,7 @@ class _RegisterTeacherScreenState extends State<RegisterTeacherScreen>
           if (mounted) {
             if (authProvider.isAuthenticated) {
               // Si el registro también inicia sesión automáticamente
-              AppRoutes.navigateToHomeAndClearStack(context);
+              AppRoutes.navigateToMainAndClearStack(context);
             } else {
               // Si requiere login manual después del registro
               AppRoutes.navigateReplacementTo(context, AppRoutes.login);

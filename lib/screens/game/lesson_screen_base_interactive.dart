@@ -1,3 +1,5 @@
+// ignore_for_file: unused_field
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:lottie/lottie.dart';
@@ -52,6 +54,8 @@ class _LessonScreenBaseInteractiveState extends State<LessonScreenBaseInteractiv
   bool _isNavigatingForward = true;
   
   // Estado de ayuda AI
+  // ignore: duplicate_ignore
+  // ignore: unused_field
   bool _showingAIHelp = false;
   String _aiHelpQuery = "";
 

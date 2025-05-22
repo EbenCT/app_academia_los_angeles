@@ -212,4 +212,13 @@ Future<bool> register(
   // Por compatibilidad, mantenemos este método pero ahora delegamos a registerStudent
   return registerStudent(email, password, firstName, lastName);
 }
+
+// Método auxiliar para determinar la ruta principal según el rol
+String getMainRouteForUser() {
+  if (_currentUser?.role == 'teacher') {
+    return '/main-teacher';
+  } else {
+    return '/main';
+  }
+}
 }

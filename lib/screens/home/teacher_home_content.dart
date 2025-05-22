@@ -1,3 +1,4 @@
+// lib/screens/home/teacher_home_content.dart
 import 'package:flutter/material.dart';
 import 'package:graphql_flutter/graphql_flutter.dart';
 import 'package:provider/provider.dart';
@@ -14,56 +15,17 @@ import '../../widgets/teacher/classroom_card_widget.dart';
 import '../../widgets/teacher/create_classroom_dialog.dart';
 import '../../widgets/common/section_title.dart';
 import '../../widgets/common/app_card.dart';
-import '../../widgets/navigation/app_bottom_navigation.dart';
 import '../../utils/app_snackbars.dart';
 
-class TeacherHomeScreen extends StatefulWidget {
-  const TeacherHomeScreen({super.key});
+class TeacherHomeContent extends StatelessWidget {
+  const TeacherHomeContent({super.key});
 
-  @override
-  State<TeacherHomeScreen> createState() => _TeacherHomeScreenState();
-}
-
-class _TeacherHomeScreenState extends State<TeacherHomeScreen> {
-  bool _isLoading = true;
-  
-  @override
-  void initState() {
-    super.initState();
-    _loadData();
-  }
-  
-  Future<void> _loadData() async {
-    setState(() {
-      _isLoading = true;
-    });
-    
-    // Simulamos tiempo de carga para mostrar la animación
-    await Future.delayed(const Duration(milliseconds: 1500));
-    
-    if (mounted) {
-      setState(() {
-        _isLoading = false;
-      });
-    }
-  }
-  
   @override
   Widget build(BuildContext context) {
     final authProvider = Provider.of<AuthProvider>(context);
     final themeProvider = Provider.of<ThemeProvider>(context);
-    final user = authProvider.currentUser;
+    final user = authProvider.currentUser!;
     final isDarkMode = themeProvider.isDarkMode;
-    
-    if (_isLoading || user == null) {
-      return Scaffold(
-        body: LoadingIndicator(
-          message: 'Preparando tu estación de comando...',
-          useAstronaut: true,
-          size: 150,
-        ),
-      );
-    }
     
     return ChangeNotifierProvider(
       create: (_) => ClassroomProvider(Provider.of<GraphQLClient>(context, listen: false)),
@@ -73,99 +35,86 @@ class _TeacherHomeScreenState extends State<TeacherHomeScreen> {
           final classrooms = classroomProvider.classrooms;
           final isLoadingClassrooms = classroomProvider.isLoading;
           
-          return Scaffold(
-           body: SafeArea(
-              child: RefreshIndicator(
-                color: AppColors.secondary,
-                onRefresh: () async {
-                  await classroomProvider.fetchTeacherClassrooms();
-                },
-                child: CustomScrollView(
-                  physics: const BouncingScrollPhysics(),
-                  slivers: [
-                    // App Bar personalizada
-                    _buildAppBar(isDarkMode, user.username, themeProvider),
-                    
-                    // Contenido principal
-                    SliverToBoxAdapter(
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            const SizedBox(height: 20),
-                            
-                            // Banner de bienvenida para profesores
-                            FadeAnimation(
-                              delay: const Duration(milliseconds: 200),
-                              child: _buildTeacherWelcomeBanner(user.username),
-                            ),
-                            
-                            const SizedBox(height: 24),
-                            
-                            // Título de sección
-                            SectionTitle(
-                              title: 'Tus aulas espaciales',
-                              color: AppColors.secondary,
-                            ),
-                            
-                            const SizedBox(height: 16),
-                            
-                            // Botón para crear nueva aula
-                            _buildCreateClassroomButton(context),
-                            
-                            const SizedBox(height: 24),
-                            
-                            // Lista de aulas
-                            if (isLoadingClassrooms)
-                              Center(
-                                child: LoadingIndicator(
-                                  message: 'Cargando tus aulas...',
-                                  size: 100,
-                                ),
-                              )
-                            else if (classrooms.isEmpty)
-                              FadeAnimation(
-                                delay: const Duration(milliseconds: 400),
-                                child: _buildEmptyClassroomMessage(),
-                              )
-                            else
-                              FadeAnimation(
-                                delay: const Duration(milliseconds: 400),
-                                child: ListView.builder(
-                                  shrinkWrap: true,
-                                  physics: const NeverScrollableScrollPhysics(),
-                                  itemCount: classrooms.length,
-                                  itemBuilder: (context, index) {
-                                    return ClassroomCardWidget(
-                                      classroom: classrooms[index],
-                                      onTap: () {
-                                        _navigateToClassroomDetail(context, classrooms[index]);
-                                      },
-                                    );
-                                  },
-                                ),
+          return SafeArea(
+            child: Column(
+              children: [
+                // App Bar personalizada
+                _buildAppBar(isDarkMode, user.username, themeProvider, context),
+                
+                // Contenido
+                Expanded(
+                  child: RefreshIndicator(
+                    color: AppColors.secondary,
+                    onRefresh: () async {
+                      await classroomProvider.fetchTeacherClassrooms();
+                    },
+                    child: SingleChildScrollView(
+                      physics: const AlwaysScrollableScrollPhysics(),
+                      padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const SizedBox(height: 20),
+                          
+                          // Banner de bienvenida para profesores
+                          FadeAnimation(
+                            delay: const Duration(milliseconds: 200),
+                            child: _buildTeacherWelcomeBanner(user.username),
+                          ),
+                          
+                          const SizedBox(height: 24),
+                          
+                          // Título de sección
+                          SectionTitle(
+                            title: 'Tus aulas espaciales',
+                            color: AppColors.secondary,
+                          ),
+                          
+                          const SizedBox(height: 16),
+                          
+                          // Botón para crear nueva aula
+                          _buildCreateClassroomButton(context),
+                          
+                          const SizedBox(height: 24),
+                          
+                          // Lista de aulas
+                          if (isLoadingClassrooms)
+                            Center(
+                              child: LoadingIndicator(
+                                message: 'Cargando tus aulas...',
+                                size: 100,
                               ),
-                            
-                            const SizedBox(height: 32),
-                          ],
-                        ),
+                            )
+                          else if (classrooms.isEmpty)
+                            FadeAnimation(
+                              delay: const Duration(milliseconds: 400),
+                              child: _buildEmptyClassroomMessage(context),
+                            )
+                          else
+                            FadeAnimation(
+                              delay: const Duration(milliseconds: 400),
+                              child: ListView.builder(
+                                shrinkWrap: true,
+                                physics: const NeverScrollableScrollPhysics(),
+                                itemCount: classrooms.length,
+                                itemBuilder: (context, index) {
+                                  return ClassroomCardWidget(
+                                    classroom: classrooms[index],
+                                    onTap: () {
+                                      _navigateToClassroomDetail(context, classrooms[index]);
+                                    },
+                                  );
+                                },
+                              ),
+                            ),
+                          
+                          const SizedBox(height: 100), // Espacio para el bottom navigation
+                        ],
                       ),
                     ),
-                  ],
+                  ),
                 ),
-              ),
-            ),
-            bottomNavigationBar: AppBottomNavigation(
-              currentIndex: 0,
-              userRole: 'teacher',
-            ),
-            floatingActionButton: FloatingActionButton(
-              onPressed: () {
-                _showCreateClassroomDialog(context);
-              },
-              backgroundColor: AppColors.secondary,
-              child: const Icon(Icons.add),
+              ],
             ),
           );
         },
@@ -173,60 +122,81 @@ class _TeacherHomeScreenState extends State<TeacherHomeScreen> {
     );
   }
   
-  Widget _buildAppBar(bool isDarkMode, String username, ThemeProvider themeProvider) {
-    return SliverAppBar(
-      expandedHeight: 120,
-      floating: true,
-      pinned: true,
-      backgroundColor: isDarkMode ? AppColors.darkPrimary : AppColors.secondary,
-      flexibleSpace: FlexibleSpaceBar(
-        title: FadeAnimation(
-          child: Text(
-            '¡Hola, Profesor $username!',
-            style: TextStyle(
-              fontFamily: 'Comic Sans MS',
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
-              color: Colors.white,
-            ),
-          ),
+  Widget _buildAppBar(bool isDarkMode, String username, ThemeProvider themeProvider, BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [
+            AppColors.secondary,
+            AppColors.secondary.withOpacity(0.7),
+          ],
+          begin: Alignment.centerLeft,
+          end: Alignment.centerRight,
         ),
-        background: Container(
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topRight,
-              end: Alignment.bottomLeft,
-              colors: [
-                AppColors.secondary,
-                AppColors.primary.withOpacity(0.7),
-              ],
-            ),
-          ),
+        borderRadius: const BorderRadius.only(
+          bottomLeft: Radius.circular(20),
+          bottomRight: Radius.circular(20),
         ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.1),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
       ),
-      actions: [
-        IconButton(
-          icon: Icon(
-            isDarkMode ? Icons.wb_sunny : Icons.nightlight_round,
+      child: Row(
+        children: [
+          Icon(
+            Icons.dashboard_rounded,
             color: Colors.white,
+            size: 24,
           ),
-          onPressed: () {
-            themeProvider.toggleTheme();
-          },
-        ),
-        IconButton(
-          icon: const Icon(
-            Icons.notifications_active,
-            color: Colors.white,
+          const SizedBox(width: 8), // Reducido de 12 a 8
+          Expanded( // Agregado Expanded para evitar overflow
+            child: Text(
+              '¡Hola, Profesor $username!',
+              style: TextStyle(
+                fontFamily: 'Comic Sans MS',
+                fontSize: 18, // Reducido de 20 a 18
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
+              ),
+              overflow: TextOverflow.ellipsis, // Añadido para textos largos
+              maxLines: 1,
+            ),
           ),
-          onPressed: () {
-            AppSnackbars.showInfoSnackBar(
-              context,
-              message: '¡No tienes notificaciones nuevas!',
-            );
-          },
-        ),
-      ],
+          const SizedBox(width: 8), // Espaciado entre texto y botones
+          IconButton(
+            icon: Icon(
+              isDarkMode ? Icons.wb_sunny : Icons.nightlight_round,
+              color: Colors.white,
+              size: 20, // Reducido tamaño del icono
+            ),
+            onPressed: () {
+              themeProvider.toggleTheme();
+            },
+            padding: EdgeInsets.all(4), // Reducido padding
+            constraints: BoxConstraints(), // Sin restricciones mínimas
+          ),
+          IconButton(
+            icon: const Icon(
+              Icons.notifications_active,
+              color: Colors.white,
+              size: 20, // Reducido tamaño del icono
+            ),
+            onPressed: () {
+              AppSnackbars.showInfoSnackBar(
+                context,
+                message: '¡No tienes notificaciones nuevas!',
+              );
+            },
+            padding: EdgeInsets.all(4), // Reducido padding
+            constraints: BoxConstraints(), // Sin restricciones mínimas
+          ),
+        ],
+      ),
     );
   }
   
@@ -343,7 +313,6 @@ class _TeacherHomeScreenState extends State<TeacherHomeScreen> {
           ),
         ],
       ),
-      
     );
   }
   
@@ -391,7 +360,7 @@ class _TeacherHomeScreenState extends State<TeacherHomeScreen> {
     );
   }
   
-  Widget _buildEmptyClassroomMessage() {
+  Widget _buildEmptyClassroomMessage(BuildContext context) {
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,

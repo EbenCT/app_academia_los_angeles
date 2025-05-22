@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import '../../theme/app_colors.dart';
-import '../animations/fade_animation.dart';
 import 'error_explanation_widget.dart';
 
 class InteractiveComparisonWidget extends StatefulWidget {
