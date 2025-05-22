@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../../models/course_model.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/student_provider.dart';
 import '../../providers/theme_provider.dart';
@@ -10,11 +9,9 @@ import '../../theme/app_colors.dart';
 import '../../config/routes.dart';
 import '../../widgets/home/welcome_banner_widget.dart';
 import '../../widgets/home/course_card_widget.dart';
-import '../../widgets/home/achievement_preview_widget.dart';
 import '../../widgets/home/daily_challenge_widget.dart';
 import '../../widgets/home/progress_summary_widget.dart';
 import '../../widgets/common/section_title.dart';
-import '../../widgets/common/app_card.dart';
 import '../../widgets/navigation/app_bottom_navigation.dart';
 import '../../utils/app_icons.dart';
 
@@ -76,10 +73,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
     final studentProvider = Provider.of<StudentProvider>(context);
     final studentLevel = studentProvider.level;
     final studentXp = studentProvider.xp;
-    final streakDays = studentProvider.streakDays;
-    final achievements = studentProvider.achievements;
-    final courses = studentProvider.courses;
-    final courseProgress = studentProvider.courseProgress;
+    final subjects = studentProvider.subjects;
 
     // Si el usuario es estudiante, verificar si está en un aula
     if (user != null && user.role == 'student') {
@@ -145,12 +139,12 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                       const SizedBox(height: 24),
                       // Título de sección
                       SectionTitle(
-                        title: 'Tus cursos espaciales',
+                        title: 'Tus materias',
                         color: AppColors.accent,
                       ),
                       const SizedBox(height: 16),
-                      // Lista horizontal de cursos
-                      _buildCoursesSection(courses, courseProgress),
+                      // Lista horizontal de materias del estudiante
+                      _buildSubjectsSection(subjects),
                       const SizedBox(height: 24),
                       // Título de sección
                       SectionTitle(
@@ -163,21 +157,9 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                         child: ProgressSummaryWidget(
                           points: studentXp,
                           level: studentLevel,
-                          streakDays: streakDays,
+                          streakDays: 5, // Valor fijo por ahora
                         ),
                       ),
-                      const SizedBox(height: 24),
-                      // Título de sección
-                      SectionTitle(
-                        title: 'Logros recientes',
-                        color: AppColors.secondary,
-                      ),
-                      const SizedBox(height: 16),
-                      // Preview de logros
-                      _buildAchievementsSection(achievements),
-                      const SizedBox(height: 32),
-                      // Mini-juego
-                      _buildMiniGameCard(),
                       const SizedBox(height: 40),
                     ],
                   ),
@@ -270,184 +252,78 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
     );
   }
 
-  Widget _buildCoursesSection(List<CourseModel> courses, Map<String, double> courseProgress) {
+  Widget _buildSubjectsSection(List<dynamic> subjects) {
     return SizedBox(
       height: 180,
       child: FadeAnimation(
         delay: const Duration(milliseconds: 400),
-        child: courses.isNotEmpty
+        child: subjects.isNotEmpty
             ? ListView.builder(
                 scrollDirection: Axis.horizontal,
-                itemCount: courses.length,
+                itemCount: subjects.length,
                 itemBuilder: (context, index) {
-                  final course = courses[index];
-                  // Obtener el progreso del curso o usar un valor predeterminado
-                  final progress = courseProgress[course.title] ?? 0.0;
-                  // Asignar un icono basado en el nombre del curso
-                  final IconData icon = AppIcons.getCourseIcon(course.title);
+                  final subject = subjects[index];
+                  // Asignar un icono basado en el nombre de la materia
+                  final IconData icon = AppIcons.getCourseIcon(subject.name);
                   // Asignar un color basado en el índice
                   final color = AppIcons.getCourseColor(index);
                   
                   return CourseCardWidget(
-                    title: course.title,
-                    progress: progress,
+                    title: subject.name,
+                    progress: 0.0, // Por ahora sin progreso
                     icon: icon,
                     color: color,
                     onTap: () {
-                      AppRoutes.navigateTo(context, AppRoutes.courses);
+                      // Navegar a la pantalla de lecciones de la materia
+                      Navigator.pushNamed(
+                        context, 
+                        '/subject-lessons',
+                        arguments: subject,
+                      );
                     },
                   );
                 },
               )
-            : _buildDefaultCourses(),
+            : _buildNoSubjectsMessage(),
       ),
     );
   }
   
-  Widget _buildDefaultCourses() {
-    return ListView(
-      scrollDirection: Axis.horizontal,
-      children: [
-        CourseCardWidget(
-          title: 'Matemáticas',
-          progress: 0.7,
-          icon: Icons.calculate,
-          color: Colors.blue,
-          onTap: () {
-            AppRoutes.navigateTo(context, AppRoutes.courses);
-          },
-        ),
-        CourseCardWidget(
-          title: 'Ciencias',
-          progress: 0.4,
-          icon: Icons.science,
-          color: Colors.green,
-          onTap: () {
-            AppRoutes.navigateTo(context, AppRoutes.courses);
-          },
-        ),
-        CourseCardWidget(
-          title: 'Lenguaje',
-          progress: 0.85,
-          icon: Icons.menu_book,
-          color: Colors.orange,
-          onTap: () {
-            AppRoutes.navigateTo(context, AppRoutes.courses);
-          },
-        ),
-      ],
-    );
-  }
-  
-  Widget _buildAchievementsSection(List<Map<String, dynamic>> achievements) {
-    return FadeAnimation(
-      delay: const Duration(milliseconds: 600),
-      child: achievements.isNotEmpty
-          ? AchievementPreviewWidget(
-              achievements: achievements.map((achievement) {
-                // Convertir el nombre del icono a un IconData
-                final IconData icon = AppIcons.getAchievementIcon(achievement['icon'] as String);
-                return {
-                  'title': achievement['title'],
-                  'description': achievement['description'],
-                  'icon': icon,
-                  'unlocked': achievement['unlocked'],
-                };
-              }).toList(),
-              onSeeMoreTap: () {
-                AppRoutes.navigateTo(context, AppRoutes.achievements);
-              },
-            )
-          : AchievementPreviewWidget(
-              achievements: _getDefaultAchievements(),
-              onSeeMoreTap: () {
-                AppRoutes.navigateTo(context, AppRoutes.achievements);
-              },
-            ),
-    );
-  }
-  
-  List<Map<String, dynamic>> _getDefaultAchievements() {
-    return [
-      {
-        'title': 'Explorador espacial',
-        'description': 'Completaste tu primer misión',
-        'icon': Icons.rocket_launch,
-        'unlocked': true,
-      },
-      {
-        'title': 'Matemático junior',
-        'description': 'Completaste 10 ejercicios de matemáticas',
-        'icon': Icons.calculate,
-        'unlocked': true,
-      },
-      {
-        'title': 'Científico curioso',
-        'description': 'Realizaste tu primer experimento',
-        'icon': Icons.science,
-        'unlocked': false,
-      },
-    ];
-  }
-  
-  Widget _buildMiniGameCard() {
-    return FadeAnimation(
-      delay: const Duration(milliseconds: 700),
-      child: AppCard.primary(
+  Widget _buildNoSubjectsMessage() {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.grey.shade100,
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Center(
         child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
           children: [
+            Icon(
+              Icons.school,
+              size: 48,
+              color: Colors.grey,
+            ),
+            const SizedBox(height: 16),
             Text(
-              'Mini-juego: Rescate de Alturas',
+              'No hay materias disponibles',
               style: TextStyle(
                 fontFamily: 'Comic Sans MS',
-                fontSize: 18,
+                fontSize: 16,
                 fontWeight: FontWeight.bold,
-                color: AppColors.primary,
+                color: Colors.grey,
               ),
             ),
-            SizedBox(height: 8),
+            const SizedBox(height: 8),
             Text(
-              'Aprende sobre números enteros rescatando amigos a diferentes alturas',
+              'Habla con tu profesor para que configure las materias',
               style: TextStyle(
                 fontFamily: 'Comic Sans MS',
                 fontSize: 14,
-                color: Theme.of(context).brightness == Brightness.dark
-                    ? Colors.white70
-                    : Colors.black87,
+                color: Colors.grey,
               ),
               textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 16),
-            Row(
-              children: [
-                Expanded(
-                  child: ElevatedButton.icon(
-                    onPressed: () {
-                      AppRoutes.navigateTo(context, AppRoutes.integerLesson);
-                    },
-                    icon: Icon(Icons.school),
-                    label: Text('Aprender'),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.accent,
-                      padding: EdgeInsets.symmetric(vertical: 12),
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: ElevatedButton.icon(
-                    onPressed: () {
-                      AppRoutes.navigateTo(context, AppRoutes.integerRescueGame);
-                    },
-                    icon: Icon(Icons.videogame_asset),
-                    label: Text('¡Jugar!'),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.secondary,
-                      padding: EdgeInsets.symmetric(vertical: 12),
-                    ),
-                  ),
-                ),
-              ],
             ),
           ],
         ),

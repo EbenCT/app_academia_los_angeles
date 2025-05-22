@@ -22,6 +22,12 @@ class StudentService {
         course {
           id
           title
+          subjects {
+            id
+            code
+            name
+            description
+          }
         }
       }
       user {
@@ -34,7 +40,7 @@ class StudentService {
   }
   ''';
 
-  // Obtener información del estudiante (ampliada)
+  // Obtener información completa del estudiante incluyendo materias
   final String _getStudentQuery = r'''
   query GetStudent {
     student {
@@ -48,6 +54,13 @@ class StudentService {
         course {
           id
           title
+          description
+          subjects {
+            id
+            code
+            name
+            description
+          }
         }
       }
       user {
@@ -77,7 +90,7 @@ class StudentService {
   }
   ''';
 
-  // Método para obtener la información del estudiante
+  // Método para obtener la información completa del estudiante
   Future<Map<String, dynamic>> getStudentInfo() async {
     try {
       final result = await _client.query(

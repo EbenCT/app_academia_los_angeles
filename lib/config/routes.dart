@@ -7,6 +7,8 @@ import '../screens/home/home_screen.dart';
 import '../screens/auth/register_teacher_screen.dart';
 import '../screens/home/teacher_home_screen.dart';
 import '../screens/join_classroom_screen.dart';
+import '../screens/courses/courses_screen.dart';
+import '../screens/courses/subject_lessons_screen.dart';
 import '../../screens/profile_screen.dart';
 import '../screens/game/integer_rescue_game.dart';
 
@@ -18,14 +20,14 @@ class AppRoutes {
   static const String home = '/home';
   static const String profile = '/profile';
   static const String courses = '/courses';
-
+  static const String subjectLessons = '/subject-lessons';
   static const String achievements = '/achievements';
   static const String leaderboard = '/leaderboard';
   static const String registerTeacher = '/registerTeacher';
   static const String teacherHome = '/teacherHome';
   static const String joinClassroom = '/joinClassroom';
   static const String integerRescueGame = '/games/integer-rescue';
-static const String integerLesson = '/integer_lesson'; // Nueva ruta para la lección
+  static const String integerLesson = '/integer_lesson'; // Nueva ruta para la lección
 
   /// Mapa de rutas nombradas para la navegación en MaterialApp
   static Map<String, WidgetBuilder> get routes => {
@@ -35,11 +37,15 @@ static const String integerLesson = '/integer_lesson'; // Nueva ruta para la lec
     home: (context) => const HomeScreen(),
     teacherHome: (context) => const TeacherHomeScreen(),
     joinClassroom: (context) => const JoinClassroomScreen(),
+    courses: (context) => const CoursesScreen(),
+    subjectLessons: (context) {
+      final subject = ModalRoute.of(context)!.settings.arguments;
+      return SubjectLessonsScreen(subject: subject);
+    },
     profile: (context) => const ProfileScreen(),
     integerRescueGame: (context) => const IntegerRescueGame(),
     integerLesson: (context) => const IntegerLessonScreenInteractive(), // Añadida la nueva ruta
-    /*courses: (context) => const CoursesScreen(),
-    achievements: (context) => const AchievementsScreen(),
+    /*achievements: (context) => const AchievementsScreen(),
     leaderboard: (context) => const LeaderboardScreen(),*/
   };
 
