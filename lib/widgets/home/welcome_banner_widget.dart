@@ -1,6 +1,9 @@
+// lib/widgets/home/welcome_banner_widget.dart
 import 'package:flutter/material.dart';
 import 'package:lottie/lottie.dart';
+import 'package:provider/provider.dart';
 import '../../constants/asset_paths.dart';
+import '../../providers/coin_provider.dart';
 import '../animations/bounce_animation.dart';
 import '../common/app_card.dart';
 
@@ -22,7 +25,6 @@ class WelcomeBannerWidget extends StatelessWidget {
         Color(0xFF0066CC), // Azul
       ],
       child: _buildBannerContent(),
-      
     );
   }
 
@@ -70,7 +72,14 @@ class WelcomeBannerWidget extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 8),
-              _buildLevelBadge(),
+              // Contenedor con nivel y monedas
+              Row(
+                children: [
+                  _buildLevelBadge(),
+                  const SizedBox(width: 12),
+                  _buildCoinsBadge(),
+                ],
+              ),
               const SizedBox(height: 12),
               _buildWelcomeMessage(),
             ],
@@ -126,6 +135,40 @@ class WelcomeBannerWidget extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildCoinsBadge() {
+    return Consumer<CoinProvider>(
+      builder: (context, coinProvider, child) {
+        return Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+          decoration: BoxDecoration(
+            color: Colors.white.withOpacity(0.3),
+            borderRadius: BorderRadius.circular(15),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                Icons.monetization_on,
+                color: Colors.amber,
+                size: 20,
+              ),
+              const SizedBox(width: 5),
+              Text(
+                '${coinProvider.coins.amount}',
+                style: TextStyle(
+                  fontFamily: 'Comic Sans MS',
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                ),
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
   

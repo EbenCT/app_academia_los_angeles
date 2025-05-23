@@ -10,6 +10,8 @@ import '../screens/join_classroom_screen.dart';
 import '../screens/courses/subject_lessons_screen.dart';
 import '../screens/game/integer_rescue_game.dart';
 import '../screens/profile/profile_screen.dart';
+import '../screens/shop/shop_screen.dart';
+import '../screens/shop/inventory_screen.dart';
 
 /// Contiene todas las rutas de navegación de la aplicación
 class AppRoutes {
@@ -24,6 +26,8 @@ class AppRoutes {
   static const String joinClassroom = '/joinClassroom';
   static const String integerRescueGame = '/games/integer-rescue';
   static const String integerLesson = '/integer_lesson';
+  static const String shop = '/shop';
+  static const String inventory = '/inventory';
 
   /// Mapa de rutas nombradas para la navegación en MaterialApp
   static Map<String, WidgetBuilder> get routes => {
@@ -40,6 +44,8 @@ class AppRoutes {
     profile: (context) => const ProfileScreen(),
     integerRescueGame: (context) => const IntegerRescueGame(),
     integerLesson: (context) => const IntegerLessonScreenInteractive(),
+    shop: (context) => const ShopScreen(),
+    inventory: (context) => const InventoryScreen(),
   };
 
   /// Navega a una ruta nombrada

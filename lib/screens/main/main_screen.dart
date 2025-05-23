@@ -3,10 +3,12 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/student_provider.dart';
+import '../../providers/coin_provider.dart';
 import '../../widgets/common/loading_indicator.dart';
 import '../../config/routes.dart';
 import '../home/home_content.dart';
 import '../courses/courses_content.dart';
+import '../shop/shop_screen.dart';
 import '../achievements/achievements_content.dart';
 import '../profile/profile_content.dart';
 import '../../widgets/navigation/main_bottom_navigation.dart';
@@ -74,20 +76,24 @@ class _MainScreenState extends State<MainScreen> {
       return _buildLoadingScreen('Cargando tu mundo de aventuras...');
     }
 
-    return Scaffold(
-      body: IndexedStack(
-        index: _currentIndex,
-        children: [
-          HomeContent(),
-          CoursesContent(),
-          AchievementsContent(),
-          ProfileContent(),
-        ],
-      ),
-      bottomNavigationBar: MainBottomNavigation(
-        currentIndex: _currentIndex,
-        onTap: _onTabTapped,
-        userRole: user.role,
+    return ChangeNotifierProvider(
+      create: (_) => CoinProvider(),
+      child: Scaffold(
+        body: IndexedStack(
+          index: _currentIndex,
+          children: [
+            HomeContent(),
+            CoursesContent(),
+            ShopScreen(),
+            AchievementsContent(),
+            ProfileContent(),
+          ],
+        ),
+        bottomNavigationBar: MainBottomNavigation(
+          currentIndex: _currentIndex,
+          onTap: _onTabTapped,
+          userRole: user.role,
+        ),
       ),
     );
   }

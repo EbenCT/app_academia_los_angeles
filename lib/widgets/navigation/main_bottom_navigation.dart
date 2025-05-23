@@ -95,6 +95,11 @@ class MainBottomNavigation extends StatelessWidget {
       label: 'Materias',
     ),
     BottomNavigationBarItem(
+      icon: Icon(Icons.store_rounded),
+      activeIcon: Icon(Icons.store_rounded),
+      label: 'Tienda',
+    ),
+    BottomNavigationBarItem(
       icon: Icon(Icons.emoji_events_rounded),
       activeIcon: Icon(Icons.emoji_events_rounded),
       label: 'Logros',
