@@ -8,6 +8,8 @@ class ProgressSummaryWidget extends StatelessWidget {
   final int level;
   final int streakDays;
   final int nextLevelPoints; // Puntos para el siguiente nivel
+  final int lessonsCompleted; // Mantenemos por compatibilidad pero no lo usamos
+  final int totalLessons; // Mantenemos por compatibilidad pero no lo usamos
 
   const ProgressSummaryWidget({
     super.key,
@@ -15,6 +17,8 @@ class ProgressSummaryWidget extends StatelessWidget {
     required this.level,
     required this.streakDays,
     this.nextLevelPoints = 100, // Por defecto, 100 puntos
+    this.lessonsCompleted = 0,
+    this.totalLessons = 0,
   });
 
   @override
@@ -37,29 +41,36 @@ class ProgressSummaryWidget extends StatelessWidget {
           Padding(
             padding: const EdgeInsets.all(16.0),
             child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceAround,
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
-                StatCard.progressItem(
-                  title: 'Puntos',
-                  value: '$points',
-                  icon: Icons.star,
-                  color: AppColors.star,
+                Flexible(
+                  child: StatCard.progressItem(
+                    title: 'Puntos',
+                    value: '$points',
+                    icon: Icons.star,
+                    color: AppColors.star,
+                  ),
                 ),
-                StatCard.progressItem(
-                  title: 'Nivel',
-                  value: '$level',
-                  icon: Icons.rocket_launch,
-                  color: AppColors.primary,
+                Flexible(
+                  child: StatCard.progressItem(
+                    title: 'Nivel',
+                    value: '$level',
+                    icon: Icons.rocket_launch,
+                    color: AppColors.primary,
+                  ),
                 ),
-                StatCard.progressItem(
-                  title: 'Racha',
-                  value: '$streakDays días',
-                  icon: Icons.local_fire_department,
-                  color: AppColors.secondary,
+                Flexible(
+                  child: StatCard.progressItem(
+                    title: 'Racha',
+                    value: '$streakDays días',
+                    icon: Icons.local_fire_department,
+                    color: AppColors.secondary,
+                  ),
                 ),
               ],
             ),
           ),
+          
           // Barra de progreso de nivel
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
@@ -69,13 +80,15 @@ class ProgressSummaryWidget extends StatelessWidget {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text(
-                      'Progreso al siguiente nivel',
-                      style: TextStyle(
-                        fontFamily: 'Comic Sans MS',
-                        fontSize: 14,
-                        fontWeight: FontWeight.bold,
-                        color: isDarkMode ? Colors.white70 : Colors.black54,
+                    Flexible(
+                      child: Text(
+                        'Progreso al siguiente nivel',
+                        style: TextStyle(
+                          fontFamily: 'Comic Sans MS',
+                          fontSize: 14,
+                          fontWeight: FontWeight.bold,
+                          color: isDarkMode ? Colors.white70 : Colors.black54,
+                        ),
                       ),
                     ),
                     Text(
@@ -93,7 +106,9 @@ class ProgressSummaryWidget extends StatelessWidget {
                 _buildProgressBar(normalizedProgress),
                 const SizedBox(height: 8),
                 Text(
-                  '¡Necesitas $pointsRemaining puntos más para el nivel ${level + 1}!',
+                  pointsRemaining > 0 
+                      ? '¡Necesitas $pointsRemaining puntos más para el nivel ${level + 1}!'
+                      : '¡Estás listo para el siguiente nivel!',
                   style: TextStyle(
                     fontFamily: 'Comic Sans MS',
                     fontSize: 12,

@@ -1,7 +1,8 @@
-// lib/screens/courses/courses_content.dart
+// lib/screens/courses/courses_content.dart (completo y ordenado)
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../providers/student_provider.dart';
+import '../../services/lesson_progress_service.dart';
 import '../../widgets/common/loading_indicator.dart';
 import '../../widgets/animations/fade_animation.dart';
 import '../../widgets/common/app_card.dart';
@@ -16,6 +17,9 @@ class CoursesContent extends StatefulWidget {
 }
 
 class _CoursesContentState extends State<CoursesContent> {
+  Map<int, Map<String, dynamic>> _subjectsProgress = {};
+  bool _progressLoaded = false;
+
   @override
   void initState() {
     super.initState();
@@ -23,9 +27,26 @@ class _CoursesContentState extends State<CoursesContent> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final studentProvider = Provider.of<StudentProvider>(context, listen: false);
       if (studentProvider.subjects.isEmpty) {
-        studentProvider.refreshStudentData();
+        studentProvider.refreshStudentData().then((_) => _loadProgress());
+      } else {
+        _loadProgress();
       }
     });
+  }
+
+  Future<void> _loadProgress() async {
+    final studentProvider = Provider.of<StudentProvider>(context, listen: false);
+    final subjects = studentProvider.subjects;
+    
+    if (subjects.isNotEmpty) {
+      final progress = await LessonProgressService.getAllSubjectsProgress(subjects);
+      if (mounted) {
+        setState(() {
+          _subjectsProgress = progress;
+          _progressLoaded = true;
+        });
+      }
+    }
   }
 
   @override
@@ -86,18 +107,60 @@ class _CoursesContentState extends State<CoursesContent> {
             size: 24,
           ),
           const SizedBox(width: 12),
-          Text(
-            'Mis Materias',
-            style: TextStyle(
-              fontFamily: 'Comic Sans MS',
-              fontSize: 22,
-              fontWeight: FontWeight.bold,
-              color: Colors.white,
+          Expanded(
+            child: Text(
+              'Mis Materias',
+              style: TextStyle(
+                fontFamily: 'Comic Sans MS',
+                fontSize: 22,
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
+              ),
             ),
           ),
+          // Mostrar progreso general si está disponible
+          if (_progressLoaded && _subjectsProgress.isNotEmpty)
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.2),
+                borderRadius: BorderRadius.circular(15),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    Icons.trending_up,
+                    color: Colors.white,
+                    size: 16,
+                  ),
+                  const SizedBox(width: 4),
+                  Text(
+                    '${_calculateOverallProgress()}%',
+                    style: TextStyle(
+                      fontFamily: 'Comic Sans MS',
+                      fontSize: 14,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
+                  ),
+                ],
+              ),
+            ),
         ],
       ),
     );
+  }
+
+  int _calculateOverallProgress() {
+    if (_subjectsProgress.isEmpty) return 0;
+    
+    double totalProgress = 0.0;
+    for (var progress in _subjectsProgress.values) {
+      totalProgress += progress['progress'] as double;
+    }
+    
+    return ((totalProgress / _subjectsProgress.length) * 100).round();
   }
 
   Widget _buildErrorState(String error) {
@@ -134,9 +197,10 @@ class _CoursesContentState extends State<CoursesContent> {
             ),
             const SizedBox(height: 24),
             ElevatedButton.icon(
-              onPressed: () {
-                Provider.of<StudentProvider>(context, listen: false)
+              onPressed: () async {
+                await Provider.of<StudentProvider>(context, listen: false)
                     .refreshStudentData();
+                await _loadProgress();
               },
               icon: const Icon(Icons.refresh),
               label: const Text('Reintentar'),
@@ -160,7 +224,10 @@ class _CoursesContentState extends State<CoursesContent> {
 
     return RefreshIndicator(
       color: AppColors.primary,
-      onRefresh: () => studentProvider.refreshStudentData(),
+      onRefresh: () async {
+        await studentProvider.refreshStudentData();
+        await _loadProgress();
+      },
       child: SingleChildScrollView(
         physics: const AlwaysScrollableScrollPhysics(),
         padding: const EdgeInsets.all(16.0),
@@ -207,6 +274,29 @@ class _CoursesContentState extends State<CoursesContent> {
                           ],
                         ),
                       ),
+                      // Mostrar estadísticas generales
+                      if (_progressLoaded && _subjectsProgress.isNotEmpty)
+                        Column(
+                          children: [
+                            Text(
+                              '${_calculateOverallProgress()}%',
+                              style: TextStyle(
+                                fontFamily: 'Comic Sans MS',
+                                fontSize: 20,
+                                fontWeight: FontWeight.bold,
+                                color: AppColors.primary,
+                              ),
+                            ),
+                            Text(
+                              'Completado',
+                              style: TextStyle(
+                                fontFamily: 'Comic Sans MS',
+                                fontSize: 12,
+                                color: Colors.grey,
+                              ),
+                            ),
+                          ],
+                        ),
                     ],
                   ),
                 ),
@@ -227,9 +317,16 @@ class _CoursesContentState extends State<CoursesContent> {
               itemCount: subjects.length,
               itemBuilder: (context, index) {
                 final subject = subjects[index];
+                final progress = _subjectsProgress[subject.id] ?? {
+                  'progress': 0.0,
+                  'completed': 0,
+                  'total': 0,
+                  'percentage': 0,
+                };
+                
                 return FadeAnimation(
                   delay: Duration(milliseconds: 200 + (index * 100)),
-                  child: _buildSubjectCard(subject, index),
+                  child: _buildSubjectCard(subject, index, progress),
                 );
               },
             ),
@@ -275,9 +372,10 @@ class _CoursesContentState extends State<CoursesContent> {
             ),
             const SizedBox(height: 24),
             ElevatedButton.icon(
-              onPressed: () {
-                Provider.of<StudentProvider>(context, listen: false)
+              onPressed: () async {
+                await Provider.of<StudentProvider>(context, listen: false)
                     .refreshStudentData();
+                await _loadProgress();
               },
               icon: const Icon(Icons.refresh),
               label: const Text('Actualizar'),
@@ -292,9 +390,13 @@ class _CoursesContentState extends State<CoursesContent> {
     );
   }
 
-  Widget _buildSubjectCard(subject, int index) {
+  Widget _buildSubjectCard(subject, int index, Map<String, dynamic> progress) {
     final IconData icon = AppIcons.getCourseIcon(subject.name);
     final Color color = AppIcons.getCourseColor(index);
+    final double progressValue = progress['progress'] as double;
+    final int completed = progress['completed'] as int;
+    final int total = progress['total'] as int;
+    final int percentage = progress['percentage'] as int;
     
     return AppCard(
       onTap: () {
@@ -303,29 +405,68 @@ class _CoursesContentState extends State<CoursesContent> {
           context,
           '/subject-lessons',
           arguments: subject,
-        );
+        ).then((_) {
+          // Recargar progreso cuando se regrese
+          _loadProgress();
+        });
       },
       child: Padding(
-        padding: const EdgeInsets.all(8.0),
+        padding: const EdgeInsets.all(12.0),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
           children: [
-            // Icono de la materia
-            Container(
-              width: 60,
-              height: 60,
-              decoration: BoxDecoration(
-                color: color.withOpacity(0.2),
-                shape: BoxShape.circle,
-              ),
-              child: Icon(
-                icon,
-                color: color,
-                size: 32,
-              ),
+            // Icono de la materia con badge de progreso
+            Stack(
+              children: [
+                Container(
+                  width: 60,
+                  height: 60,
+                  decoration: BoxDecoration(
+                    color: color.withOpacity(0.2),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(
+                    icon,
+                    color: color,
+                    size: 32,
+                  ),
+                ),
+                // Badge de progreso
+                if (total > 0)
+                  Positioned(
+                    top: 0,
+                    right: 0,
+                    child: Container(
+                      width: 20,
+                      height: 20,
+                      decoration: BoxDecoration(
+                        color: _getProgressColor(progressValue),
+                        shape: BoxShape.circle,
+                        border: Border.all(color: Colors.white, width: 2),
+                      ),
+                      child: Center(
+                        child: progressValue >= 1.0
+                            ? Icon(
+                                Icons.check,
+                                color: Colors.white,
+                                size: 10,
+                              )
+                            : Text(
+                                '$percentage',
+                                style: TextStyle(
+                                  fontFamily: 'Comic Sans MS',
+                                  fontSize: 8,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.white,
+                                ),
+                              ),
+                      ),
+                    ),
+                  ),
+              ],
             ),
             
-            // Nombre de la materia (una sola línea)
+            // Nombre de la materia
             Text(
               subject.name,
               style: TextStyle(
@@ -341,7 +482,7 @@ class _CoursesContentState extends State<CoursesContent> {
               overflow: TextOverflow.ellipsis,
             ),
             
-            // Descripción si existe (máximo 2 líneas)
+            // Descripción si existe
             if (subject.description != null && subject.description!.isNotEmpty)
               Text(
                 subject.description!,
@@ -358,38 +499,65 @@ class _CoursesContentState extends State<CoursesContent> {
               // Placeholder para mantener la altura consistente
               SizedBox(height: 22),
             
-            // Progreso placeholder
+            // Progreso mejorado
             Column(
               children: [
+                // Barra de progreso
                 Container(
                   width: double.infinity,
-                  height: 6,
+                  height: 8,
                   decoration: BoxDecoration(
                     color: color.withOpacity(0.2),
-                    borderRadius: BorderRadius.circular(3),
+                    borderRadius: BorderRadius.circular(4),
                   ),
                   child: FractionallySizedBox(
-                    widthFactor: 0.0, // Sin progreso por ahora
+                    widthFactor: progressValue,
                     alignment: Alignment.centerLeft,
                     child: Container(
                       decoration: BoxDecoration(
-                        color: color,
-                        borderRadius: BorderRadius.circular(3),
+                        color: _getProgressColor(progressValue),
+                        borderRadius: BorderRadius.circular(4),
                       ),
                     ),
                   ),
                 ),
                 
-                const SizedBox(height: 4),
+                const SizedBox(height: 6),
                 
-                Text(
-                  '0% completado',
-                  style: TextStyle(
-                    fontFamily: 'Comic Sans MS',
-                    fontSize: 11,
-                    color: color,
-                    fontWeight: FontWeight.bold,
-                  ),
+                // Texto de progreso
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      total > 0 ? '$completed/$total' : 'Sin lecciones',
+                      style: TextStyle(
+                        fontFamily: 'Comic Sans MS',
+                        fontSize: 10,
+                        color: Colors.grey,
+                      ),
+                    ),
+                    Row(
+                      children: [
+                        Text(
+                          '$percentage%',
+                          style: TextStyle(
+                            fontFamily: 'Comic Sans MS',
+                            fontSize: 11,
+                            fontWeight: FontWeight.bold,
+                            color: _getProgressColor(progressValue),
+                          ),
+                        ),
+                        if (progressValue >= 1.0) ...[
+                          const SizedBox(width: 2),
+                          Icon(
+                            Icons.star,
+                            color: AppColors.star,
+                            size: 12,
+                          ),
+                        ],
+                      ],
+                    ),
+                  ],
                 ),
               ],
             ),
@@ -397,5 +565,12 @@ class _CoursesContentState extends State<CoursesContent> {
         ),
       ),
     );
+  }
+
+  Color _getProgressColor(double progress) {
+    if (progress >= 1.0) return AppColors.success;
+    if (progress >= 0.7) return AppColors.star;
+    if (progress >= 0.3) return AppColors.primary;
+    return Colors.grey;
   }
 }

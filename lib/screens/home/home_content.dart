@@ -1,9 +1,10 @@
-// lib/screens/home/home_content.dart
+// lib/screens/home/home_content.dart (con progreso)
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/student_provider.dart';
 import '../../providers/theme_provider.dart';
+import '../../services/lesson_progress_service.dart';
 import '../../widgets/animations/fade_animation.dart';
 import '../../theme/app_colors.dart';
 import '../../widgets/home/welcome_banner_widget.dart';
@@ -13,8 +14,35 @@ import '../../widgets/home/progress_summary_widget.dart';
 import '../../widgets/common/section_title.dart';
 import '../../utils/app_icons.dart';
 
-class HomeContent extends StatelessWidget {
+class HomeContent extends StatefulWidget {
   const HomeContent({super.key});
+
+  @override
+  State<HomeContent> createState() => _HomeContentState();
+}
+
+class _HomeContentState extends State<HomeContent> {
+  Map<String, dynamic>? _overallProgress;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadOverallProgress();
+  }
+
+  Future<void> _loadOverallProgress() async {
+    final studentProvider = Provider.of<StudentProvider>(context, listen: false);
+    final subjects = studentProvider.subjects;
+    
+    if (subjects.isNotEmpty) {
+      final progress = await LessonProgressService.getOverallProgress(subjects);
+      if (mounted) {
+        setState(() {
+          _overallProgress = progress;
+        });
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -31,7 +59,10 @@ class HomeContent extends StatelessWidget {
     return SafeArea(
       child: RefreshIndicator(
         color: AppColors.primary,
-        onRefresh: () => studentProvider.refreshStudentData(),
+        onRefresh: () async {
+          await studentProvider.refreshStudentData();
+          await _loadOverallProgress();
+        },
         child: CustomScrollView(
           physics: const BouncingScrollPhysics(),
           slivers: [
@@ -66,10 +97,36 @@ class HomeContent extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(height: 24),
-                    // Título de sección
-                    SectionTitle(
-                      title: 'Tus materias',
-                      color: AppColors.accent,
+                    // Título de sección con estadísticas
+                    Row(
+                      children: [
+                        Expanded(
+                          child: SectionTitle(
+                            title: 'Tus materias',
+                            color: AppColors.accent,
+                          ),
+                        ),
+                        if (_overallProgress != null)
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                            decoration: BoxDecoration(
+                              color: AppColors.accent.withOpacity(0.1),
+                              borderRadius: BorderRadius.circular(15),
+                              border: Border.all(
+                                color: AppColors.accent.withOpacity(0.3),
+                              ),
+                            ),
+                            child: Text(
+                              '${_overallProgress!['percentage']}% completado',
+                              style: TextStyle(
+                                fontFamily: 'Comic Sans MS',
+                                fontSize: 12,
+                                fontWeight: FontWeight.bold,
+                                color: AppColors.accent,
+                              ),
+                            ),
+                          ),
+                      ],
                     ),
                     const SizedBox(height: 16),
                     // Lista horizontal de materias del estudiante
@@ -157,7 +214,7 @@ class HomeContent extends StatelessWidget {
 
   Widget _buildSubjectsSection(List<dynamic> subjects) {
     return SizedBox(
-      height: 180,
+      height: 200, // Aumentamos un poco la altura para acomodar el nuevo contenido
       child: FadeAnimation(
         delay: const Duration(milliseconds: 400),
         child: subjects.isNotEmpty
@@ -173,12 +230,19 @@ class HomeContent extends StatelessWidget {
                   
                   return CourseCardWidget(
                     title: subject.name,
-                    progress: 0.0, // Por ahora sin progreso
                     icon: icon,
                     color: color,
+                    subjectId: subject.id, // Pasamos el ID de la materia
                     onTap: () {
-                      // Aquí puedes navegar a la pantalla de lecciones de la materia
-                      // O cambiar el índice del tab a la pantalla de materias
+                      // Navegar a la pantalla de lecciones de la materia
+                      Navigator.pushNamed(
+                        context,
+                        '/subject-lessons',
+                        arguments: subject,
+                      ).then((_) {
+                        // Recargar progreso cuando se regrese
+                        _loadOverallProgress();
+                      });
                     },
                   );
                 },
