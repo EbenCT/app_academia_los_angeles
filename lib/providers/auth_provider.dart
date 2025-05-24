@@ -1,6 +1,7 @@
-// lib/providers/auth_provider.dart
+// lib/providers/auth_provider.dart (con limpieza de datos)
 import 'package:flutter/foundation.dart';
 import 'package:graphql_flutter/graphql_flutter.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../models/user_model.dart';
 import '../services/auth_service.dart';
 import '../services/storage_service.dart';
@@ -104,19 +105,73 @@ class AuthProvider extends ChangeNotifier {
     }
   }
 
-  /// Cierra la sesión del usuario
+  /// Cierra la sesión del usuario y limpia todos los datos locales
   Future<void> logout() async {
     _setLoading(true);
 
     try {
+      // Cerrar sesión en el servidor
       await _authService.logout();
+      
+      // Limpiar token de autenticación
       await _storageService.clearAuthToken();
+      
+      // Limpiar todos los datos locales relacionados con el usuario
+      await _clearAllLocalData();
+      
     } catch (e) {
       // Intentar cerrar sesión de todos modos
+      print('Error durante logout: $e');
     } finally {
       _isAuthenticated = false;
       _currentUser = null;
       _setLoading(false);
+    }
+  }
+
+  /// Limpia todos los datos locales almacenados
+  Future<void> _clearAllLocalData() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      
+      // Limpiar datos del estudiante
+      await prefs.remove('student_level');
+      await prefs.remove('student_xp');
+      await prefs.remove('student_has_classroom');
+      await prefs.remove('student_course_name');
+      await prefs.remove('student_classroom_name');
+      await prefs.remove('student_subjects');
+      
+      // Limpiar datos de monedas
+      await prefs.remove('coin_amount');
+      await prefs.remove('coin_last_updated');
+      await prefs.remove('owned_items');
+      await prefs.remove('equipped_items');
+      
+      // Limpiar desafíos diarios y progreso de lecciones
+      final keys = prefs.getKeys();
+      for (String key in keys) {
+        if (key.startsWith('daily_challenge_') || 
+            key.startsWith('completed_lessons_') || 
+            key.startsWith('unlocked_lessons_') ||
+            key.startsWith('subject_')) {
+          await prefs.remove(key);
+        }
+      }
+      
+      // Limpiar datos de avatar
+      final currentUser = await prefs.getString('current_fluttermoji_user');
+      if (currentUser != null) {
+        await prefs.remove('fluttermoji_$currentUser');
+        await prefs.remove('current_fluttermoji_user');
+      }
+      
+      // Limpiar preferencias de tema (opcional - puedes mantener esto)
+      // await prefs.remove('dark_mode');
+      
+      print('Todos los datos locales han sido limpiados');
+    } catch (e) {
+      print('Error limpiando datos locales: $e');
     }
   }
 
@@ -133,92 +188,92 @@ class AuthProvider extends ChangeNotifier {
   }
 
   Future<bool> registerStudent(
-  String email,
-  String password,
-  String firstName,
-  String lastName,
-) async {
-  _setLoading(true);
-  _error = null;
-  try {
-    final result = await _authService.registerStudent(
-      email,
-      password,
-      firstName,
-      lastName,
-    );
-    if (result['success']) {
-      // Registro exitoso
-      _currentUser = UserModel.fromJson(result['user']);
-      _isAuthenticated = true;
-      _setLoading(false);
-      return true;
-    } else {
-      // Registro fallido
-      _error = result['message'] ?? 'Error en el registro';
-      _setLoading(false);
-      return false;
-    }
-  } catch (e) {
-    _error = 'Error de conexión. Verifica tu internet e intenta nuevamente.';
-    _setLoading(false);
-    return false;
-  }
-}
-
-Future<bool> registerTeacher(
-  String email,
-  String password,
-  String firstName,
-  String lastName,
-  int cellphone,
-) async {
-  _setLoading(true);
-  _error = null;
-  try {
-    final result = await _authService.registerTeacher(
-      email,
-      password,
-      firstName,
-      lastName,
-      cellphone,
-    );
-    if (result['success']) {
-      // Registro exitoso
-      _currentUser = UserModel.fromJson(result['user']);
-      _isAuthenticated = true;
-      _setLoading(false);
-      return true;
-    } else {
-      // Registro fallido
-      _error = result['message'] ?? 'Error en el registro';
+    String email,
+    String password,
+    String firstName,
+    String lastName,
+  ) async {
+    _setLoading(true);
+    _error = null;
+    try {
+      final result = await _authService.registerStudent(
+        email,
+        password,
+        firstName,
+        lastName,
+      );
+      if (result['success']) {
+        // Registro exitoso
+        _currentUser = UserModel.fromJson(result['user']);
+        _isAuthenticated = true;
+        _setLoading(false);
+        return true;
+      } else {
+        // Registro fallido
+        _error = result['message'] ?? 'Error en el registro';
+        _setLoading(false);
+        return false;
+      }
+    } catch (e) {
+      _error = 'Error de conexión. Verifica tu internet e intenta nuevamente.';
       _setLoading(false);
       return false;
     }
-  } catch (e) {
-    _error = 'Error de conexión. Verifica tu internet e intenta nuevamente.';
-    _setLoading(false);
-    return false;
   }
-}
 
-Future<bool> register(
-  String email,
-  String password,
-  String firstName,
-  String lastName,
-  String role,
-) async {
-  // Por compatibilidad, mantenemos este método pero ahora delegamos a registerStudent
-  return registerStudent(email, password, firstName, lastName);
-}
-
-// Método auxiliar para determinar la ruta principal según el rol
-String getMainRouteForUser() {
-  if (_currentUser?.role == 'teacher') {
-    return '/main-teacher';
-  } else {
-    return '/main';
+  Future<bool> registerTeacher(
+    String email,
+    String password,
+    String firstName,
+    String lastName,
+    int cellphone,
+  ) async {
+    _setLoading(true);
+    _error = null;
+    try {
+      final result = await _authService.registerTeacher(
+        email,
+        password,
+        firstName,
+        lastName,
+        cellphone,
+      );
+      if (result['success']) {
+        // Registro exitoso
+        _currentUser = UserModel.fromJson(result['user']);
+        _isAuthenticated = true;
+        _setLoading(false);
+        return true;
+      } else {
+        // Registro fallido
+        _error = result['message'] ?? 'Error en el registro';
+        _setLoading(false);
+        return false;
+      }
+    } catch (e) {
+      _error = 'Error de conexión. Verifica tu internet e intenta nuevamente.';
+      _setLoading(false);
+      return false;
+    }
   }
-}
+
+  Future<bool> register(
+    String email,
+    String password,
+    String firstName,
+    String lastName,
+    String role,
+  ) async {
+    // Por compatibilidad, mantenemos este método pero ahora delegamos a registerStudent
+    return registerStudent(email, password, firstName, lastName);
+  }
+
+  // Método auxiliar para determinar la ruta principal según el rol
+  String getMainRouteForUser() {
+    if (_currentUser?.role == 'teacher') {
+      return '/main-teacher';
+    } else {
+      return '/main';
+    }
+  }
 }

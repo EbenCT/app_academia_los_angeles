@@ -1,5 +1,6 @@
-// lib/widgets/home/daily_challenge_widget.dart (actualizada)
+// lib/widgets/home/daily_challenge_widget.dart (corregida)
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../theme/app_colors.dart';
 import '../../services/reward_service.dart';
 import '../animations/bounce_animation.dart';
@@ -23,6 +24,42 @@ class _DailyChallengeWidgetState extends State<DailyChallengeWidget> {
   bool _isCompleted = false;
   int? _selectedAnswerIndex;
   bool _isProcessing = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadChallengeState();
+  }
+
+  // Cargar el estado del desafío desde SharedPreferences
+  Future<void> _loadChallengeState() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final today = DateTime.now();
+      final dateKey = '${today.year}-${today.month}-${today.day}';
+      final isCompleted = prefs.getBool('daily_challenge_$dateKey') ?? false;
+      
+      if (mounted) {
+        setState(() {
+          _isCompleted = isCompleted;
+        });
+      }
+    } catch (e) {
+      print('Error loading challenge state: $e');
+    }
+  }
+
+  // Guardar el estado del desafío
+  Future<void> _saveChallengeState() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final today = DateTime.now();
+      final dateKey = '${today.year}-${today.month}-${today.day}';
+      await prefs.setBool('daily_challenge_$dateKey', true);
+    } catch (e) {
+      print('Error saving challenge state: $e');
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -81,12 +118,15 @@ class _DailyChallengeWidgetState extends State<DailyChallengeWidget> {
           ),
           const SizedBox(width: 16),
           
-          // Información del desafío
-          Expanded(
+          // Información del desafío - Usando Flexible para evitar overflow
+          Flexible(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Row(
+                // Primera fila con el título y badge - Usando Wrap para responsive
+                Wrap(
+                  crossAxisAlignment: WrapCrossAlignment.center,
+                  spacing: 8,
                   children: [
                     Text(
                       'DESAFÍO DEL DÍA',
@@ -97,7 +137,6 @@ class _DailyChallengeWidgetState extends State<DailyChallengeWidget> {
                         color: AppColors.secondary,
                       ),
                     ),
-                    const SizedBox(width: 8),
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                       decoration: BoxDecoration(
@@ -135,12 +174,14 @@ class _DailyChallengeWidgetState extends State<DailyChallengeWidget> {
                         size: 16,
                       ),
                       const SizedBox(width: 4),
-                      Text(
-                        'Toca para ver el desafío',
-                        style: TextStyle(
-                          fontFamily: 'Comic Sans MS',
-                          fontSize: 12,
-                          color: textColor.withOpacity(0.7),
+                      Flexible(
+                        child: Text(
+                          'Toca para ver el desafío',
+                          style: TextStyle(
+                            fontFamily: 'Comic Sans MS',
+                            fontSize: 12,
+                            color: textColor.withOpacity(0.7),
+                          ),
                         ),
                       ),
                     ],
@@ -244,17 +285,45 @@ class _DailyChallengeWidgetState extends State<DailyChallengeWidget> {
           ),
           const SizedBox(height: 20),
           
-          // Opciones de respuesta
-          Row(
-            children: [
-              _buildAnswerOption(0, '8', false),
-              const SizedBox(width: 10),
-              _buildAnswerOption(1, '13', false),
-              const SizedBox(width: 10),
-              _buildAnswerOption(2, '18', true),
-              const SizedBox(width: 10),
-              _buildAnswerOption(3, '22', false),
-            ],
+          // Opciones de respuesta - Corregido el overflow usando Column para pantallas pequeñas
+          LayoutBuilder(
+            builder: (context, constraints) {
+              // Si el ancho es menor a 400px, usar columna en lugar de fila
+              if (constraints.maxWidth < 400) {
+                return Column(
+                  children: [
+                    Row(
+                      children: [
+                        Expanded(child: _buildAnswerOption(0, '8', false)),
+                        const SizedBox(width: 10),
+                        Expanded(child: _buildAnswerOption(1, '13', false)),
+                      ],
+                    ),
+                    const SizedBox(height: 10),
+                    Row(
+                      children: [
+                        Expanded(child: _buildAnswerOption(2, '18', true)),
+                        const SizedBox(width: 10),
+                        Expanded(child: _buildAnswerOption(3, '22', false)),
+                      ],
+                    ),
+                  ],
+                );
+              } else {
+                // Layout original para pantallas más grandes
+                return Row(
+                  children: [
+                    Expanded(child: _buildAnswerOption(0, '8', false)),
+                    const SizedBox(width: 8),
+                    Expanded(child: _buildAnswerOption(1, '13', false)),
+                    const SizedBox(width: 8),
+                    Expanded(child: _buildAnswerOption(2, '18', true)),
+                    const SizedBox(width: 8),
+                    Expanded(child: _buildAnswerOption(3, '22', false)),
+                  ],
+                );
+              }
+            },
           ),
           
           const SizedBox(height: 16),
@@ -336,19 +405,17 @@ class _DailyChallengeWidgetState extends State<DailyChallengeWidget> {
   Widget _buildAnswerOption(int index, String answer, bool isCorrect) {
     final bool isSelected = _selectedAnswerIndex == index;
     
-    return Expanded(
-      child: OptionButton(
-        text: answer,
-        isCorrect: isCorrect,
-        onSelected: _isCompleted ? null : () {
-          setState(() {
-            _selectedAnswerIndex = index;
-          });
-        },
-        width: double.infinity,
-        height: 50,
-        color: AppColors.secondary,
-      ),
+    return OptionButton(
+      text: answer,
+      isCorrect: isCorrect,
+      onSelected: _isCompleted ? null : () {
+        setState(() {
+          _selectedAnswerIndex = index;
+        });
+      },
+      width: double.infinity,
+      height: 50,
+      color: AppColors.secondary,
     );
   }
 
@@ -370,6 +437,9 @@ class _DailyChallengeWidgetState extends State<DailyChallengeWidget> {
           xpEarned: 50,
           coinsEarned: 25,
         );
+        
+        // Guardar el estado del desafío como completado
+        await _saveChallengeState();
         
         setState(() {
           _isCompleted = true;
