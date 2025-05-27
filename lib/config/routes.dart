@@ -9,7 +9,6 @@ import '../screens/auth/register_teacher_screen.dart';
 import '../screens/join_classroom_screen.dart';
 import '../screens/courses/subject_lessons_screen.dart';
 import '../screens/game/integer_rescue_game.dart';
-import '../screens/profile/profile_screen.dart';
 import '../screens/shop/shop_screen.dart';
 import '../screens/shop/inventory_screen.dart';
 
@@ -41,7 +40,6 @@ class AppRoutes {
       final subject = ModalRoute.of(context)!.settings.arguments;
       return SubjectLessonsScreen(subject: subject);
     },
-    profile: (context) => const ProfileScreen(),
     integerRescueGame: (context) => const IntegerRescueGame(),
     integerLesson: (context) => const IntegerLessonScreenInteractive(),
     shop: (context) => const ShopScreen(),
