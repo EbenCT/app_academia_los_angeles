@@ -6,7 +6,6 @@ import '../../providers/student_provider.dart';
 import '../../providers/coin_provider.dart';
 import '../../widgets/common/loading_indicator.dart';
 import '../../config/routes.dart';
-import '../debug/fluttermoji_explorer_screen.dart';
 import '../home/home_content.dart';
 import '../courses/courses_content.dart';
 import '../shop/shop_screen.dart';
@@ -90,7 +89,6 @@ class _MainScreenState extends State<MainScreen> {
             ProfileContent(),
           ],
         ),
-        floatingActionButton: FluttermojiDebugButton(),
         bottomNavigationBar: MainBottomNavigation(
           currentIndex: _currentIndex,
           onTap: _onTabTapped,
