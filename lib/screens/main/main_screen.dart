@@ -5,6 +5,7 @@ import '../../providers/auth_provider.dart';
 import '../../providers/student_provider.dart';
 import '../../providers/coin_provider.dart';
 import '../../widgets/common/loading_indicator.dart';
+import '../../widgets/pet/floating_pet_widget.dart';
 import '../../config/routes.dart';
 import '../home/home_content.dart';
 import '../courses/courses_content.dart';
@@ -79,14 +80,22 @@ class _MainScreenState extends State<MainScreen> {
     return ChangeNotifierProvider(
       create: (_) => CoinProvider(),
       child: Scaffold(
-        body: IndexedStack(
-          index: _currentIndex,
+        body: Stack(
           children: [
-            HomeContent(),
-            CoursesContent(),
-            ShopScreen(),
-            AchievementsContent(),
-            ProfileContent(),
+            // Contenido principal con IndexedStack
+            IndexedStack(
+              index: _currentIndex,
+              children: [
+                HomeContent(),
+                CoursesContent(),
+                ShopScreen(),
+                AchievementsContent(),
+                ProfileContent(),
+              ],
+            ),
+            
+            // Widget flotante de mascota
+            _buildFloatingPet(),
           ],
         ),
         bottomNavigationBar: MainBottomNavigation(
@@ -95,6 +104,29 @@ class _MainScreenState extends State<MainScreen> {
           userRole: user.role,
         ),
       ),
+    );
+  }
+
+  Widget _buildFloatingPet() {
+    return Consumer<CoinProvider>(
+      builder: (context, coinProvider, child) {
+        final equippedPet = coinProvider.equippedPet;
+        
+        if (equippedPet != null) {
+          return FloatingPetWidget(
+            pet: equippedPet,
+            onTap: () {
+              // Mostrar información de la mascota
+              showDialog(
+                context: context,
+                builder: (context) => PetInfoDialog(pet: equippedPet),
+              );
+            },
+          );
+        }
+        
+        return const SizedBox.shrink();
+      },
     );
   }
 

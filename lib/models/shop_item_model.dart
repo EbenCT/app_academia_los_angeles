@@ -2,7 +2,7 @@
 import 'package:flutter/material.dart';
 
 enum ShopItemType {
-  accessory,    // Accesorios para el avatar
+  pet,          // Mascotas (antes accessory)
   booster,      // Potenciadores temporales
   theme,        // Temas para la app
   badge,        // Insignias especiales
@@ -27,6 +27,7 @@ class ShopItemModel {
   final bool isOwned;
   final bool isEquipped;
   final Map<String, dynamic>? effects; // Para potenciadores
+  final String? animationPath; // Nuevo campo para mascotas
 
   const ShopItemModel({
     required this.id,
@@ -40,6 +41,7 @@ class ShopItemModel {
     this.isOwned = false,
     this.isEquipped = false,
     this.effects,
+    this.animationPath,
   });
 
   factory ShopItemModel.fromJson(Map<String, dynamic> json) {
@@ -50,7 +52,7 @@ class ShopItemModel {
       price: json['price'],
       type: ShopItemType.values.firstWhere(
         (e) => e.toString() == 'ShopItemType.${json['type']}',
-        orElse: () => ShopItemType.accessory,
+        orElse: () => ShopItemType.pet,
       ),
       rarity: ShopItemRarity.values.firstWhere(
         (e) => e.toString() == 'ShopItemRarity.${json['rarity']}',
@@ -63,6 +65,7 @@ class ShopItemModel {
       isOwned: json['is_owned'] ?? false,
       isEquipped: json['is_equipped'] ?? false,
       effects: json['effects'],
+      animationPath: json['animation_path'],
     );
   }
 
@@ -79,6 +82,7 @@ class ShopItemModel {
       'is_owned': isOwned,
       'is_equipped': isEquipped,
       'effects': effects,
+      'animation_path': animationPath,
     };
   }
 
@@ -94,6 +98,7 @@ class ShopItemModel {
     bool? isOwned,
     bool? isEquipped,
     Map<String, dynamic>? effects,
+    String? animationPath,
   }) {
     return ShopItemModel(
       id: id ?? this.id,
@@ -107,6 +112,7 @@ class ShopItemModel {
       isOwned: isOwned ?? this.isOwned,
       isEquipped: isEquipped ?? this.isEquipped,
       effects: effects ?? this.effects,
+      animationPath: animationPath ?? this.animationPath,
     );
   }
 
@@ -125,8 +131,8 @@ class ShopItemModel {
 
   String get typeDisplayName {
     switch (type) {
-      case ShopItemType.accessory:
-        return 'Accesorio';
+      case ShopItemType.pet:
+        return 'Mascota';
       case ShopItemType.booster:
         return 'Potenciador';
       case ShopItemType.theme:

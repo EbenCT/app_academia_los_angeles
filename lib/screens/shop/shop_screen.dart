@@ -40,7 +40,7 @@ class _ShopScreenState extends State<ShopScreen> with TickerProviderStateMixin {
     
     // Agrupar items por tipo
     _itemsByType = {
-      ShopItemType.accessory: _allItems.where((item) => item.type == ShopItemType.accessory).toList(),
+      ShopItemType.pet: _allItems.where((item) => item.type == ShopItemType.pet).toList(),
       ShopItemType.booster: _allItems.where((item) => item.type == ShopItemType.booster).toList(),
       ShopItemType.theme: _allItems.where((item) => item.type == ShopItemType.theme).toList(),
       ShopItemType.badge: _allItems.where((item) => item.type == ShopItemType.badge).toList(),
@@ -56,9 +56,9 @@ class _ShopScreenState extends State<ShopScreen> with TickerProviderStateMixin {
             // App Bar personalizada
             _buildAppBar(),
             
-            // Tabs - Reducir padding
+            // Tabs
             Container(
-              margin: const EdgeInsets.fromLTRB(16, 8, 16, 8), // Reducido margen vertical
+              margin: const EdgeInsets.fromLTRB(16, 8, 16, 8),
               decoration: BoxDecoration(
                 color: Colors.grey.shade100,
                 borderRadius: BorderRadius.circular(25),
@@ -66,7 +66,7 @@ class _ShopScreenState extends State<ShopScreen> with TickerProviderStateMixin {
               child: TabBar(
                 controller: _tabController,
                 tabs: [
-                  _buildTab(Icons.construction, 'Accesorios'),
+                  _buildTab(Icons.pets, 'Mascotas'),
                   _buildTab(Icons.speed, 'Boosts'),
                   _buildTab(Icons.palette, 'Temas'),
                   _buildTab(Icons.military_tech, 'Insignias'),
@@ -81,12 +81,12 @@ class _ShopScreenState extends State<ShopScreen> with TickerProviderStateMixin {
                 dividerColor: Colors.transparent,
                 labelStyle: TextStyle(
                   fontFamily: 'Comic Sans MS',
-                  fontSize: 11, // Reducido tamaño de fuente
+                  fontSize: 11,
                   fontWeight: FontWeight.bold,
                 ),
                 unselectedLabelStyle: TextStyle(
                   fontFamily: 'Comic Sans MS',
-                  fontSize: 10, // Reducido tamaño de fuente
+                  fontSize: 10,
                 ),
               ),
             ),
@@ -96,7 +96,7 @@ class _ShopScreenState extends State<ShopScreen> with TickerProviderStateMixin {
               child: TabBarView(
                 controller: _tabController,
                 children: [
-                  _buildItemGrid(ShopItemType.accessory),
+                  _buildItemGrid(ShopItemType.pet),
                   _buildItemGrid(ShopItemType.booster),
                   _buildItemGrid(ShopItemType.theme),
                   _buildItemGrid(ShopItemType.badge),
@@ -111,7 +111,7 @@ class _ShopScreenState extends State<ShopScreen> with TickerProviderStateMixin {
 
   Widget _buildAppBar() {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8), // Reducido padding vertical
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [
@@ -154,7 +154,7 @@ class _ShopScreenState extends State<ShopScreen> with TickerProviderStateMixin {
               'Tienda Galáctica',
               style: TextStyle(
                 fontFamily: 'Comic Sans MS',
-                fontSize: 20, // Reducido tamaño de fuente
+                fontSize: 20,
                 fontWeight: FontWeight.bold,
                 color: Colors.white,
               ),
@@ -172,13 +172,13 @@ class _ShopScreenState extends State<ShopScreen> with TickerProviderStateMixin {
 
   Widget _buildTab(IconData icon, String label) {
     return Tab(
-      height: 50, // Altura fija para evitar overflow
+      height: 50,
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(icon, size: 16), // Reducido tamaño del icono
+          Icon(icon, size: 16),
           const SizedBox(height: 2),
-          Flexible( // Agregado Flexible para evitar overflow
+          Flexible(
             child: Text(
               label,
               overflow: TextOverflow.ellipsis,
@@ -205,10 +205,10 @@ class _ShopScreenState extends State<ShopScreen> with TickerProviderStateMixin {
         setState(() {});
       },
       child: GridView.builder(
-        padding: const EdgeInsets.all(12), // Reducido padding
+        padding: const EdgeInsets.all(12),
         gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
           crossAxisCount: 2,
-          childAspectRatio: 0.75, // Ajustado para mejor proporción
+          childAspectRatio: 0.75,
           crossAxisSpacing: 12,
           mainAxisSpacing: 12,
         ),
@@ -219,10 +219,18 @@ class _ShopScreenState extends State<ShopScreen> with TickerProviderStateMixin {
             child: ShopItemCard(
               item: items[index],
               onPurchase: () {
-                AppSnackbars.showSuccessSnackBar(
-                  context,
-                  message: '¡Has comprado ${items[index].name}!',
-                );
+                // Mensaje especial para mascotas
+                if (items[index].type == ShopItemType.pet) {
+                  AppSnackbars.showSuccessSnackBar(
+                    context,
+                    message: '¡Has adoptado a ${items[index].name}! Ve al inicio para verla.',
+                  );
+                } else {
+                  AppSnackbars.showSuccessSnackBar(
+                    context,
+                    message: '¡Has comprado ${items[index].name}!',
+                  );
+                }
               },
             ),
           );
@@ -236,9 +244,9 @@ class _ShopScreenState extends State<ShopScreen> with TickerProviderStateMixin {
     IconData icon;
     
     switch (type) {
-      case ShopItemType.accessory:
-        message = 'No hay accesorios disponibles';
-        icon = Icons.construction;
+      case ShopItemType.pet:
+        message = 'No hay mascotas disponibles';
+        icon = Icons.pets;
         break;
       case ShopItemType.booster:
         message = 'No hay potenciadores disponibles';

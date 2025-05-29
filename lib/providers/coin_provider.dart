@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/coin_model.dart';
 import '../models/shop_item_model.dart';
+import '../constants/asset_paths.dart';
 
 class CoinProvider extends ChangeNotifier {
   CoinModel _coins = CoinModel(amount: 100, lastUpdated: DateTime.now()); // Empezamos con 100 monedas
@@ -21,6 +22,12 @@ class CoinProvider extends ChangeNotifier {
 
   CoinProvider() {
     _loadData();
+  }
+
+  // Obtener mascota equipada actualmente
+  ShopItemModel? get equippedPet {
+    final pets = _equippedItems.where((item) => item.type == ShopItemType.pet);
+    return pets.isNotEmpty ? pets.first : null;
   }
 
   // Cargar datos desde SharedPreferences
@@ -127,6 +134,13 @@ class CoinProvider extends ChangeNotifier {
     final success = await spendCoins(item.price);
     if (success) {
       _ownedItems.add(item.copyWith(isOwned: true));
+      
+      // Si es la primera mascota, equiparla automáticamente
+      if (item.type == ShopItemType.pet && 
+          !_equippedItems.any((equipped) => equipped.type == ShopItemType.pet)) {
+        _equippedItems.add(item.copyWith(isEquipped: true));
+      }
+      
       await _saveData();
       _clearError();
       return true;
@@ -172,36 +186,61 @@ class CoinProvider extends ChangeNotifier {
   // Obtener objetos de la tienda (datos estáticos por ahora)
   List<ShopItemModel> getShopItems() {
     return [
-      // Accesorios
+      // Mascotas
       ShopItemModel(
-        id: 'hat_space',
-        name: 'Casco Espacial',
-        description: 'Un casco futurista para verdaderos exploradores',
-        price: 150,
-        type: ShopItemType.accessory,
+        id: 'pet_red',
+        name: 'Mascota Roja',
+        description: 'Una adorable mascota roja que te acompañará en tus aventuras',
+        price: 100,
+        type: ShopItemType.pet,
         rarity: ShopItemRarity.common,
-        icon: Icons.construction,
-        colors: [Colors.blue, Colors.cyan],
+        icon: Icons.pets,
+        colors: [Colors.red, Colors.red.shade700],
+        animationPath: AssetPaths.petRed,
       ),
       ShopItemModel(
-        id: 'cape_hero',
-        name: 'Capa de Héroe',
-        description: 'Una capa que ondea con cada aventura',
-        price: 300,
-        type: ShopItemType.accessory,
+        id: 'pet_blue',
+        name: 'Mascota Azul',
+        description: 'Una tranquila mascota azul perfecta para estudiar',
+        price: 100,
+        type: ShopItemType.pet,
+        rarity: ShopItemRarity.common,
+        icon: Icons.pets,
+        colors: [Colors.blue, Colors.blue.shade700],
+        animationPath: AssetPaths.petBlue,
+      ),
+      ShopItemModel(
+        id: 'pet_orange',
+        name: 'Mascota Naranja',
+        description: 'Una energética mascota naranja llena de vitalidad',
+        price: 100,
+        type: ShopItemType.pet,
+        rarity: ShopItemRarity.common,
+        icon: Icons.pets,
+        colors: [Colors.orange, Colors.orange.shade700],
+        animationPath: AssetPaths.petOrange,
+      ),
+      ShopItemModel(
+        id: 'pet_yellow',
+        name: 'Mascota Amarilla',
+        description: 'Una alegre mascota amarilla que iluminará tus días',
+        price: 100,
+        type: ShopItemType.pet,
+        rarity: ShopItemRarity.common,
+        icon: Icons.pets,
+        colors: [Colors.yellow, Colors.yellow.shade700],
+        animationPath: AssetPaths.petYellow,
+      ),
+      ShopItemModel(
+        id: 'pet_green',
+        name: 'Mascota Verde',
+        description: 'Una sabia mascota verde que te ayudará en matemáticas',
+        price: 100,
+        type: ShopItemType.pet,
         rarity: ShopItemRarity.rare,
-        icon: Icons.flag,
-        colors: [Colors.red, Colors.orange],
-      ),
-      ShopItemModel(
-        id: 'crown_math',
-        name: 'Corona de Matemáticas',
-        description: 'Corona dorada para los maestros de números',
-        price: 500,
-        type: ShopItemType.accessory,
-        rarity: ShopItemRarity.epic,
-        icon: Icons.diamond,
-        colors: [Colors.amber, Colors.yellow],
+        icon: Icons.pets,
+        colors: [Colors.green, Colors.green.shade700],
+        animationPath: AssetPaths.petGreen,
       ),
       
       // Potenciadores
@@ -214,6 +253,7 @@ class CoinProvider extends ChangeNotifier {
         rarity: ShopItemRarity.common,
         icon: Icons.speed,
         colors: [Colors.green, Colors.lightGreen],
+        animationPath: AssetPaths.exp,
         effects: {'xp_multiplier': 2.0, 'duration_hours': 1},
       ),
       ShopItemModel(
@@ -225,6 +265,7 @@ class CoinProvider extends ChangeNotifier {
         rarity: ShopItemRarity.rare,
         icon: Icons.monetization_on,
         colors: [Colors.amber, Colors.orange],
+        animationPath: AssetPaths.coins,
         effects: {'coin_multiplier': 2.0, 'duration_minutes': 30},
       ),
       

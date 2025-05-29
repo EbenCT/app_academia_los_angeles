@@ -1,9 +1,10 @@
-// lib/screens/home/home_content.dart (con progreso)
+// lib/screens/home/home_content.dart
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/student_provider.dart';
 import '../../providers/theme_provider.dart';
+import '../../providers/coin_provider.dart';
 import '../../services/lesson_progress_service.dart';
 import '../../widgets/animations/fade_animation.dart';
 import '../../theme/app_colors.dart';
@@ -11,6 +12,7 @@ import '../../widgets/home/welcome_banner_widget.dart';
 import '../../widgets/home/course_card_widget.dart';
 import '../../widgets/home/daily_challenge_widget.dart';
 import '../../widgets/home/progress_summary_widget.dart';
+import '../../widgets/pet/floating_pet_widget.dart';
 import '../../widgets/common/section_title.dart';
 import '../../utils/app_icons.dart';
 
@@ -57,103 +59,134 @@ class _HomeContentState extends State<HomeContent> {
     final subjects = studentProvider.subjects;
 
     return SafeArea(
-      child: RefreshIndicator(
-        color: AppColors.primary,
-        onRefresh: () async {
-          await studentProvider.refreshStudentData();
-          await _loadOverallProgress();
-        },
-        child: CustomScrollView(
-          physics: const BouncingScrollPhysics(),
-          slivers: [
-            // App Bar personalizada
-            _buildAppBar(isDarkMode, user.username, themeProvider),
-            
-            // Contenido principal
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const SizedBox(height: 20),
-                    // Banner de bienvenida
-                    FadeAnimation(
-                      delay: const Duration(milliseconds: 200),
-                      child: WelcomeBannerWidget(
-                        username: user.username,
-                        level: studentLevel,
-                      ),
-                    ),
-                    const SizedBox(height: 24),
-                    // Desafío diario
-                    FadeAnimation(
-                      delay: const Duration(milliseconds: 300),
-                      child: DailyChallengeWidget(
-                        onComplete: () async {
-                          // Actualizar los puntos al completar un desafío
-                          await studentProvider.completeChallenge(50);
-                        },
-                      ),
-                    ),
-                    const SizedBox(height: 24),
-                    // Título de sección con estadísticas
-                    Row(
+      child: Stack(
+        children: [
+          // Contenido principal
+          RefreshIndicator(
+            color: AppColors.primary,
+            onRefresh: () async {
+              await studentProvider.refreshStudentData();
+              await _loadOverallProgress();
+            },
+            child: CustomScrollView(
+              physics: const BouncingScrollPhysics(),
+              slivers: [
+                // App Bar personalizada
+                _buildAppBar(isDarkMode, user.username, themeProvider),
+                
+                // Contenido principal
+                SliverToBoxAdapter(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Expanded(
-                          child: SectionTitle(
-                            title: 'Tus materias',
-                            color: AppColors.accent,
+                        const SizedBox(height: 20),
+                        // Banner de bienvenida
+                        FadeAnimation(
+                          delay: const Duration(milliseconds: 200),
+                          child: WelcomeBannerWidget(
+                            username: user.username,
+                            level: studentLevel,
                           ),
                         ),
-                        if (_overallProgress != null)
-                          Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                            decoration: BoxDecoration(
-                              color: AppColors.accent.withOpacity(0.1),
-                              borderRadius: BorderRadius.circular(15),
-                              border: Border.all(
-                                color: AppColors.accent.withOpacity(0.3),
-                              ),
-                            ),
-                            child: Text(
-                              '${_overallProgress!['percentage']}% completado',
-                              style: TextStyle(
-                                fontFamily: 'Comic Sans MS',
-                                fontSize: 12,
-                                fontWeight: FontWeight.bold,
+                        const SizedBox(height: 24),
+                        // Desafío diario
+                        FadeAnimation(
+                          delay: const Duration(milliseconds: 300),
+                          child: DailyChallengeWidget(
+                            onComplete: () async {
+                              // Actualizar los puntos al completar un desafío
+                              await studentProvider.completeChallenge(50);
+                            },
+                          ),
+                        ),
+                        const SizedBox(height: 24),
+                        // Título de sección con estadísticas
+                        Row(
+                          children: [
+                            Expanded(
+                              child: SectionTitle(
+                                title: 'Tus materias',
                                 color: AppColors.accent,
                               ),
                             ),
+                            if (_overallProgress != null)
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                                decoration: BoxDecoration(
+                                  color: AppColors.accent.withOpacity(0.1),
+                                  borderRadius: BorderRadius.circular(15),
+                                  border: Border.all(
+                                    color: AppColors.accent.withOpacity(0.3),
+                                  ),
+                                ),
+                                child: Text(
+                                  '${_overallProgress!['percentage']}% completado',
+                                  style: TextStyle(
+                                    fontFamily: 'Comic Sans MS',
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.bold,
+                                    color: AppColors.accent,
+                                  ),
+                                ),
+                              ),
+                          ],
+                        ),
+                        const SizedBox(height: 16),
+                        // Lista horizontal de materias del estudiante
+                        _buildSubjectsSection(subjects),
+                        const SizedBox(height: 24),
+                        // Título de sección
+                        SectionTitle(
+                          title: 'Tu progreso espacial',
+                        ),
+                        const SizedBox(height: 16),
+                        // Resumen de progreso
+                        FadeAnimation(
+                          delay: const Duration(milliseconds: 500),
+                          child: ProgressSummaryWidget(
+                            points: studentXp,
+                            level: studentLevel,
+                            streakDays: 5, // Valor fijo por ahora
                           ),
+                        ),
+                        const SizedBox(height: 100), // Espacio para el bottom navigation
                       ],
                     ),
-                    const SizedBox(height: 16),
-                    // Lista horizontal de materias del estudiante
-                    _buildSubjectsSection(subjects),
-                    const SizedBox(height: 24),
-                    // Título de sección
-                    SectionTitle(
-                      title: 'Tu progreso espacial',
-                    ),
-                    const SizedBox(height: 16),
-                    // Resumen de progreso
-                    FadeAnimation(
-                      delay: const Duration(milliseconds: 500),
-                      child: ProgressSummaryWidget(
-                        points: studentXp,
-                        level: studentLevel,
-                        streakDays: 5, // Valor fijo por ahora
-                      ),
-                    ),
-                    const SizedBox(height: 100), // Espacio para el bottom navigation
-                  ],
+                  ),
                 ),
-              ),
+              ],
             ),
-          ],
-        ),
+          ),
+          
+          // Widget flotante de mascota
+          _buildFloatingPet(),
+        ],
       ),
+    );
+  }
+
+  Widget _buildFloatingPet() {
+    return Consumer<CoinProvider>(
+      builder: (context, coinProvider, child) {
+        final equippedPet = coinProvider.equippedPet;
+        
+        if (equippedPet != null) {
+          return FloatingPetWidget(
+            pet: equippedPet,
+            onTap: () {
+              // Mostrar información de la mascota
+              showDialog(
+                context: context,
+                builder: (context) => PetInfoDialog(pet: equippedPet),
+              );
+            },
+          );
+        }
+        
+        return const SizedBox.shrink();
+      },
     );
   }
 
@@ -214,7 +247,7 @@ class _HomeContentState extends State<HomeContent> {
 
   Widget _buildSubjectsSection(List<dynamic> subjects) {
     return SizedBox(
-      height: 200, // Aumentamos un poco la altura para acomodar el nuevo contenido
+      height: 200,
       child: FadeAnimation(
         delay: const Duration(milliseconds: 400),
         child: subjects.isNotEmpty

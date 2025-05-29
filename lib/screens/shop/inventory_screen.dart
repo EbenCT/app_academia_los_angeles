@@ -1,6 +1,7 @@
 // lib/screens/shop/inventory_screen.dart
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:lottie/lottie.dart';
 import '../../providers/coin_provider.dart';
 import '../../theme/app_colors.dart';
 import '../../models/shop_item_model.dart';
@@ -27,7 +28,7 @@ class InventoryScreen extends StatelessWidget {
             // Contenido
             Expanded(
               child: ownedItems.isEmpty
-                  ? _buildEmptyInventory(context) // Pasar context aquí
+                  ? _buildEmptyInventory(context)
                   : _buildInventoryContent(ownedItems, equippedItems, coinProvider),
             ),
           ],
@@ -96,7 +97,7 @@ class InventoryScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildEmptyInventory(BuildContext context) { // Agregar context como parámetro
+  Widget _buildEmptyInventory(BuildContext context) {
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(32.0),
@@ -121,7 +122,7 @@ class InventoryScreen extends StatelessWidget {
             ),
             const SizedBox(height: 12),
             Text(
-              'Visita la tienda para comprar objetos geniales y personalizar tu experiencia',
+              'Visita la tienda para adoptar mascotas y comprar objetos geniales',
               style: TextStyle(
                 fontFamily: 'Comic Sans MS',
                 fontSize: 16,
@@ -132,9 +133,9 @@ class InventoryScreen extends StatelessWidget {
             const SizedBox(height: 32),
             ElevatedButton.icon(
               onPressed: () {
-                Navigator.pushNamed(context, '/shop'); // Ahora context está disponible
+                Navigator.pushNamed(context, '/shop');
               },
-              icon: Icon(Icons.store),
+              icon: Icon(Icons.pets),
               label: Text(
                 'Ir a la Tienda',
                 style: TextStyle(fontFamily: 'Comic Sans MS'),
@@ -233,11 +234,22 @@ class InventoryScreen extends StatelessWidget {
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Icon(
-                      item.icon,
-                      color: Colors.white,
-                      size: 16,
-                    ),
+                    // Para mascotas, mostrar animación pequeña
+                    if (item.type == ShopItemType.pet && item.animationPath != null)
+                      SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: Lottie.asset(
+                          item.animationPath!,
+                          fit: BoxFit.contain,
+                        ),
+                      )
+                    else
+                      Icon(
+                        item.icon,
+                        color: Colors.white,
+                        size: 16,
+                      ),
                     const SizedBox(width: 4),
                     Text(
                       item.name,
@@ -267,9 +279,9 @@ class InventoryScreen extends StatelessWidget {
     IconData typeIcon;
     
     switch (type) {
-      case ShopItemType.accessory:
-        typeName = 'Accesorios';
-        typeIcon = Icons.construction;
+      case ShopItemType.pet:
+        typeName = 'Mascotas';
+        typeIcon = Icons.pets;
         break;
       case ShopItemType.booster:
         typeName = 'Potenciadores';
@@ -369,11 +381,27 @@ class InventoryScreen extends StatelessWidget {
               child: Stack(
                 alignment: Alignment.center,
                 children: [
-                  Icon(
-                    item.icon,
-                    color: Colors.white,
-                    size: 24,
-                  ),
+                  // Para mascotas y potenciadores, mostrar animación circular
+                  if ((item.type == ShopItemType.pet || item.type == ShopItemType.booster) && item.animationPath != null)
+                    ClipOval(
+                      child: Container(
+                        width: 50,
+                        height: 50,
+                        child: Transform.scale(
+                          scale: 1.3, // Escalamos para llenar mejor el círculo
+                          child: Lottie.asset(
+                            item.animationPath!,
+                            fit: BoxFit.cover, // Cover para llenar todo el espacio
+                          ),
+                        ),
+                      ),
+                    )
+                  else
+                    Icon(
+                      item.icon,
+                      color: Colors.white,
+                      size: 24,
+                    ),
                   if (isEquipped)
                     Positioned(
                       top: 0,
@@ -410,7 +438,7 @@ class InventoryScreen extends StatelessWidget {
             overflow: TextOverflow.ellipsis,
           ),
           const SizedBox(height: 4),
-          if (item.type == ShopItemType.accessory || item.type == ShopItemType.badge)
+          if (item.type == ShopItemType.pet || item.type == ShopItemType.badge)
             SizedBox(
               width: double.infinity,
               height: 24,

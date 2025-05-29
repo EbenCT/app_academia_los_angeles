@@ -1,3 +1,4 @@
+// lib/constants/asset_paths.dart
 /// Rutas a los activos estáticos de la aplicación
 class AssetPaths {
   // Imágenes
@@ -13,6 +14,16 @@ class AssetPaths {
   static const String successAnimation = 'assets/animations/success.json';
   static const String errorAnimation = 'assets/animations/error.json';
   static const String emptyAnimation = 'assets/animations/empty.json';
+  
+  // Mascotas - Nuevas animaciones
+  static const String petRed = 'assets/animations/petRed.json';
+  static const String petBlue = 'assets/animations/petBlue.json';
+  static const String petOrange = 'assets/animations/petOrange.json';
+  static const String petYellow = 'assets/animations/petYellow.json';
+  static const String petGreen = 'assets/animations/petGreen.json';
+
+  static const String coins = 'assets/animations/coin2.json';
+  static const String exp = 'assets/animations/exp.json';
   
   // Iconos
   static const String achievementIcon = 'assets/images/achievement_icon.png';
