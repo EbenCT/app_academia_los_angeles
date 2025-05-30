@@ -31,10 +31,8 @@ class BoosterProvider extends ChangeNotifier {
       final prefs = await SharedPreferences.getInstance();
       final boosterJson = prefs.getString('active_booster');
       
-      print('Loading booster from storage: $boosterJson');
-      
       if (boosterJson != null) {
-        // Intentar parsear como JSON simple
+        // Parsear como query string simple
         final data = boosterJson.split('&').fold<Map<String, String>>({}, (map, item) {
           final parts = item.split('=');
           if (parts.length == 2) {
@@ -42,8 +40,6 @@ class BoosterProvider extends ChangeNotifier {
           }
           return map;
         });
-        
-        print('Parsed data: $data');
         
         final booster = ActiveBoosterModel.fromJson({
           'id': data['id'] ?? '',
@@ -55,22 +51,19 @@ class BoosterProvider extends ChangeNotifier {
           'icon_path': data['icon_path'] ?? '',
         });
         
-        print('Created booster: ${booster.name}, isActive: ${booster.isActive}');
-        
         if (booster.isActive) {
           _activeBooster = booster;
-          print('Set active booster: ${_activeBooster!.name}');
         } else {
-          print('Booster expired, clearing...');
           // Limpiar potenciador expirado
           await _clearActiveBooster();
         }
       }
     } catch (e) {
-      print('Error loading active booster: $e');
+      // Error silencioso en producción
     }
     notifyListeners();
   }
+
   // Guardar potenciador activo
   Future<void> _saveActiveBooster() async {
     try {
@@ -78,13 +71,17 @@ class BoosterProvider extends ChangeNotifier {
       
       if (_activeBooster != null) {
         final data = _activeBooster!.toJson();
-        final queryString = Uri(queryParameters: data.map((k, v) => MapEntry(k, v.toString()))).query;
-        await prefs.setString('active_booster', queryString);
+        // Convertir a string simple para evitar problemas de parsing
+        final saveString = data.entries
+            .map((e) => '${Uri.encodeComponent(e.key)}=${Uri.encodeComponent(e.value.toString())}')
+            .join('&');
+        
+        await prefs.setString('active_booster', saveString);
       } else {
         await prefs.remove('active_booster');
       }
     } catch (e) {
-      print('Error saving active booster: $e');
+      // Error silencioso en producción
     }
   }
 
@@ -95,7 +92,7 @@ class BoosterProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-// Activar un nuevo potenciador
+  // Activar un nuevo potenciador
   Future<void> activateBooster({
     required String id,
     required String name,
@@ -104,8 +101,6 @@ class BoosterProvider extends ChangeNotifier {
     required Duration duration,
     required String iconPath,
   }) async {
-    print('Activating booster: $name, XP: $xpMultiplier, Coins: $coinMultiplier, Duration: ${duration.inMinutes}min');
-    
     _activeBooster = ActiveBoosterModel(
       id: id,
       name: name,
@@ -117,7 +112,6 @@ class BoosterProvider extends ChangeNotifier {
     );
     
     await _saveActiveBooster();
-    print('Booster activated and saved. Active: ${_activeBooster!.isActive}');
     notifyListeners();
   }
 

@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/student_provider.dart';
 import '../../providers/theme_provider.dart';
+import '../../providers/coin_provider.dart';
 import '../../services/lesson_progress_service.dart';
 import '../../widgets/animations/fade_animation.dart';
 import '../../theme/app_colors.dart';
@@ -11,8 +12,10 @@ import '../../widgets/home/welcome_banner_widget.dart';
 import '../../widgets/home/course_card_widget.dart';
 import '../../widgets/home/daily_challenge_widget.dart';
 import '../../widgets/home/progress_summary_widget.dart';
+import '../../widgets/pet/floating_pet_widget.dart';
 import '../../widgets/common/section_title.dart';
 import '../../utils/app_icons.dart';
+import '../shop/active_booster_indicator.dart';
 
 class HomeContent extends StatefulWidget {
   const HomeContent({super.key});
@@ -31,6 +34,8 @@ class _HomeContentState extends State<HomeContent> {
   }
 
   Future<void> _loadOverallProgress() async {
+    if (!mounted) return;
+    
     final studentProvider = Provider.of<StudentProvider>(context, listen: false);
     final subjects = studentProvider.subjects;
     
@@ -63,8 +68,11 @@ class _HomeContentState extends State<HomeContent> {
           RefreshIndicator(
             color: AppColors.primary,
             onRefresh: () async {
+              if (!mounted) return;
               await studentProvider.refreshStudentData();
-              await _loadOverallProgress();
+              if (mounted) {
+                await _loadOverallProgress();
+              }
             },
             child: CustomScrollView(
               physics: const BouncingScrollPhysics(),
@@ -80,6 +88,9 @@ class _HomeContentState extends State<HomeContent> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         const SizedBox(height: 20),
+                        // Indicador de potenciador activo (inline)
+                        ActiveBoosterIndicator(isFloating: false),
+                        
                         // Banner de bienvenida
                         FadeAnimation(
                           delay: const Duration(milliseconds: 200),
@@ -89,13 +100,14 @@ class _HomeContentState extends State<HomeContent> {
                           ),
                         ),
                         const SizedBox(height: 24),
+                        
                         // Desafío diario
                         FadeAnimation(
                           delay: const Duration(milliseconds: 300),
                           child: DailyChallengeWidget(
                             onComplete: () async {
                               // Actualizar los puntos al completar un desafío
-                              await studentProvider.completeChallenge(50);
+                              await studentProvider.completeChallenge(50, context: context);
                             },
                           ),
                         ),
@@ -157,8 +169,34 @@ class _HomeContentState extends State<HomeContent> {
               ],
             ),
           ),
+          
+          // Widget flotante de mascota
+          _buildFloatingPet(),
         ],
       ),
+    );
+  }
+
+  Widget _buildFloatingPet() {
+    return Consumer<CoinProvider>(
+      builder: (context, coinProvider, child) {
+        final equippedPet = coinProvider.equippedPet;
+        
+        if (equippedPet != null) {
+          return FloatingPetWidget(
+            pet: equippedPet,
+            onTap: () {
+              // Mostrar información de la mascota
+              showDialog(
+                context: context,
+                builder: (context) => PetInfoDialog(pet: equippedPet),
+              );
+            },
+          );
+        }
+        
+        return const SizedBox.shrink();
+      },
     );
   }
 

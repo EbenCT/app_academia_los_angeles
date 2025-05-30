@@ -99,20 +99,10 @@ class _MainScreenState extends State<MainScreen> {
           _buildFloatingPet(),
           
           // Indicador flotante de potenciador activo
-          Consumer<BoosterProvider>(
-            builder: (context, boosterProvider, child) {
-              print('BoosterProvider state: hasActive=${boosterProvider.hasActiveBooster}');
-              if (boosterProvider.activeBooster != null) {
-                print('Active booster: ${boosterProvider.activeBooster!.name}');
-                print('Remaining time: ${boosterProvider.getFormattedRemainingTime()}');
-              }
-              
-              return ActiveBoosterIndicator(
-                isFloating: true,
-                onTap: () {
-                  _showBoosterInfo(context);
-                },
-              );
+          ActiveBoosterIndicator(
+            isFloating: true,
+            onTap: () {
+              _showBoosterInfo(context);
             },
           ),
         ],
@@ -127,10 +117,7 @@ class _MainScreenState extends State<MainScreen> {
 
   void _showBoosterInfo(BuildContext context) {
     final boosterProvider = Provider.of<BoosterProvider>(context, listen: false);
-    if (!boosterProvider.hasActiveBooster) {
-      print('No active booster to show info for');
-      return;
-    }
+    if (!boosterProvider.hasActiveBooster) return;
 
     final booster = boosterProvider.activeBooster!;
     
