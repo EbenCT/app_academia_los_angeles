@@ -4,7 +4,6 @@ import 'package:provider/provider.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/student_provider.dart';
 import '../../providers/theme_provider.dart';
-import '../../providers/coin_provider.dart';
 import '../../services/lesson_progress_service.dart';
 import '../../widgets/animations/fade_animation.dart';
 import '../../theme/app_colors.dart';
@@ -12,7 +11,6 @@ import '../../widgets/home/welcome_banner_widget.dart';
 import '../../widgets/home/course_card_widget.dart';
 import '../../widgets/home/daily_challenge_widget.dart';
 import '../../widgets/home/progress_summary_widget.dart';
-import '../../widgets/pet/floating_pet_widget.dart';
 import '../../widgets/common/section_title.dart';
 import '../../utils/app_icons.dart';
 
@@ -159,34 +157,8 @@ class _HomeContentState extends State<HomeContent> {
               ],
             ),
           ),
-          
-          // Widget flotante de mascota
-          _buildFloatingPet(),
         ],
       ),
-    );
-  }
-
-  Widget _buildFloatingPet() {
-    return Consumer<CoinProvider>(
-      builder: (context, coinProvider, child) {
-        final equippedPet = coinProvider.equippedPet;
-        
-        if (equippedPet != null) {
-          return FloatingPetWidget(
-            pet: equippedPet,
-            onTap: () {
-              // Mostrar información de la mascota
-              showDialog(
-                context: context,
-                builder: (context) => PetInfoDialog(pet: equippedPet),
-              );
-            },
-          );
-        }
-        
-        return const SizedBox.shrink();
-      },
     );
   }
 

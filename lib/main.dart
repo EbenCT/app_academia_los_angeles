@@ -10,6 +10,7 @@ import 'providers/theme_provider.dart';
 import 'providers/student_provider.dart';
 import 'providers/avatar_provider.dart';
 import 'providers/coin_provider.dart';
+import 'providers/booster_provider.dart';
 import 'screens/auth/login_screen.dart';
 import 'services/graphql_service.dart';
 
@@ -67,6 +68,10 @@ class MyApp extends StatelessWidget {
           // Añade el CoinProvider
           ChangeNotifierProvider(create: (context) {
             return CoinProvider();
+          }),
+          // Añade el BoosterProvider
+          ChangeNotifierProvider(create: (context) {
+            return BoosterProvider();
           }),
         ],
         child: Consumer<ThemeProvider>(

@@ -7,6 +7,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../services/student_service.dart';
 import '../models/subject_model.dart';
 import '../providers/coin_provider.dart';
+import 'booster_provider.dart';
 
 class StudentProvider extends ChangeNotifier {
   late final StudentService _studentService;
@@ -215,10 +216,20 @@ class StudentProvider extends ChangeNotifier {
     }
   }
 
-  // Completar un desafío con recompensas mejoradas
+// Completar un desafío con recompensas mejoradas
   Future<void> completeChallenge(int pointsEarned, {BuildContext? context}) async {
     final oldLevel = _level;
-    _xp += pointsEarned;
+    
+    // Aplicar multiplicador de XP si hay potenciador activo
+    double finalXp = pointsEarned.toDouble();
+    if (context != null) {
+      final boosterProvider = Provider.of<BoosterProvider>(context, listen: false);
+      if (boosterProvider.hasActiveBooster) {
+        finalXp *= boosterProvider.xpMultiplier;
+      }
+    }
+    
+    _xp += finalXp.round();
     
     // Lógica simple para subir de nivel
     if (_xp >= _level * 100) {
@@ -226,7 +237,15 @@ class StudentProvider extends ChangeNotifier {
     }
     
     // Calcular monedas ganadas (basado en puntos)
-    final coinsEarned = (pointsEarned * 0.5).round(); // 50% de los puntos como monedas
+    double finalCoins = (pointsEarned * 0.5); // 50% de los puntos como monedas
+    
+    // Aplicar multiplicador de monedas si hay potenciador activo
+    if (context != null) {
+      final boosterProvider = Provider.of<BoosterProvider>(context, listen: false);
+      if (boosterProvider.hasActiveBooster) {
+        finalCoins *= boosterProvider.coinMultiplier;
+      }
+    }
     
     // Si subió de nivel, bonus de monedas
     int levelBonus = 0;
@@ -243,7 +262,7 @@ class StudentProvider extends ChangeNotifier {
     if (context != null) {
       final coinProvider = Provider.of<CoinProvider>(context, listen: false);
       await coinProvider.addCoins(
-        coinsEarned + levelBonus,
+        finalCoins.round() + levelBonus,
         reason: levelBonus > 0 
             ? 'Desafío completado + Subida de nivel' 
             : 'Desafío completado',
@@ -256,15 +275,33 @@ class StudentProvider extends ChangeNotifier {
 
   // Completar lección con recompensas
   Future<void> completeLesson(String lessonId, {BuildContext? context}) async {
-    final baseXp = 75;
-    final baseCoins = 40;
+    final baseXp = 75.0;
+    final baseCoins = 40.0;
     final oldLevel = _level;
     
-    _xp += baseXp;
+    // Aplicar multiplicador de XP si hay potenciador activo
+    double finalXp = baseXp;
+    if (context != null) {
+      final boosterProvider = Provider.of<BoosterProvider>(context, listen: false);
+      if (boosterProvider.hasActiveBooster) {
+        finalXp *= boosterProvider.xpMultiplier;
+      }
+    }
+    
+    _xp += finalXp.round();
     
     // Verificar subida de nivel
     if (_xp >= _level * 100) {
       _level++;
+    }
+    
+    // Aplicar multiplicador de monedas si hay potenciador activo
+    double finalCoins = baseCoins;
+    if (context != null) {
+      final boosterProvider = Provider.of<BoosterProvider>(context, listen: false);
+      if (boosterProvider.hasActiveBooster) {
+        finalCoins *= boosterProvider.coinMultiplier;
+      }
     }
     
     int levelBonus = 0;
@@ -281,7 +318,7 @@ class StudentProvider extends ChangeNotifier {
     if (context != null) {
       final coinProvider = Provider.of<CoinProvider>(context, listen: false);
       await coinProvider.addCoins(
-        baseCoins + levelBonus,
+        finalCoins.round() + levelBonus,
         reason: levelBonus > 0 
             ? 'Lección completada + Subida de nivel' 
             : 'Lección completada',
@@ -292,12 +329,20 @@ class StudentProvider extends ChangeNotifier {
   // Completar juego con recompensas especiales
   Future<void> completeGame(String gameId, int score, {BuildContext? context}) async {
     // Calcular XP basado en puntuación
-    final baseXp = 100;
-    final scoreBonus = (score * 0.1).round();
-    final totalXp = baseXp + scoreBonus;
+    final baseXp = 100.0;
+    final scoreBonus = (score * 0.1);
+    double totalXp = baseXp + scoreBonus;
     final oldLevel = _level;
     
-    _xp += totalXp;
+    // Aplicar multiplicador de XP si hay potenciador activo
+    if (context != null) {
+      final boosterProvider = Provider.of<BoosterProvider>(context, listen: false);
+      if (boosterProvider.hasActiveBooster) {
+        totalXp *= boosterProvider.xpMultiplier;
+      }
+    }
+    
+    _xp += totalXp.round();
     
     // Verificar subida de nivel
     if (_xp >= _level * 100) {
@@ -305,8 +350,18 @@ class StudentProvider extends ChangeNotifier {
     }
     
     // Calcular monedas (juegos dan más monedas)
-    final baseCoins = 60;
-    final coinBonus = (score * 0.05).round();
+    final baseCoins = 60.0;
+    double coinBonus = (score * 0.05);
+    double totalCoins = baseCoins + coinBonus;
+    
+    // Aplicar multiplicador de monedas si hay potenciador activo
+    if (context != null) {
+      final boosterProvider = Provider.of<BoosterProvider>(context, listen: false);
+      if (boosterProvider.hasActiveBooster) {
+        totalCoins *= boosterProvider.coinMultiplier;
+      }
+    }
+    
     int levelBonus = 0;
     if (_level > oldLevel) {
       levelBonus = _level * 20; // Bonus aún mayor por juegos
@@ -321,14 +376,13 @@ class StudentProvider extends ChangeNotifier {
     if (context != null) {
       final coinProvider = Provider.of<CoinProvider>(context, listen: false);
       await coinProvider.addCoins(
-        baseCoins + coinBonus + levelBonus,
+        totalCoins.round() + levelBonus,
         reason: levelBonus > 0 
             ? 'Juego completado + Subida de nivel' 
             : 'Juego completado',
       );
     }
   }
-
   // Recargar datos del estudiante
   Future<void> refreshStudentData() async {
     await _loadStudentData();
@@ -369,6 +423,7 @@ class StudentProvider extends ChangeNotifier {
       print('Error limpiando datos locales: $e');
     }
   }
+  
 
   // Cambiar estado de carga
   void _setLoading(bool value) {

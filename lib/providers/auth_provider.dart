@@ -129,7 +129,7 @@ class AuthProvider extends ChangeNotifier {
     }
   }
 
-  /// Limpia todos los datos locales almacenados
+/// Limpia todos los datos locales almacenados
   Future<void> _clearAllLocalData() async {
     try {
       final prefs = await SharedPreferences.getInstance();
@@ -147,6 +147,9 @@ class AuthProvider extends ChangeNotifier {
       await prefs.remove('coin_last_updated');
       await prefs.remove('owned_items');
       await prefs.remove('equipped_items');
+      
+      // Limpiar datos de potenciadores
+      await prefs.remove('active_booster');
       
       // Limpiar desafíos diarios y progreso de lecciones
       final keys = prefs.getKeys();
@@ -174,7 +177,6 @@ class AuthProvider extends ChangeNotifier {
       print('Error limpiando datos locales: $e');
     }
   }
-
   /// Cambia el estado de carga y notifica a los listeners
   void _setLoading(bool value) {
     _isLoading = value;
