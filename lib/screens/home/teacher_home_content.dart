@@ -16,6 +16,7 @@ import '../../widgets/teacher/create_classroom_dialog.dart';
 import '../../widgets/common/section_title.dart';
 import '../../widgets/common/app_card.dart';
 import '../../utils/app_snackbars.dart';
+import '../teacher/teacher_progress_dashboard.dart';
 
 class TeacherHomeContent extends StatelessWidget {
   const TeacherHomeContent({super.key});
@@ -76,7 +77,13 @@ class TeacherHomeContent extends StatelessWidget {
                           _buildCreateClassroomButton(context),
                           
                           const SizedBox(height: 24),
-                          
+                          // Tarjetas de acceso rápido
+FadeAnimation(
+  delay: const Duration(milliseconds: 350),
+  child: _buildQuickAccessSection(context),
+),
+
+const SizedBox(height: 24),
                           // Lista de aulas
                           if (isLoadingClassrooms)
                             Center(
@@ -435,4 +442,122 @@ class TeacherHomeContent extends StatelessWidget {
       message: 'Función en desarrollo: Detalle del aula "${classroom.name}"',
     );
   }
+  // Métodos adicionales para lib/screens/home/teacher_home_content.dart
+
+Widget _buildQuickAccessSection(BuildContext context) {
+  return Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      SectionTitle(
+        title: 'Acceso Rápido',
+        color: AppColors.accent,
+      ),
+      const SizedBox(height: 16),
+      Row(
+        children: [
+          Expanded(
+            child: _buildQuickAccessCard(
+              context: context,
+              title: 'Seguimiento de Progreso',
+              subtitle: 'Ver métricas de estudiantes',
+              icon: Icons.analytics_rounded,
+              color: AppColors.info,
+              onTap: () => _navigateToProgressDashboard(context),
+            ),
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: _buildQuickAccessCard(
+              context: context,
+              title: 'Crear Evaluación',
+              subtitle: 'Próximamente disponible',
+              icon: Icons.assignment_rounded,
+              color: AppColors.warning,
+              onTap: () => _showComingSoon(context, 'Crear Evaluación'),
+            ),
+          ),
+        ],
+      ),
+    ],
+  );
+}
+
+Widget _buildQuickAccessCard({
+  required BuildContext context,
+  required String title,
+  required String subtitle,
+  required IconData icon,
+  required Color color,
+  required VoidCallback onTap,
+}) {
+  return InkWell(
+    onTap: onTap,
+    borderRadius: BorderRadius.circular(16),
+    child: Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: color.withOpacity(0.3),
+          width: 2,
+        ),
+      ),
+      child: Column(
+        children: [
+          Container(
+            width: 50,
+            height: 50,
+            decoration: BoxDecoration(
+              color: color.withOpacity(0.2),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(
+              icon,
+              color: color,
+              size: 28,
+            ),
+          ),
+          const SizedBox(height: 12),
+          Text(
+            title,
+            style: TextStyle(
+              fontFamily: 'Comic Sans MS',
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+              color: color,
+            ),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 4),
+          Text(
+            subtitle,
+            style: TextStyle(
+              fontFamily: 'Comic Sans MS',
+              fontSize: 12,
+              color: Colors.grey,
+            ),
+            textAlign: TextAlign.center,
+          ),
+        ],
+      ),
+    ),
+  );
+}
+
+void _navigateToProgressDashboard(BuildContext context) {
+  Navigator.push(
+    context,
+    MaterialPageRoute(
+      builder: (context) => const TeacherProgressDashboard(),
+    ),
+  );
+}
+
+void _showComingSoon(BuildContext context, String feature) {
+  AppSnackbars.showInfoSnackBar(
+    context,
+    message: '$feature estará disponible próximamente',
+  );
+}
 }

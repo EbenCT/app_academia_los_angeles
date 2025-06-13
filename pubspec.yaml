@@ -48,6 +48,10 @@ dependencies:
   mobile_scanner: ^3.5.5
   audioplayers: ^6.4.0
   fluttermoji: ^1.0.2
+  pdf: ^3.11.3
+  printing: ^5.14.2
+  excel: ^4.0.6
+  permission_handler: ^11.0.1
 
 dev_dependencies:
   flutter_test:
