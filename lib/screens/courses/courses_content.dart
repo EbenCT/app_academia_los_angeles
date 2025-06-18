@@ -8,6 +8,7 @@ import '../../widgets/animations/fade_animation.dart';
 import '../../widgets/common/app_card.dart';
 import '../../theme/app_colors.dart';
 import '../../utils/app_icons.dart';
+import '../../widgets/transition/subject_to_topics_transition.dart';
 
 class CoursesContent extends StatefulWidget {
   const CoursesContent({super.key});
@@ -399,17 +400,16 @@ class _CoursesContentState extends State<CoursesContent> {
     final int percentage = progress['percentage'] as int;
     
     return AppCard(
-      onTap: () {
-        // Navegar a la pantalla de lecciones de la materia específica
-        Navigator.pushNamed(
-          context,
-          '/subject-lessons',
-          arguments: subject,
-        ).then((_) {
-          // Recargar progreso cuando se regrese
-          _loadProgress();
-        });
-      },
+onTap: () async {
+  // Usar el nuevo sistema genérico
+  await SubjectToTopicsTransition.navigateToSubjectTopics(
+    context,
+    subject,
+  );
+  
+  // Recargar progreso si tienes una función similar
+  _loadProgress(); // o como se llame tu función de recargar
+},
       child: Padding(
         padding: const EdgeInsets.all(12.0),
         child: Column(

@@ -15,6 +15,7 @@ import '../../widgets/home/progress_summary_widget.dart';
 import '../../widgets/pet/floating_pet_widget.dart';
 import '../../widgets/common/section_title.dart';
 import '../../utils/app_icons.dart';
+import '../../widgets/transition/subject_to_topics_transition.dart';
 import '../shop/active_booster_indicator.dart';
 
 class HomeContent extends StatefulWidget {
@@ -276,16 +277,16 @@ class _HomeContentState extends State<HomeContent> {
                     icon: icon,
                     color: color,
                     subjectId: subject.id, // Pasamos el ID de la materia
-                    onTap: () {
-                      // Navegar a la pantalla de lecciones de la materia
-                      Navigator.pushNamed(
+                    // REEMPLAZAR EL onTap: del CourseCardWidget con esto:
+                    onTap: () async {
+                      // Usar el nuevo sistema de transición
+                      await SubjectToTopicsTransition.navigateToSubjectTopics(
                         context,
-                        '/subject-lessons',
-                        arguments: subject,
-                      ).then((_) {
-                        // Recargar progreso cuando se regrese
-                        _loadOverallProgress();
-                      });
+                        subject,
+                      );
+                      
+                      // Recargar progreso cuando se regrese
+                      _loadOverallProgress();
                     },
                   );
                 },

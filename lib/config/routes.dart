@@ -11,6 +11,11 @@ import '../screens/courses/subject_lessons_screen.dart';
 import '../screens/game/integer_rescue_game.dart';
 import '../screens/shop/shop_screen.dart';
 import '../screens/shop/inventory_screen.dart';
+import '../screens/courses/generic_topic_lessons_screen.dart';
+import '../screens/game/generic_lesson_screen.dart';
+import '../screens/game/integer_rescue_game.dart';
+import '../screens/shop/shop_screen.dart';
+import '../screens/shop/inventory_screen.dart';
 
 /// Contiene todas las rutas de navegación de la aplicación
 class AppRoutes {
@@ -21,6 +26,8 @@ class AppRoutes {
   static const String mainTeacher = '/main-teacher'; // Nueva ruta principal para profesores
   static const String profile = '/profile';
   static const String subjectLessons = '/subject-lessons';
+  static const String topicLessons = '/topic-lessons';
+  static const String genericLesson = '/generic-lesson';
   static const String registerTeacher = '/registerTeacher';
   static const String joinClassroom = '/joinClassroom';
   static const String integerRescueGame = '/games/integer-rescue';
@@ -40,20 +47,35 @@ class AppRoutes {
       final subject = ModalRoute.of(context)!.settings.arguments;
       return SubjectLessonsScreen(subject: subject);
     },
+        // NUEVAS RUTAS GENÉRICAS
+    topicLessons: (context) {
+      final args = ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>;
+      return GenericTopicLessonsScreen(
+        topic: args['topic'],
+        subject: args['subject'],
+      );
+    },
+        genericLesson: (context) {
+      final args = ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>;
+      return GenericLessonScreen(
+        lessonId: args['lessonId'],
+        lessonTitle: args['lessonTitle'],
+        onLessonCompleted: args['onLessonCompleted'],
+      );
+    },
     integerRescueGame: (context) => const IntegerRescueGame(),
     integerLesson: (context) => const IntegerLessonScreenInteractive(),
     shop: (context) => const ShopScreen(),
     inventory: (context) => const InventoryScreen(),
   };
 
-  /// Navega a una ruta nombrada
-  static void navigateTo(BuildContext context, String routeName) {
-    Navigator.pushNamed(context, routeName);
+  // Métodos de navegación auxiliares
+  static void navigateTo(BuildContext context, String routeName, {Object? arguments}) {
+    Navigator.pushNamed(context, routeName, arguments: arguments);
   }
 
-  /// Navega a una ruta y reemplaza la actual en el stack
-  static void navigateReplacementTo(BuildContext context, String routeName) {
-    Navigator.pushReplacementNamed(context, routeName);
+  static void navigateReplacementTo(BuildContext context, String routeName, {Object? arguments}) {
+    Navigator.pushReplacementNamed(context, routeName, arguments: arguments);
   }
 
   /// Navega al inicio y limpia todo el stack de navegación
