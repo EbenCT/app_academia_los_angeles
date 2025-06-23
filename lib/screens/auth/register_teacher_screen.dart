@@ -10,6 +10,7 @@ import '../../widgets/common/custom_button.dart';
 import '../../widgets/common/custom_text_field.dart';
 import '../../widgets/common/loading_indicator.dart';
 import '../../widgets/common/space_background.dart';
+import '../../widgets/common/terms_checkbox_widget.dart';
 
 class RegisterTeacherScreen extends StatefulWidget {
   const RegisterTeacherScreen({super.key});
@@ -727,38 +728,18 @@ class _RegisterTeacherScreenState extends State<RegisterTeacherScreen>
           delay: const Duration(milliseconds: 800),
           child: Row(
             children: [
-              Checkbox(
-                value: _acceptTerms,
-                onChanged: (value) {
-                  setState(() {
-                    _acceptTerms = value ?? false;
-                  });
-                },
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(4),
-                ),
-                activeColor: AppColors.primary,
-              ),
-              Expanded(
-                child: GestureDetector(
-                  onTap: () {
-                    setState(() {
-                      _acceptTerms = !_acceptTerms;
-                    });
-                  },
-                  child: Text(
-                    'Acepto las reglas espaciales y prometo guiar a mis estudiantes en su aventura de aprendizaje.',
-                    style: TextStyle(
-                      fontFamily: 'Comic Sans MS',
-                      fontSize: 12,
-                      color: Theme.of(context).brightness == Brightness.dark
-                          ? Colors.white70
-                          : Colors.black87,
-                    ),
-                    overflow: TextOverflow.visible,
-                  ),
-                ),
-              ),
+FadeAnimation(
+  delay: const Duration(milliseconds: 800),
+  child: TermsCheckboxWidget(
+    acceptTerms: _acceptTerms,
+    onChanged: (value) {
+      setState(() {
+        _acceptTerms = value;
+      });
+    },
+    message: 'Acepto los terminos y condiciones',
+  ),
+),
             ],
           ),
         ),
