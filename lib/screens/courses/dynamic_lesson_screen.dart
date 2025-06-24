@@ -6,9 +6,12 @@ import '../../theme/app_colors.dart';
 import '../../widgets/screens/screen_base.dart';
 import '../../providers/student_provider.dart';
 import '../../providers/coin_provider.dart';
-import '../../widgets/animations/bounce_animation.dart';
 import '../../services/topic_lesson_service.dart';
 import '../../services/graphql_service.dart';
+import '../../services/exercise_validator.dart';
+import '../../widgets/lessons/error_explanation_widget.dart';
+import '../../widgets/lessons/ai_help_dialog.dart';
+import '../../widgets/lessons/exercise_widgets.dart';
 
 class DynamicLessonScreen extends StatefulWidget {
   final Lesson lesson;
@@ -29,14 +32,20 @@ class _DynamicLessonScreenState extends State<DynamicLessonScreen> with TickerPr
   late AnimationController _animationController;
   late TopicLessonService _topicLessonService;
   
+  // Estado de navegación
   int _currentStep = 0;
-  Map<int, List<int>> _selectedAnswers = {}; // Para tipo 1
-  Map<int, List<int>> _orderedAnswers = {}; // Para tipo 2
-  Map<int, int> _exerciseErrors = {}; // Contar errores por ejercicio
-  Map<int, DateTime> _exerciseStartTimes = {}; // Tiempo de inicio por ejercicio
-  Map<int, bool> _exerciseSubmitted = {}; // Si ya se envió al backend
   bool _isCompleting = false;
   bool _showingFeedback = false;
+  bool _showingAIHelp = false;
+  
+  // Respuestas de ejercicios
+  Map<int, List<int>> _selectedAnswers = {};
+  Map<int, List<int>> _orderedAnswers = {};
+  
+  // Tracking de ejercicios
+  Map<int, int> _exerciseErrors = {};
+  Map<int, DateTime> _exerciseStartTimes = {};
+  Map<int, bool> _exerciseSubmitted = {};
 
   @override
   void initState() {
@@ -63,22 +72,30 @@ class _DynamicLessonScreenState extends State<DynamicLessonScreen> with TickerPr
   }
 
   int get _totalSteps {
-    // Paso de contenido + ejercicios
     return (widget.lesson.content != null ? 1 : 0) + widget.lesson.exercises.length;
   }
 
-  // MÉTODOS DE NAVEGACIÓN
+  bool get _isOnExerciseStep {
+    if (widget.lesson.content != null && _currentStep == 0) return false;
+    return true;
+  }
+
+  Exercise? get _currentExercise {
+    final exerciseIndex = widget.lesson.content != null ? _currentStep - 1 : _currentStep;
+    if (exerciseIndex >= 0 && exerciseIndex < widget.lesson.exercises.length) {
+      return widget.lesson.exercises[exerciseIndex];
+    }
+    return null;
+  }
+
+  // NAVEGACIÓN
   void _nextStep() {
     if (_currentStep < _totalSteps - 1) {
-      setState(() {
-        _currentStep++;
-      });
+      setState(() => _currentStep++);
       _pageController.nextPage(
         duration: const Duration(milliseconds: 300),
         curve: Curves.easeInOut,
       );
-      
-      // Si entramos a un ejercicio, marcar el tiempo de inicio
       _markExerciseStartTime();
     } else {
       _completeLesson();
@@ -87,9 +104,7 @@ class _DynamicLessonScreenState extends State<DynamicLessonScreen> with TickerPr
 
   void _previousStep() {
     if (_currentStep > 0) {
-      setState(() {
-        _currentStep--;
-      });
+      setState(() => _currentStep--);
       _pageController.previousPage(
         duration: const Duration(milliseconds: 300),
         curve: Curves.easeInOut,
@@ -97,101 +112,55 @@ class _DynamicLessonScreenState extends State<DynamicLessonScreen> with TickerPr
     }
   }
 
-  // MÉTODOS DE EJERCICIOS
-  void _markExerciseStartTime() {
-    final exerciseIndex = widget.lesson.content != null ? _currentStep - 1 : _currentStep;
-    
-    if (exerciseIndex >= 0 && exerciseIndex < widget.lesson.exercises.length) {
-      final exercise = widget.lesson.exercises[exerciseIndex];
-      if (!_exerciseStartTimes.containsKey(exercise.id)) {
-        _exerciseStartTimes[exercise.id] = DateTime.now();
-        _exerciseErrors[exercise.id] = 0; // Inicializar errores
-        
-        // Para ejercicios de tipo 2, inicializar con opciones mezcladas
-        if (exercise.type == 2 && !_orderedAnswers.containsKey(exercise.id)) {
-          _orderedAnswers[exercise.id] = [];
-        }
-      }
-    }
-  }
-
   bool _canGoNext() {
-    // Si estamos en el contenido, siempre se puede avanzar
-    if (widget.lesson.content != null && _currentStep == 0) {
-      return true;
-    }
+    if (!_isOnExerciseStep) return true;
 
-    // Si estamos en un ejercicio, verificar si tiene respuestas (no necesariamente correctas)
-    final exerciseIndex = widget.lesson.content != null ? _currentStep - 1 : _currentStep;
-    if (exerciseIndex >= 0 && exerciseIndex < widget.lesson.exercises.length) {
-      final exercise = widget.lesson.exercises[exerciseIndex];
-      
-      if (exercise.type == 1) {
-        // Tipo 1: debe tener al menos una respuesta seleccionada
-        final selected = _selectedAnswers[exercise.id] ?? [];
-        return selected.isNotEmpty;
-      } else if (exercise.type == 2) {
-        // Tipo 2: debe tener todas las opciones ordenadas
-        final ordered = _orderedAnswers[exercise.id] ?? [];
-        return ordered.length == exercise.options.length;
-      }
-    }
+    final exercise = _currentExercise;
+    if (exercise == null) return false;
 
-    return false;
-  }
-
-  bool _isExerciseCorrect(Exercise exercise) {
     if (exercise.type == 1) {
-      // Verificar respuestas de selección múltiple
       final selected = _selectedAnswers[exercise.id] ?? [];
-      final correctOptions = exercise.options.where((opt) => opt.isCorrect).map((opt) => opt.id).toList();
-      
-      if (selected.length != correctOptions.length) return false;
-      
-      for (final correctId in correctOptions) {
-        if (!selected.contains(correctId)) return false;
-      }
-      return true;
+      return selected.isNotEmpty;
     } else if (exercise.type == 2) {
-      // Verificar orden correcto
       final ordered = _orderedAnswers[exercise.id] ?? [];
-      final correctOrder = exercise.options.toList()..sort((a, b) => a.index.compareTo(b.index));
-      
-      if (ordered.length != correctOrder.length) return false;
-      
-      for (int i = 0; i < ordered.length; i++) {
-        if (ordered[i] != correctOrder[i].id) return false;
-      }
-      return true;
+      return ordered.length == exercise.options.length;
     }
     return false;
   }
 
-  // VALIDACIÓN Y ENVÍO AL BACKEND
-  Future<void> _validateAndSubmitExercise() async {
-    final exerciseIndex = widget.lesson.content != null ? _currentStep - 1 : _currentStep;
-    
-    if (exerciseIndex >= 0 && exerciseIndex < widget.lesson.exercises.length) {
-      final exercise = widget.lesson.exercises[exerciseIndex];
-      final isCorrect = _isExerciseCorrect(exercise);
+  // EJERCICIOS
+  void _markExerciseStartTime() {
+    final exercise = _currentExercise;
+    if (exercise != null && !_exerciseStartTimes.containsKey(exercise.id)) {
+      _exerciseStartTimes[exercise.id] = DateTime.now();
+      _exerciseErrors[exercise.id] = 0;
       
-      if (!isCorrect) {
-        // Incrementar errores
-        _exerciseErrors[exercise.id] = (_exerciseErrors[exercise.id] ?? 0) + 1;
-        
-        // Mostrar feedback de error
-        _showErrorFeedback(exercise);
-        return;
+      if (exercise.type == 2) {
+        _orderedAnswers[exercise.id] = [];
       }
-      
-      // Si es correcto y no se ha enviado antes, enviar al backend
-      if (!(_exerciseSubmitted[exercise.id] ?? false)) {
-        await _submitExerciseToBackend(exercise);
-      }
-      
-      // Mostrar feedback de éxito
-      _showSuccessFeedback(exercise);
     }
+  }
+
+  Future<void> _validateAndSubmitExercise() async {
+    final exercise = _currentExercise;
+    if (exercise == null) return;
+
+    final isCorrect = ExerciseValidator.isExerciseCorrect(
+      exercise, 
+      _selectedAnswers, 
+      _orderedAnswers
+    );
+
+    if (!isCorrect) {
+      _exerciseErrors[exercise.id] = (_exerciseErrors[exercise.id] ?? 0) + 1;
+      _showErrorFeedback(exercise);
+      return;
+    }
+
+    if (!(_exerciseSubmitted[exercise.id] ?? false)) {
+      await _submitExerciseToBackend(exercise);
+    }
+    _showSuccessFeedback(exercise);
   }
 
   Future<void> _submitExerciseToBackend(Exercise exercise) async {
@@ -199,67 +168,52 @@ class _DynamicLessonScreenState extends State<DynamicLessonScreen> with TickerPr
       final startTime = _exerciseStartTimes[exercise.id] ?? DateTime.now();
       final endTime = DateTime.now();
       final errors = _exerciseErrors[exercise.id] ?? 0;
-      
+
       await _topicLessonService.submitExerciseResult(
         exerciseId: exercise.id,
         startedAt: startTime,
         finishedAt: endTime,
         errors: errors,
       );
-      
-      // Marcar como enviado
+
       _exerciseSubmitted[exercise.id] = true;
-      
-      print('Ejercicio ${exercise.id} enviado al backend con $errors errores');
     } catch (e) {
       print('Error enviando ejercicio al backend: $e');
-      // No interrumpimos el flujo si falla el envío
     }
   }
 
-  // FEEDBACK VISUAL
+  // FEEDBACK
   void _showErrorFeedback(Exercise exercise) {
-    setState(() {
-      _showingFeedback = true;
-    });
-    
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Row(
-          children: [
-            Icon(Icons.error, color: Colors.white),
-            SizedBox(width: 8),
-            Expanded(
-              child: Text(
-                'Respuesta incorrecta. ¡Inténtalo de nuevo!',
-                style: TextStyle(fontFamily: 'Comic Sans MS'),
-              ),
-            ),
-          ],
-        ),
-        backgroundColor: AppColors.error,
-        behavior: SnackBarBehavior.floating,
-        duration: Duration(seconds: 2),
-      ),
-    );
-    
-    // Resetear respuestas para que el usuario intente de nuevo
+    setState(() => _showingFeedback = true);
+
+    _showAIErrorExplanation(exercise);
     _resetExerciseAnswers(exercise);
-    
-    Future.delayed(Duration(seconds: 2), () {
-      if (mounted) {
-        setState(() {
-          _showingFeedback = false;
-        });
-      }
+
+    Future.delayed(Duration(seconds: 3), () {
+      if (mounted) setState(() => _showingFeedback = false);
     });
   }
 
+  void _showAIErrorExplanation(Exercise exercise) {
+    final userAnswer = ExerciseValidator.getUserAnswerText(exercise, _selectedAnswers, _orderedAnswers);
+    final correctAnswer = ExerciseValidator.getCorrectAnswerText(exercise);
+
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => ErrorExplanationWidget(
+        concept: 'números enteros',
+        userAnswer: userAnswer,
+        correctAnswer: correctAnswer,
+        lessonContext: widget.lesson.title,
+        onDismiss: () => Navigator.of(context).pop(),
+      ),
+    );
+  }
+
   void _showSuccessFeedback(Exercise exercise) {
-    setState(() {
-      _showingFeedback = true;
-    });
-    
+    setState(() => _showingFeedback = true);
+
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Row(
@@ -279,27 +233,23 @@ class _DynamicLessonScreenState extends State<DynamicLessonScreen> with TickerPr
         duration: Duration(seconds: 2),
       ),
     );
-    
+
     Future.delayed(Duration(seconds: 2), () {
-      if (mounted) {
-        setState(() {
-          _showingFeedback = false;
-        });
-      }
+      if (mounted) setState(() => _showingFeedback = false);
     });
   }
 
   void _showIncompleteMessage() {
-    final exercise = _getCurrentExercise();
+    final exercise = _currentExercise;
     if (exercise == null) return;
-    
+
     String message;
     if (exercise.type == 1) {
       message = 'Por favor selecciona al menos una respuesta antes de continuar.';
     } else {
       message = 'Por favor ordena todas las opciones antes de continuar.';
     }
-    
+
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Row(
@@ -331,32 +281,48 @@ class _DynamicLessonScreenState extends State<DynamicLessonScreen> with TickerPr
     });
   }
 
+  void _showAIHelp() {
+    final exercise = _currentExercise;
+    if (exercise == null) return;
+
+    setState(() => _showingAIHelp = true);
+
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => AIHelpDialog(
+        exercise: exercise,
+        lessonTitle: widget.lesson.title,
+        onDismiss: () {
+          setState(() => _showingAIHelp = false);
+          Navigator.of(context).pop();
+        },
+      ),
+    );
+  }
+
   // COMPLETAR LECCIÓN
   Future<void> _completeLesson() async {
     if (_isCompleting) return;
-    
-    setState(() {
-      _isCompleting = true;
-    });
+
+    setState(() => _isCompleting = true);
 
     try {
-      // Calcular puntaje total
       int totalCoins = 0;
       for (final exercise in widget.lesson.exercises) {
-        if (_isExerciseCorrect(exercise)) {
+        if (ExerciseValidator.isExerciseCorrect(exercise, _selectedAnswers, _orderedAnswers)) {
           totalCoins += exercise.coins;
         }
       }
 
-      // Agregar recompensas
       final studentProvider = Provider.of<StudentProvider>(context, listen: false);
       final coinProvider = Provider.of<CoinProvider>(context, listen: false);
-      
+
       await studentProvider.completeLesson(
         widget.lesson.id.toString(),
         context: context,
       );
-      
+
       if (totalCoins > 0) {
         await coinProvider.addCoins(
           totalCoins,
@@ -364,62 +330,66 @@ class _DynamicLessonScreenState extends State<DynamicLessonScreen> with TickerPr
         );
       }
 
-      // Llamar callback de completado
       widget.onComplete();
 
-      // Navegar de vuelta
-      if (mounted) {
-        Navigator.pop(context);
-      }
+      if (mounted) Navigator.pop(context);
     } catch (e) {
       print('Error completando lección: $e');
     } finally {
-      setState(() {
-        _isCompleting = false;
-      });
+      setState(() => _isCompleting = false);
     }
   }
 
-  // HELPERS DE UI
-  bool _isOnExerciseStep() {
-    if (widget.lesson.content != null && _currentStep == 0) {
-      return false; // Estamos en el contenido
-    }
-    return true; // Estamos en un ejercicio
+  // HANDLERS DE EVENTOS
+  void _onMultipleChoiceOptionSelected(int exerciseId, int optionId, bool isSelected) {
+    setState(() {
+      final selected = _selectedAnswers[exerciseId] ?? [];
+      if (isSelected) {
+        selected.remove(optionId);
+      } else {
+        selected.add(optionId);
+      }
+      _selectedAnswers[exerciseId] = selected;
+    });
   }
 
-  Exercise? _getCurrentExercise() {
-    final exerciseIndex = widget.lesson.content != null ? _currentStep - 1 : _currentStep;
-    if (exerciseIndex >= 0 && exerciseIndex < widget.lesson.exercises.length) {
-      return widget.lesson.exercises[exerciseIndex];
-    }
-    return null;
+  void _onOrderingOptionAdded(int exerciseId, int optionId) {
+    setState(() {
+      final ordered = _orderedAnswers[exerciseId] ?? [];
+      ordered.add(optionId);
+      _orderedAnswers[exerciseId] = ordered;
+    });
+  }
+
+  void _onOrderingOptionRemoved(int exerciseId, int position) {
+    setState(() {
+      final ordered = _orderedAnswers[exerciseId] ?? [];
+      ordered.removeAt(position);
+      _orderedAnswers[exerciseId] = ordered;
+    });
+  }
+
+  // UI HELPERS
+  String _getNextButtonText() {
+    if (_isCompleting) return 'Completando...';
+    if (_currentStep == _totalSteps - 1) return 'Completar';
+    if (_isOnExerciseStep && !_canGoNext()) return 'Verificar';
+    return 'Siguiente';
   }
 
   IconData _getNextButtonIcon() {
     if (_isCompleting) return Icons.hourglass_empty;
     if (_currentStep == _totalSteps - 1) return Icons.check;
-    if (_isOnExerciseStep() && !_canGoNext()) return Icons.quiz;
+    if (_isOnExerciseStep && !_canGoNext()) return Icons.quiz;
     return Icons.arrow_forward;
-  }
-
-  String _getNextButtonText() {
-    if (_isCompleting) return 'Completando...';
-    if (_currentStep == _totalSteps - 1) return 'Completar';
-    if (_isOnExerciseStep() && !_canGoNext()) return 'Verificar';
-    return 'Siguiente';
   }
 
   Color _getSeverityColor(String severity) {
     switch (severity.toLowerCase()) {
-      case 'easy':
-        return AppColors.success;
-      case 'medium':
-        return AppColors.warning;
-      case 'hard':
-        return AppColors.error;
-      default:
-        return AppColors.primary;
+      case 'easy': return AppColors.success;
+      case 'medium': return AppColors.warning;
+      case 'hard': return AppColors.error;
+      default: return AppColors.primary;
     }
   }
 
@@ -429,25 +399,38 @@ class _DynamicLessonScreenState extends State<DynamicLessonScreen> with TickerPr
     return ScreenBase.forStudent(
       title: widget.lesson.title,
       showBackButton: true,
-      body: Column(
+      body: Stack(
         children: [
-          // Barra de progreso
-          _buildProgressBar(),
-          
-          // Contenido principal
-          Expanded(
-            child: PageView.builder(
-              controller: _pageController,
-              physics: const NeverScrollableScrollPhysics(),
-              itemCount: _totalSteps,
-              itemBuilder: (context, index) {
-                return _buildStepContent(index);
-              },
-            ),
+          Column(
+            children: [
+              _buildProgressBar(),
+              Expanded(
+                child: Stack(
+                  children: [
+                    PageView.builder(
+                      controller: _pageController,
+                      physics: const NeverScrollableScrollPhysics(),
+                      itemCount: _totalSteps,
+                      itemBuilder: (context, index) => _buildStepContent(index),
+                    ),
+                    if (_isOnExerciseStep)
+                      Positioned(
+                        bottom: 20,
+                        right: 20,
+                        child: FloatingActionButton(
+                          mini: true,
+                          backgroundColor: AppColors.info,
+                          onPressed: _showingFeedback || _showingAIHelp ? null : _showAIHelp,
+                          tooltip: "Pedir ayuda con IA",
+                          child: Icon(Icons.help_outline, color: Colors.white),
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+              _buildNavigationButtons(),
+            ],
           ),
-          
-          // Botones de navegación
-          _buildNavigationButtons(),
         ],
       ),
     );
@@ -455,7 +438,7 @@ class _DynamicLessonScreenState extends State<DynamicLessonScreen> with TickerPr
 
   Widget _buildProgressBar() {
     final progress = _totalSteps > 0 ? (_currentStep + 1) / _totalSteps : 0.0;
-    
+
     return Container(
       padding: const EdgeInsets.all(16),
       child: Column(
@@ -495,27 +478,22 @@ class _DynamicLessonScreenState extends State<DynamicLessonScreen> with TickerPr
   }
 
   Widget _buildStepContent(int stepIndex) {
-    // Si hay contenido y estamos en el primer paso
     if (widget.lesson.content != null && stepIndex == 0) {
       return _buildContentStep();
     }
-    
-    // Calcular índice del ejercicio
+
     final exerciseIndex = widget.lesson.content != null ? stepIndex - 1 : stepIndex;
-    
+
     if (exerciseIndex >= 0 && exerciseIndex < widget.lesson.exercises.length) {
       final exercise = widget.lesson.exercises[exerciseIndex];
-      
-      // Marcar tiempo de inicio si es la primera vez que ve este ejercicio
+
       if (!_exerciseStartTimes.containsKey(exercise.id)) {
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          _markExerciseStartTime();
-        });
+        WidgetsBinding.instance.addPostFrameCallback((_) => _markExerciseStartTime());
       }
-      
+
       return _buildExerciseStep(exercise);
     }
-    
+
     return Container();
   }
 
@@ -525,7 +503,6 @@ class _DynamicLessonScreenState extends State<DynamicLessonScreen> with TickerPr
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Imagen si existe
           if (widget.lesson.imgLink != null) ...[
             Center(
               child: ClipRRect(
@@ -553,8 +530,6 @@ class _DynamicLessonScreenState extends State<DynamicLessonScreen> with TickerPr
             ),
             const SizedBox(height: 24),
           ],
-          
-          // Contenido de texto
           if (widget.lesson.content != null)
             Container(
               padding: const EdgeInsets.all(20),
@@ -585,402 +560,83 @@ class _DynamicLessonScreenState extends State<DynamicLessonScreen> with TickerPr
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisSize: MainAxisSize.min,
         children: [
-          // Pregunta
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.all(20),
-            decoration: BoxDecoration(
-              color: AppColors.primary.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: AppColors.primary.withOpacity(0.3)),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Icon(
-                      Icons.help_outline,
-                      color: AppColors.primary,
-                      size: 20,
-                    ),
-                    const SizedBox(width: 8),
-                    Text(
-                      'Pregunta',
-                      style: TextStyle(
-                        fontFamily: 'Comic Sans MS',
-                        fontSize: 14,
-                        fontWeight: FontWeight.bold,
-                        color: AppColors.primary,
-                      ),
-                    ),
-                    const Spacer(),
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                      decoration: BoxDecoration(
-                        color: _getSeverityColor(exercise.severity),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Text(
-                        exercise.severity.toUpperCase(),
-                        style: TextStyle(
-                          fontFamily: 'Comic Sans MS',
-                          fontSize: 10,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 12),
-                Text(
-                  exercise.question,
-                  style: TextStyle(
-                    fontFamily: 'Comic Sans MS',
-                    fontSize: 16,
-                    color: AppColors.textPrimary,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          
+          _buildQuestionHeader(exercise),
           const SizedBox(height: 24),
-          
-          // Opciones según el tipo
           if (exercise.type == 1)
-            _buildMultipleChoiceOptions(exercise)
+            ExerciseWidgets.buildMultipleChoiceOptions(
+              exercise: exercise,
+              selectedAnswers: _selectedAnswers,
+              onOptionSelected: _onMultipleChoiceOptionSelected,
+              isDisabled: _showingFeedback,
+            )
           else if (exercise.type == 2)
-            _buildOrderingOptions(exercise),
-            
-          // Espacio extra al final para evitar desbordamiento
+            ExerciseWidgets.buildOrderingOptions(
+              exercise: exercise,
+              orderedAnswers: _orderedAnswers,
+              onOptionAdded: _onOrderingOptionAdded,
+              onOptionRemoved: _onOrderingOptionRemoved,
+              isDisabled: _showingFeedback,
+            ),
           const SizedBox(height: 100),
         ],
       ),
     );
   }
 
-  Widget _buildMultipleChoiceOptions(Exercise exercise) {
-    final selected = _selectedAnswers[exercise.id] ?? [];
-    
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'Selecciona la(s) respuesta(s) correcta(s):',
-          style: TextStyle(
-            fontFamily: 'Comic Sans MS',
-            fontSize: 14,
-            fontWeight: FontWeight.w600,
-            color: AppColors.textPrimary,
-          ),
-        ),
-        const SizedBox(height: 16),
-        ...exercise.options.map((option) {
-          final isSelected = selected.contains(option.id);
-          return Container(
-            margin: const EdgeInsets.only(bottom: 12),
-            child: BounceAnimation(
-              child: GestureDetector(
-                onTap: _showingFeedback ? null : () {
-                  setState(() {
-                    if (isSelected) {
-                      selected.remove(option.id);
-                    } else {
-                      selected.add(option.id);
-                    }
-                    _selectedAnswers[exercise.id] = selected;
-                  });
-                },
-                child: Container(
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: isSelected ? AppColors.primary.withOpacity(0.1) : Colors.white,
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(
-                      color: isSelected ? AppColors.primary : Colors.grey.shade300,
-                      width: 2,
-                    ),
-                  ),
-                  child: Row(
-                    children: [
-                      Container(
-                        width: 24,
-                        height: 24,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: isSelected ? AppColors.primary : Colors.transparent,
-                          border: Border.all(
-                            color: isSelected ? AppColors.primary : Colors.grey.shade400,
-                            width: 2,
-                          ),
-                        ),
-                        child: isSelected
-                            ? Icon(Icons.check, color: Colors.white, size: 16)
-                            : null,
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Text(
-                          option.text,
-                          style: TextStyle(
-                            fontFamily: 'Comic Sans MS',
-                            fontSize: 14,
-                            color: isSelected ? AppColors.primary : AppColors.textPrimary,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-          );
-        }).toList(),
-      ],
-    );
-  }
-
-  Widget _buildOrderingOptions(Exercise exercise) {
-    final ordered = _orderedAnswers[exercise.id] ?? [];
-    
-    // Crear lista de opciones disponibles mezcladas solo una vez
-    List<ExerciseOption> shuffledOptions = [];
-    if (!_exerciseStartTimes.containsKey(exercise.id)) {
-      // Primera vez: mezclar opciones
-      shuffledOptions = List<ExerciseOption>.from(exercise.options)..shuffle();
-    } else {
-      // Ya se mezclaron: obtener opciones no ordenadas manteniendo el orden mezclado original
-      final allShuffled = List<ExerciseOption>.from(exercise.options)..shuffle();
-      shuffledOptions = allShuffled.where((opt) => !ordered.contains(opt.id)).toList();
-    }
-    
-    return ConstrainedBox(
-      constraints: BoxConstraints(
-        maxHeight: MediaQuery.of(context).size.height * 0.6, // Máximo 60% de la pantalla
+  Widget _buildQuestionHeader(Exercise exercise) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: AppColors.primary.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppColors.primary.withOpacity(0.3)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisSize: MainAxisSize.min,
         children: [
-          Text(
-            'Ordena las opciones de menor a mayor:',
-            style: TextStyle(
-              fontFamily: 'Comic Sans MS',
-              fontSize: 14,
-              fontWeight: FontWeight.w600,
-              color: AppColors.textPrimary,
-            ),
-          ),
-          const SizedBox(height: 16),
-          
-          // Área de ordenamiento - Altura fija
-          Container(
-            height: 120, // Altura fija para evitar desbordamiento
-            width: double.infinity,
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: Colors.grey.shade50,
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: Colors.grey.shade300),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Tu orden:',
-                  style: TextStyle(
-                    fontFamily: 'Comic Sans MS',
-                    fontSize: 12,
-                    color: Colors.grey.shade600,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Expanded(
-                  child: ordered.isEmpty
-                      ? Center(
-                          child: Text(
-                            'Toca las opciones de abajo\npara ordenarlas aquí',
-                            style: TextStyle(
-                              fontFamily: 'Comic Sans MS',
-                              fontSize: 14,
-                              color: Colors.grey.shade500,
-                              fontStyle: FontStyle.italic,
-                            ),
-                            textAlign: TextAlign.center,
-                          ),
-                        )
-                      : SingleChildScrollView(
-                          child: Wrap(
-                            spacing: 6,
-                            runSpacing: 6,
-                            children: ordered.asMap().entries.map((entry) {
-                              final index = entry.key;
-                              final optionId = entry.value;
-                              final option = exercise.options.firstWhere((opt) => opt.id == optionId);
-                              return _buildOrderedOption(option, exercise.id, index);
-                            }).toList(),
-                          ),
-                        ),
-                ),
-              ],
-            ),
-          ),
-          
-          const SizedBox(height: 16),
-          
-          // Opciones disponibles
-          Text(
-            'Opciones disponibles:',
-            style: TextStyle(
-              fontFamily: 'Comic Sans MS',
-              fontSize: 14,
-              fontWeight: FontWeight.w600,
-              color: AppColors.textPrimary,
-            ),
-          ),
-          const SizedBox(height: 8),
-          
-          // Lista de opciones con altura limitada
-          if (shuffledOptions.isEmpty)
-            Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: Colors.blue.shade50,
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: Colors.blue.shade200),
-              ),
-              child: Row(
-                children: [
-                  Icon(Icons.info, color: Colors.blue.shade600),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Text(
-                      'Todas las opciones han sido colocadas. Presiona "Verificar" para comprobar tu respuesta.',
-                      style: TextStyle(
-                        fontFamily: 'Comic Sans MS',
-                        fontSize: 14,
-                        color: Colors.blue.shade700,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            )
-          else
-            Container(
-              constraints: BoxConstraints(
-                maxHeight: 150, // Altura máxima para las opciones
-              ),
-              child: SingleChildScrollView(
-                child: Wrap(
-                  spacing: 8,
-                  runSpacing: 8,
-                  children: shuffledOptions.map((option) {
-                    return _buildDraggableOption(option, exercise.id);
-                  }).toList(),
-                ),
-              ),
-            ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildOrderedOption(ExerciseOption option, int exerciseId, int position) {
-    return BounceAnimation(
-      child: GestureDetector(
-        onTap: _showingFeedback ? null : () {
-          setState(() {
-            final ordered = _orderedAnswers[exerciseId] ?? [];
-            ordered.removeAt(position);
-            _orderedAnswers[exerciseId] = ordered;
-          });
-        },
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
-          decoration: BoxDecoration(
-            color: AppColors.primary,
-            borderRadius: BorderRadius.circular(16),
-          ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
+          Row(
             children: [
-              Container(
-                width: 18,
-                height: 18,
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  shape: BoxShape.circle,
-                ),
-                child: Center(
-                  child: Text(
-                    '${position + 1}',
-                    style: TextStyle(
-                      fontFamily: 'Comic Sans MS',
-                      fontSize: 10,
-                      fontWeight: FontWeight.bold,
-                      color: AppColors.primary,
-                    ),
-                  ),
+              Icon(Icons.help_outline, color: AppColors.primary, size: 20),
+              const SizedBox(width: 8),
+              Text(
+                'Pregunta',
+                style: TextStyle(
+                  fontFamily: 'Comic Sans MS',
+                  fontSize: 14,
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.primary,
                 ),
               ),
-              const SizedBox(width: 6),
-              Flexible(
+              const Spacer(),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: _getSeverityColor(exercise.severity),
+                  borderRadius: BorderRadius.circular(12),
+                ),
                 child: Text(
-                  option.text,
+                  exercise.severity.toUpperCase(),
                   style: TextStyle(
                     fontFamily: 'Comic Sans MS',
-                    fontSize: 12,
+                    fontSize: 10,
+                    fontWeight: FontWeight.bold,
                     color: Colors.white,
                   ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
                 ),
               ),
-              const SizedBox(width: 4),
-              Icon(Icons.close, color: Colors.white, size: 14),
             ],
           ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildDraggableOption(ExerciseOption option, int exerciseId) {
-    return BounceAnimation(
-      child: GestureDetector(
-        onTap: _showingFeedback ? null : () {
-          setState(() {
-            final ordered = _orderedAnswers[exerciseId] ?? [];
-            ordered.add(option.id);
-            _orderedAnswers[exerciseId] = ordered;
-          });
-        },
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: Colors.grey.shade300),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.grey.withOpacity(0.1),
-                blurRadius: 4,
-                offset: const Offset(0, 2),
-              ),
-            ],
-          ),
-          child: Text(
-            option.text,
+          const SizedBox(height: 12),
+          Text(
+            exercise.question,
             style: TextStyle(
               fontFamily: 'Comic Sans MS',
-              fontSize: 14,
+              fontSize: 16,
               color: AppColors.textPrimary,
             ),
           ),
-        ),
+        ],
       ),
     );
   }
@@ -1000,49 +656,37 @@ class _DynamicLessonScreenState extends State<DynamicLessonScreen> with TickerPr
       ),
       child: Row(
         children: [
-          // Botón anterior
           if (_currentStep > 0)
             Expanded(
               child: ElevatedButton.icon(
                 onPressed: _showingFeedback ? null : _previousStep,
                 icon: Icon(Icons.arrow_back),
-                label: Text(
-                  'Anterior',
-                  style: TextStyle(fontFamily: 'Comic Sans MS'),
-                ),
+                label: Text('Anterior', style: TextStyle(fontFamily: 'Comic Sans MS')),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.grey.shade200,
                   foregroundColor: Colors.grey.shade700,
                   padding: const EdgeInsets.symmetric(vertical: 12),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
-                  ),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                 ),
               ),
             ),
-          
           if (_currentStep > 0) const SizedBox(width: 16),
-          
-          // Botón siguiente/completar/verificar
           Expanded(
             flex: _currentStep > 0 ? 1 : 2,
             child: ElevatedButton.icon(
               onPressed: _showingFeedback || _isCompleting
                   ? null
                   : () async {
-                      if (_isOnExerciseStep()) {
-                        // Si estamos en un ejercicio, primero verificar si tiene respuestas
+                      if (_isOnExerciseStep) {
                         if (!_canGoNext()) {
-                          // No tiene respuestas, mostrar mensaje
                           _showIncompleteMessage();
                           return;
                         }
-                        
-                        // Tiene respuestas, validar si son correctas
+
                         await _validateAndSubmitExercise();
-                        
-                        // Si es correcto, avanzar automáticamente después del feedback
-                        if (_isExerciseCorrect(_getCurrentExercise()!)) {
+
+                        final exercise = _currentExercise;
+                        if (exercise != null && ExerciseValidator.isExerciseCorrect(exercise, _selectedAnswers, _orderedAnswers)) {
                           Future.delayed(Duration(seconds: 2), () {
                             if (mounted && !_showingFeedback) {
                               if (_currentStep == _totalSteps - 1) {
@@ -1054,7 +698,6 @@ class _DynamicLessonScreenState extends State<DynamicLessonScreen> with TickerPr
                           });
                         }
                       } else {
-                        // Si no es ejercicio, avanzar directamente
                         if (_currentStep == _totalSteps - 1) {
                           _completeLesson();
                         } else {
@@ -1072,21 +715,16 @@ class _DynamicLessonScreenState extends State<DynamicLessonScreen> with TickerPr
                       ),
                     )
                   : Icon(_getNextButtonIcon()),
-              label: Text(
-                _getNextButtonText(),
-                style: TextStyle(fontFamily: 'Comic Sans MS'),
-              ),
+              label: Text(_getNextButtonText(), style: TextStyle(fontFamily: 'Comic Sans MS')),
               style: ElevatedButton.styleFrom(
-                backgroundColor: (_canGoNext() || !_isOnExerciseStep()) && !_showingFeedback 
-                    ? AppColors.primary 
+                backgroundColor: (_canGoNext() || !_isOnExerciseStep) && !_showingFeedback
+                    ? AppColors.primary
                     : Colors.grey.shade300,
-                foregroundColor: (_canGoNext() || !_isOnExerciseStep()) && !_showingFeedback 
-                    ? Colors.white 
+                foregroundColor: (_canGoNext() || !_isOnExerciseStep) && !_showingFeedback
+                    ? Colors.white
                     : Colors.grey.shade500,
                 padding: const EdgeInsets.symmetric(vertical: 12),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
-                ),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
               ),
             ),
           ),
