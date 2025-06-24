@@ -97,7 +97,48 @@ class TopicLessonService {
         throw Exception(_getErrorMessage(result.exception));
       }
       
-      return result.data?['subject'] ?? {};
+      final subjectData = result.data?['subject'] ?? {};
+      
+      // Filtrar ejercicios en las lecciones según las reglas:
+      // - Primera lección: solo ejercicios fáciles
+      // - Demás lecciones: solo ejercicios de nivel medio
+      if (subjectData['topics'] != null) {
+        final topics = subjectData['topics'] as List;
+        
+        for (var topic in topics) {
+          if (topic['lessons'] != null) {
+            final lessons = topic['lessons'] as List;
+            
+            for (int lessonIndex = 0; lessonIndex < lessons.length; lessonIndex++) {
+              final lesson = lessons[lessonIndex];
+              
+              if (lesson['exercises'] != null) {
+                final exercises = lesson['exercises'] as List;
+                
+                // Filtrar ejercicios según la posición de la lección
+                final filteredExercises = exercises.where((exercise) {
+                  final severity = (exercise['severity'] as String).toLowerCase();
+                  
+                  if (lessonIndex == 0) {
+                    // Primera lección: solo ejercicios fáciles
+                    return severity == 'easy';
+                  } else {
+                    // Demás lecciones: solo ejercicios de nivel medio
+                    return severity == 'medium';
+                  }
+                }).toList();
+                
+                // Reemplazar los ejercicios con los filtrados
+                lesson['exercises'] = filteredExercises;
+                
+                print('Lección ${lessonIndex + 1}: ${filteredExercises.length} ejercicios filtrados (${lessonIndex == 0 ? 'easy' : 'medium'})');
+              }
+            }
+          }
+        }
+      }
+      
+      return subjectData;
     } catch (e) {
       throw Exception('Error al obtener topics de la materia: $e');
     }
@@ -147,9 +188,7 @@ class TopicLessonService {
           },
         ),
       );
-      String ini = startedAt.toIso8601String();
-      String fin = finishedAt.toIso8601String();
-      print("ejercicio: $exerciseId, errores: $errors, inicio: $ini, fin: $fin");
+      
       if (result.hasException) {
         throw Exception(_getErrorMessage(result.exception));
       }
