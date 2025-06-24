@@ -64,8 +64,13 @@ class LessonNode {
 
 class SubjectLessonsScreen extends StatefulWidget {
   final dynamic subject;
+  final Topic? topic; // NUEVO: Topic específico
 
-  const SubjectLessonsScreen({super.key, required this.subject, required topic});
+  const SubjectLessonsScreen({
+    super.key, 
+    required this.subject,
+    this.topic, // NUEVO
+  });
 
   @override
   State<SubjectLessonsScreen> createState() => _SubjectLessonsScreenState();
@@ -83,14 +88,25 @@ class _SubjectLessonsScreenState extends State<SubjectLessonsScreen> {
   @override
   void initState() {
     super.initState();
-    _initializeServices();
-    _loadLessonsFromBackend();
+    _initializeServicesAndLoad();
   }
 
-  void _initializeServices() async {
-    final client = await GraphQLService.getClient();
-    _topicLessonService = TopicLessonService(client);
-    _adaptiveService = AdaptiveExerciseService(client);
+  // CORREGIDO: Inicializar servicios de forma síncrona
+  Future<void> _initializeServicesAndLoad() async {
+    try {
+      final client = await GraphQLService.getClient();
+      _topicLessonService = TopicLessonService(client);
+      _adaptiveService = AdaptiveExerciseService(client);
+      
+      // Ahora cargar las lecciones
+      await _loadLessonsFromBackend();
+    } catch (e) {
+      print('❌ [SubjectLessons] Error inicializando servicios: $e');
+      setState(() {
+        _isLoading = false;
+        _errorMessage = 'Error inicializando servicios: $e';
+      });
+    }
   }
 
   // CARGA DE DATOS
@@ -101,14 +117,12 @@ class _SubjectLessonsScreenState extends State<SubjectLessonsScreen> {
     });
 
     try {
-      final subjectData = await _topicLessonService.getSubjectTopics(widget.subject.id.toString());
-      final topics = (subjectData['topics'] as List).map((topicJson) => Topic.fromJson(topicJson)).toList();
-
       List<LessonNode> backendLessons = [];
-      int nodeIndex = 0;
-
-      for (final topic in topics) {
-        for (final lesson in topic.lessons) {
+      
+      if (widget.topic != null) {
+        // NUEVO: Cargar solo las lecciones del topic específico
+        int nodeIndex = 0;
+        for (final lesson in widget.topic!.lessons) {
           nodeIndex++;
           backendLessons.add(LessonNode(
             id: lesson.id,
@@ -117,9 +131,30 @@ class _SubjectLessonsScreenState extends State<SubjectLessonsScreen> {
             isUnlocked: nodeIndex == 1,
             isCompleted: false,
             description: lesson.content,
-            topicId: topic.id,
+            topicId: widget.topic!.id,
             lessonData: lesson,
           ));
+        }
+      } else {
+        // Código original para cargar todos los topics (compatibilidad)
+        final subjectData = await _topicLessonService.getSubjectTopics(widget.subject.id.toString());
+        final topics = (subjectData['topics'] as List).map((topicJson) => Topic.fromJson(topicJson)).toList();
+
+        int nodeIndex = 0;
+        for (final topic in topics) {
+          for (final lesson in topic.lessons) {
+            nodeIndex++;
+            backendLessons.add(LessonNode(
+              id: lesson.id,
+              title: lesson.title,
+              type: LessonNodeType.lesson,
+              isUnlocked: nodeIndex == 1,
+              isCompleted: false,
+              description: lesson.content,
+              topicId: topic.id,
+              lessonData: lesson,
+            ));
+          }
         }
       }
 
@@ -138,8 +173,11 @@ class _SubjectLessonsScreenState extends State<SubjectLessonsScreen> {
   Future<void> _loadLessonProgress(List<LessonNode> backendLessons) async {
     try {
       final prefs = await SharedPreferences.getInstance();
-      final subjectKey = 'subject_${widget.subject.id}_lessons_v3';
-      final progressJson = prefs.getStringList(subjectKey) ?? [];
+      final storageKey = widget.topic != null 
+          ? 'topic_${widget.topic!.id}_lessons_v3'  // NUEVO: Key específico por topic
+          : 'subject_${widget.subject.id}_lessons_v3'; // Original
+      
+      final progressJson = prefs.getStringList(storageKey) ?? [];
 
       if (progressJson.isNotEmpty) {
         final Map<int, Map<String, bool>> savedProgress = {};
@@ -176,13 +214,15 @@ class _SubjectLessonsScreenState extends State<SubjectLessonsScreen> {
   Future<void> _saveLessonProgress() async {
     try {
       final prefs = await SharedPreferences.getInstance();
-      final subjectKey = 'subject_${widget.subject.id}_lessons_v3';
+      final storageKey = widget.topic != null 
+          ? 'topic_${widget.topic!.id}_lessons_v3'  // NUEVO: Key específico por topic
+          : 'subject_${widget.subject.id}_lessons_v3'; // Original
       
       final progressStrings = lessons.map((lesson) {
         return '${lesson.id}|${lesson.isUnlocked}|${lesson.isCompleted}';
       }).toList();
       
-      await prefs.setStringList(subjectKey, progressStrings);
+      await prefs.setStringList(storageKey, progressStrings);
     } catch (e) {
       print('Error guardando progreso: $e');
     }
@@ -190,91 +230,151 @@ class _SubjectLessonsScreenState extends State<SubjectLessonsScreen> {
 
   // GENERACIÓN DE NODOS ESPECIALES
   Future<void> _generateSpecialNodes() async {
-    final completedCount = lessons.where((l) => l.isCompleted && l.type == LessonNodeType.lesson).length;
-    final specialNodesNeeded = (completedCount / 5).floor();
+    final regularLessons = lessons.where((l) => l.type == LessonNodeType.lesson).toList();
+    final completedRegularLessons = regularLessons.where((l) => l.isCompleted).length;
+    final totalRegularLessons = regularLessons.length;
     
-    List<LessonNode> specialNodes = [];
+    // NUEVO: Los nodos especiales se desbloquean al completar TODAS las lecciones del topic
+    final shouldUnlockSpecialNodes = completedRegularLessons == totalRegularLessons && totalRegularLessons > 0;
     
-    for (int i = 1; i <= specialNodesNeeded; i++) {
-      final requiredLessons = i * 5;
-      final isUnlocked = completedCount >= requiredLessons;
+    if (shouldUnlockSpecialNodes) {
+      // Eliminar nodos especiales existentes para regenerarlos
+      lessons.removeWhere((l) => l.type == LessonNodeType.game || l.type == LessonNodeType.adaptive);
       
-      // Nodo de juego (Rescate en las Alturas)
+      // Crear nodo de juego (Rescate en las Alturas)
       final gameNode = LessonNode(
-        id: 1000 + (i * 2 - 1),
-        title: '🎮 Rescate en las Alturas $i',
+        id: 9000 + (widget.topic?.id ?? 0), // ID único para el juego por topic
+        title: '🎮 Rescate en las Alturas',
         type: LessonNodeType.game,
-        isUnlocked: isUnlocked,
+        isUnlocked: true,
         isCompleted: false,
-        description: 'Juego desbloqueado por completar $requiredLessons lecciones',
+        description: 'Juego desbloqueado por completar todas las lecciones del tema',
         specialNode: SpecialLessonNode.game(
-          levelNumber: i,
-          requiredCompletedLessons: requiredLessons,
-          isUnlocked: isUnlocked,
+          levelNumber: 1,
+          requiredCompletedLessons: totalRegularLessons,
+          isUnlocked: true,
         ),
       );
       
-      // Nodo adaptativo
+      // Crear nodo adaptativo con debug mejorado
       AdaptiveLesson? adaptiveLesson;
-      if (isUnlocked) {
-        try {
-          final adaptiveExercises = await _adaptiveService.getAdaptiveExercises();
-          adaptiveLesson = AdaptiveLesson.fromExercises(
-            exercises: adaptiveExercises,
-            levelNumber: i,
-            requiredCompletedLessons: requiredLessons,
-            isUnlocked: true,
-          );
-        } catch (e) {
+      try {
+        print('🔍 [SubjectLessons] Intentando obtener ejercicios adaptativos...');
+        
+        // Obtener el topicId - si hay topic específico, usar ese, sino usar el primero
+        final topicId = widget.topic?.id ?? 
+            (lessons.isNotEmpty ? lessons.first.topicId : null);
+        
+        if (topicId != null) {
+          print('🔍 [SubjectLessons] Usando topicId: $topicId');
+          final adaptiveExercises = await _adaptiveService.getAdaptiveExercises(topicId: topicId);
+          print('🔍 [SubjectLessons] Ejercicios adaptativos obtenidos: ${adaptiveExercises.length}');
+          
+          if (adaptiveExercises.isNotEmpty) {
+            print('✅ [SubjectLessons] Creando lección adaptativa con ${adaptiveExercises.length} ejercicios');
+            adaptiveLesson = AdaptiveLesson.fromExercises(
+              exercises: adaptiveExercises,
+              levelNumber: 1,
+              requiredCompletedLessons: totalRegularLessons,
+              isUnlocked: true,
+            );
+          } else {
+            print('⚠️ [SubjectLessons] No se encontraron ejercicios adaptativos para topic $topicId, creando lección vacía');
+            adaptiveLesson = AdaptiveLesson.fromExercises(
+              exercises: [],
+              levelNumber: 1,
+              requiredCompletedLessons: totalRegularLessons,
+              isUnlocked: true,
+            );
+          }
+        } else {
+          print('⚠️ [SubjectLessons] No se pudo determinar el topicId, creando lección vacía');
           adaptiveLesson = AdaptiveLesson.fromExercises(
             exercises: [],
-            levelNumber: i,
-            requiredCompletedLessons: requiredLessons,
+            levelNumber: 1,
+            requiredCompletedLessons: totalRegularLessons,
             isUnlocked: true,
           );
         }
+      } catch (e) {
+        print('❌ [SubjectLessons] Error obteniendo ejercicios adaptativos: $e');
+        adaptiveLesson = AdaptiveLesson.fromExercises(
+          exercises: [],
+          levelNumber: 1,
+          requiredCompletedLessons: totalRegularLessons,
+          isUnlocked: true,
+        );
       }
       
       final adaptiveNode = LessonNode(
-        id: 1000 + (i * 2),
-        title: '🧠 Nivel Adaptativo $i',
+        id: 9001 + (widget.topic?.id ?? 0), // ID único para el adaptativo por topic
+        title: '🧠 Nivel Adaptativo',
         type: LessonNodeType.adaptive,
-        isUnlocked: isUnlocked,
+        isUnlocked: true,
         isCompleted: false,
         description: 'Ejercicios personalizados según tu progreso',
         specialNode: SpecialLessonNode.adaptive(
-          levelNumber: i,
-          requiredCompletedLessons: requiredLessons,
-          isUnlocked: isUnlocked,
-          adaptiveLesson: adaptiveLesson!,
+          levelNumber: 1,
+          requiredCompletedLessons: totalRegularLessons,
+          isUnlocked: true,
+          adaptiveLesson: adaptiveLesson,
         ),
       );
       
-      specialNodes.addAll([gameNode, adaptiveNode]);
+      print('✅ [SubjectLessons] Nodos especiales creados - Juego: ${gameNode.title}, Adaptativo: ${adaptiveNode.title}');
+      
+      // Agregar nodos especiales al final
+      lessons.addAll([gameNode, adaptiveNode]);
     }
-    
-    _insertSpecialNodes(specialNodes);
   }
 
-  void _insertSpecialNodes(List<LessonNode> specialNodes) {
-    List<LessonNode> finalLessons = [];
-    int regularLessonCount = 0;
-    int specialNodeIndex = 0;
-    
-    for (final lesson in lessons) {
-      if (lesson.type == LessonNodeType.lesson) {
-        finalLessons.add(lesson);
-        regularLessonCount++;
+  // COMPLETAR LECCIÓN
+  void _completeLessonNode(int lessonId) async {
+    setState(() {
+      final lessonIndex = lessons.indexWhere((lesson) => lesson.id == lessonId);
+      if (lessonIndex != -1) {
+        lessons[lessonIndex] = lessons[lessonIndex].copyWith(isCompleted: true);
         
-        if (regularLessonCount % 5 == 0 && specialNodeIndex < specialNodes.length - 1) {
-          finalLessons.add(specialNodes[specialNodeIndex]);     // Juego
-          finalLessons.add(specialNodes[specialNodeIndex + 1]); // Adaptativo
-          specialNodeIndex += 2;
+        if (lessonIndex + 1 < lessons.length) {
+          lessons[lessonIndex + 1] = lessons[lessonIndex + 1].copyWith(isUnlocked: true);
         }
       }
-    }
+    });
+
+    await _saveLessonProgress();
+
+    // NUEVO: Verificar si se completaron todas las lecciones regulares del topic
+    final regularLessons = lessons.where((l) => l.type == LessonNodeType.lesson).toList();
+    final completedRegularLessons = regularLessons.where((l) => l.isCompleted).length;
+    final totalRegularLessons = regularLessons.length;
     
-    lessons = finalLessons;
+    if (completedRegularLessons == totalRegularLessons && totalRegularLessons > 0) {
+      // Todas las lecciones del topic completadas
+      await _generateSpecialNodes();
+      setState(() {});
+      _showTopicCompletedMessage();
+      
+      // NUEVO: Notificar que el topic está completado
+      if (widget.topic != null) {
+        final args = ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;
+        final onTopicCompleted = args?['onTopicCompleted'] as VoidCallback?;
+        onTopicCompleted?.call();
+      }
+    }
+
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            '¡Lección completada! ${_getNextLessonMessage(lessonId)}',
+            style: TextStyle(fontFamily: 'Comic Sans MS'),
+          ),
+          backgroundColor: AppColors.success,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+        ),
+      );
+    }
   }
 
   // NAVEGACIÓN Y ACCIONES
@@ -319,19 +419,16 @@ class _SubjectLessonsScreenState extends State<SubjectLessonsScreen> {
     if (adaptiveNode.specialNode?.adaptiveLesson != null) {
       final adaptiveLesson = adaptiveNode.specialNode!.adaptiveLesson!;
       
+      print('🔍 [Navigation] Navegando a nivel adaptativo con ${adaptiveLesson.exercises.length} ejercicios');
+      
+      // Si no hay ejercicios, intentar recargarlos antes de mostrar error
       if (adaptiveLesson.exercises.isEmpty) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              'No hay ejercicios adaptativos disponibles en este momento',
-              style: TextStyle(fontFamily: 'Comic Sans MS'),
-            ),
-            backgroundColor: AppColors.warning,
-            behavior: SnackBarBehavior.floating,
-          ),
-        );
+        print('⚠️ [Navigation] Sin ejercicios adaptativos, intentando recargar...');
+        _reloadAdaptiveExercises(adaptiveNode);
         return;
       }
+      
+      print('✅ [Navigation] Navegando a DynamicLessonScreen con ejercicios adaptativos');
       
       Navigator.pushNamed(
         context,
@@ -341,50 +438,140 @@ class _SubjectLessonsScreenState extends State<SubjectLessonsScreen> {
           'onComplete': () => _completeLessonNode(adaptiveNode.id),
         },
       );
-    }
-  }
-
-  void _completeLessonNode(int lessonId) async {
-    setState(() {
-      final lessonIndex = lessons.indexWhere((lesson) => lesson.id == lessonId);
-      if (lessonIndex != -1) {
-        lessons[lessonIndex] = lessons[lessonIndex].copyWith(isCompleted: true);
-        
-        if (lessonIndex + 1 < lessons.length) {
-          lessons[lessonIndex + 1] = lessons[lessonIndex + 1].copyWith(isUnlocked: true);
-        }
-      }
-    });
-
-    await _saveLessonProgress();
-
-    final completedRegularLessons = lessons.where((l) => l.isCompleted && l.type == LessonNodeType.lesson).length;
-    
-    if (AdaptiveExerciseService.shouldUnlockAdaptiveExercises(completedRegularLessons)) {
-      await _generateSpecialNodes();
-      setState(() {});
-      _showSpecialNodesUnlockedMessage(completedRegularLessons);
-    }
-
-    if (mounted) {
+    } else {
+      print('❌ [Navigation] Nodo adaptativo sin lección configurada');
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            '¡Lección completada! ${_getNextLessonMessage(lessonId)}',
+            'Error al cargar el nivel adaptativo. Intenta nuevamente.',
             style: TextStyle(fontFamily: 'Comic Sans MS'),
           ),
-          backgroundColor: AppColors.success,
+          backgroundColor: AppColors.error,
           behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+        ),
+      );
+    }
+  }
+
+  // NUEVA FUNCIÓN: Recargar ejercicios adaptativos cuando el usuario intenta acceder
+  Future<void> _reloadAdaptiveExercises(LessonNode adaptiveNode) async {
+    try {
+      print('🔄 [Navigation] Recargando ejercicios adaptativos...');
+      
+      // Mostrar loading
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) => Dialog(
+          child: Padding(
+            padding: const EdgeInsets.all(20),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                CircularProgressIndicator(color: AppColors.primary),
+                const SizedBox(width: 16),
+                Text(
+                  'Cargando ejercicios adaptativos...',
+                  style: TextStyle(fontFamily: 'Comic Sans MS'),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+
+      // Obtener el topicId
+      final topicId = widget.topic?.id ?? 
+          (lessons.isNotEmpty ? lessons.first.topicId : null);
+      
+      if (topicId != null) {
+        final adaptiveExercises = await _adaptiveService.getAdaptiveExercises(topicId: topicId);
+        
+        // Cerrar loading dialog
+        Navigator.of(context).pop();
+        
+        if (adaptiveExercises.isNotEmpty) {
+          print('✅ [Navigation] Ejercicios recargados: ${adaptiveExercises.length}');
+          
+          // Actualizar el nodo con los nuevos ejercicios
+          final updatedLesson = AdaptiveLesson.fromExercises(
+            exercises: adaptiveExercises,
+            levelNumber: 1,
+            requiredCompletedLessons: adaptiveNode.specialNode!.requiredCompletedLessons,
+            isUnlocked: true,
+          );
+          
+          final updatedSpecialNode = adaptiveNode.specialNode!.copyWith(
+            adaptiveLesson: updatedLesson,
+          );
+          
+          final updatedNode = adaptiveNode.copyWith(
+            specialNode: updatedSpecialNode,
+          );
+          
+          // Reemplazar en la lista
+          final nodeIndex = lessons.indexWhere((l) => l.id == adaptiveNode.id);
+          if (nodeIndex != -1) {
+            setState(() {
+              lessons[nodeIndex] = updatedNode;
+            });
+          }
+          
+          // Navegar ahora que tenemos ejercicios
+          Navigator.pushNamed(
+            context,
+            AppRoutes.dynamicLesson,
+            arguments: {
+              'lesson': updatedLesson.toStandardLesson(),
+              'onComplete': () => _completeLessonNode(adaptiveNode.id),
+            },
+          );
+        } else {
+          print('⚠️ [Navigation] Aún no hay ejercicios adaptativos disponibles');
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                'No hay ejercicios adaptativos disponibles para este tema. El sistema está analizando tu progreso.',
+                style: TextStyle(fontFamily: 'Comic Sans MS'),
+              ),
+              backgroundColor: AppColors.warning,
+              behavior: SnackBarBehavior.floating,
+              duration: Duration(seconds: 4),
+            ),
+          );
+        }
+      } else {
+        Navigator.of(context).pop(); // Cerrar loading
+        print('❌ [Navigation] No se pudo determinar el topicId');
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'Error: No se pudo identificar el tema para los ejercicios adaptativos.',
+              style: TextStyle(fontFamily: 'Comic Sans MS'),
+            ),
+            backgroundColor: AppColors.error,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    } catch (e) {
+      Navigator.of(context).pop(); // Cerrar loading
+      print('❌ [Navigation] Error recargando ejercicios: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Error al cargar ejercicios adaptativos. Intenta nuevamente.',
+            style: TextStyle(fontFamily: 'Comic Sans MS'),
+          ),
+          backgroundColor: AppColors.error,
+          behavior: SnackBarBehavior.floating,
         ),
       );
     }
   }
 
   // MENSAJES Y DIÁLOGOS
-  void _showSpecialNodesUnlockedMessage(int completedLessons) {
-    final levelNumber = (completedLessons / 5).floor();
-    
+  void _showTopicCompletedMessage() {
     showDialog(
       context: context,
       builder: (context) => Dialog(
@@ -397,24 +584,26 @@ class _SubjectLessonsScreenState extends State<SubjectLessonsScreen> {
               Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: AppColors.secondary.withOpacity(0.1),
+                  color: AppColors.success.withOpacity(0.1),
                   shape: BoxShape.circle,
                 ),
-                child: Icon(Icons.celebration, color: AppColors.secondary, size: 48),
+                child: Icon(Icons.celebration, color: AppColors.success, size: 48),
               ),
               const SizedBox(height: 16),
               Text(
-                '🎉 ¡Felicidades!',
+                '🎉 ¡Tema Completado!',
                 style: TextStyle(
                   fontFamily: 'Comic Sans MS',
                   fontSize: 24,
                   fontWeight: FontWeight.bold,
-                  color: AppColors.secondary,
+                  color: AppColors.success,
                 ),
               ),
               const SizedBox(height: 12),
               Text(
-                'Has completado $completedLessons lecciones y has desbloqueado:',
+                widget.topic != null 
+                    ? 'Has completado todas las lecciones de "${widget.topic!.name}"!'
+                    : 'Has completado todas las lecciones!',
                 style: TextStyle(
                   fontFamily: 'Comic Sans MS',
                   fontSize: 16,
@@ -438,7 +627,7 @@ class _SubjectLessonsScreenState extends State<SubjectLessonsScreen> {
                         const SizedBox(width: 8),
                         Expanded(
                           child: Text(
-                            '🎮 Rescate en las Alturas $levelNumber',
+                            '🎮 Rescate en las Alturas',
                             style: TextStyle(
                               fontFamily: 'Comic Sans MS',
                               fontSize: 14,
@@ -456,7 +645,7 @@ class _SubjectLessonsScreenState extends State<SubjectLessonsScreen> {
                         const SizedBox(width: 8),
                         Expanded(
                           child: Text(
-                            '🧠 Nivel Adaptativo $levelNumber',
+                            '🧠 Nivel Adaptativo',
                             style: TextStyle(
                               fontFamily: 'Comic Sans MS',
                               fontSize: 14,
@@ -476,7 +665,7 @@ class _SubjectLessonsScreenState extends State<SubjectLessonsScreen> {
                 child: ElevatedButton(
                   onPressed: () => Navigator.of(context).pop(),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.secondary,
+                    backgroundColor: AppColors.success,
                     foregroundColor: Colors.white,
                     padding: const EdgeInsets.symmetric(vertical: 12),
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
@@ -562,7 +751,7 @@ class _SubjectLessonsScreenState extends State<SubjectLessonsScreen> {
   Widget build(BuildContext context) {
     if (_isLoading) {
       return ScreenBase.forStudent(
-        title: widget.subject.name,
+        title: widget.topic?.name ?? widget.subject.name,
         showBackButton: true,
         isLoading: true,
         loadingMessage: 'Cargando lecciones...',
@@ -572,14 +761,14 @@ class _SubjectLessonsScreenState extends State<SubjectLessonsScreen> {
 
     if (_errorMessage != null) {
       return ScreenBase.forStudent(
-        title: widget.subject.name,
+        title: widget.topic?.name ?? widget.subject.name,
         showBackButton: true,
         body: _buildErrorState(),
       );
     }
 
     return ScreenBase.forStudent(
-      title: widget.subject.name,
+      title: widget.topic?.name ?? widget.subject.name,
       showBackButton: true,
       body: Container(
         decoration: BoxDecoration(
@@ -646,6 +835,7 @@ class _SubjectLessonsScreenState extends State<SubjectLessonsScreen> {
     final completedCount = lessons.where((l) => l.isCompleted).length;
     final totalCount = lessons.length;
     final regularLessonsCompleted = lessons.where((l) => l.isCompleted && l.type == LessonNodeType.lesson).length;
+    final totalRegularLessons = lessons.where((l) => l.type == LessonNodeType.lesson).length;
     final progress = totalCount > 0 ? completedCount / totalCount : 0.0;
 
     return Container(
@@ -657,7 +847,7 @@ class _SubjectLessonsScreenState extends State<SubjectLessonsScreen> {
             children: [
               _buildStatItem(Icons.school, '$completedCount/$totalCount', 'Completadas', AppColors.primary),
               _buildStatItem(Icons.trending_up, '${(progress * 100).round()}%', 'Progreso', AppColors.success),
-              _buildStatItem(Icons.psychology, '${(regularLessonsCompleted / 5).floor()}', 'Adaptativos', AppColors.secondary),
+              _buildStatItem(Icons.psychology, regularLessonsCompleted == totalRegularLessons && totalRegularLessons > 0 ? '✓' : '0', 'Especiales', AppColors.secondary),
             ],
           ),
           const SizedBox(height: 24),

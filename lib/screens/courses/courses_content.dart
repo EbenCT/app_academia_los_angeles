@@ -1,4 +1,4 @@
-// lib/screens/courses/courses_content.dart (completo y ordenado)
+// lib/screens/courses/courses_content.dart
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../providers/student_provider.dart';
@@ -8,6 +8,7 @@ import '../../widgets/animations/fade_animation.dart';
 import '../../widgets/common/app_card.dart';
 import '../../theme/app_colors.dart';
 import '../../utils/app_icons.dart';
+import '../../config/routes.dart'; // IMPORTANTE: Agregar este import
 
 class CoursesContent extends StatefulWidget {
   const CoursesContent({super.key});
@@ -68,7 +69,7 @@ class _CoursesContentState extends State<CoursesContent> {
                   )
                 : studentProvider.error != null
                     ? _buildErrorState(studentProvider.error!)
-                    : _buildSubjectsGrid(studentProvider),
+                    : _buildSubjectsList(studentProvider),
           ),
         ],
       ),
@@ -77,90 +78,64 @@ class _CoursesContentState extends State<CoursesContent> {
 
   Widget _buildAppBar() {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      padding: const EdgeInsets.fromLTRB(24, 16, 24, 8),
       decoration: BoxDecoration(
         gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
           colors: [
             AppColors.primary,
-            AppColors.primary.withOpacity(0.7),
+            AppColors.primary.withOpacity(0.8),
           ],
-          begin: Alignment.centerLeft,
-          end: Alignment.centerRight,
         ),
-        borderRadius: const BorderRadius.only(
-          bottomLeft: Radius.circular(20),
-          bottomRight: Radius.circular(20),
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.1),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
       ),
-      child: Row(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(
-            Icons.auto_stories_rounded,
-            color: Colors.white,
-            size: 24,
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Text(
-              'Mis Materias',
-              style: TextStyle(
-                fontFamily: 'Comic Sans MS',
-                fontSize: 22,
-                fontWeight: FontWeight.bold,
-                color: Colors.white,
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.white.withOpacity(0.2),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Icon(
+                  Icons.school,
+                  color: Colors.white,
+                  size: 32,
+                ),
               ),
-            ),
-          ),
-          // Mostrar progreso general si está disponible
-          if (_progressLoaded && _subjectsProgress.isNotEmpty)
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-              decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.2),
-                borderRadius: BorderRadius.circular(15),
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(
-                    Icons.trending_up,
-                    color: Colors.white,
-                    size: 16,
-                  ),
-                  const SizedBox(width: 4),
-                  Text(
-                    '${_calculateOverallProgress()}%',
-                    style: TextStyle(
-                      fontFamily: 'Comic Sans MS',
-                      fontSize: 14,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      '📚 Mis Materias',
+                      style: TextStyle(
+                        fontFamily: 'Comic Sans MS',
+                        fontSize: 24,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
                     ),
-                  ),
-                ],
+                    Text(
+                      'Selecciona una materia para comenzar',
+                      style: TextStyle(
+                        fontFamily: 'Comic Sans MS',
+                        fontSize: 14,
+                        color: Colors.white.withOpacity(0.9),
+                      ),
+                    ),
+                  ],
+                ),
               ),
-            ),
+            ],
+          ),
         ],
       ),
     );
-  }
-
-  int _calculateOverallProgress() {
-    if (_subjectsProgress.isEmpty) return 0;
-    
-    double totalProgress = 0.0;
-    for (var progress in _subjectsProgress.values) {
-      totalProgress += progress['progress'] as double;
-    }
-    
-    return ((totalProgress / _subjectsProgress.length) * 100).round();
   }
 
   Widget _buildErrorState(String error) {
@@ -177,10 +152,10 @@ class _CoursesContentState extends State<CoursesContent> {
             ),
             const SizedBox(height: 16),
             Text(
-              'Error al cargar materias',
+              'Error al cargar las materias',
               style: TextStyle(
                 fontFamily: 'Comic Sans MS',
-                fontSize: 24,
+                fontSize: 20,
                 fontWeight: FontWeight.bold,
                 color: AppColors.error,
               ),
@@ -190,7 +165,7 @@ class _CoursesContentState extends State<CoursesContent> {
               error,
               style: TextStyle(
                 fontFamily: 'Comic Sans MS',
-                fontSize: 16,
+                fontSize: 14,
                 color: Colors.grey,
               ),
               textAlign: TextAlign.center,
@@ -215,7 +190,7 @@ class _CoursesContentState extends State<CoursesContent> {
     );
   }
 
-  Widget _buildSubjectsGrid(StudentProvider studentProvider) {
+  Widget _buildSubjectsList(StudentProvider studentProvider) {
     final subjects = studentProvider.subjects;
     
     if (subjects.isEmpty) {
@@ -232,97 +207,33 @@ class _CoursesContentState extends State<CoursesContent> {
         physics: const AlwaysScrollableScrollPhysics(),
         padding: const EdgeInsets.all(16.0),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Información del curso
-            if (studentProvider.courseName != null) ...[
-              FadeAnimation(
-                delay: const Duration(milliseconds: 100),
-                child: AppCard(
-                  backgroundColor: AppColors.primary.withOpacity(0.1),
-                  borderColor: AppColors.primary.withOpacity(0.3),
-                  child: Row(
-                    children: [
-                      Icon(
-                        Icons.school,
-                        color: AppColors.primary,
-                        size: 32,
-                      ),
-                      const SizedBox(width: 16),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'Curso: ${studentProvider.courseName}',
-                              style: TextStyle(
-                                fontFamily: 'Comic Sans MS',
-                                fontSize: 18,
-                                fontWeight: FontWeight.bold,
-                                color: AppColors.primary,
-                              ),
-                            ),
-                            if (studentProvider.classroomName != null)
-                              Text(
-                                'Aula: ${studentProvider.classroomName}',
-                                style: TextStyle(
-                                  fontFamily: 'Comic Sans MS',
-                                  fontSize: 14,
-                                  color: Colors.grey,
-                                ),
-                              ),
-                          ],
-                        ),
-                      ),
-                      // Mostrar estadísticas generales
-                      if (_progressLoaded && _subjectsProgress.isNotEmpty)
-                        Column(
-                          children: [
-                            Text(
-                              '${_calculateOverallProgress()}%',
-                              style: TextStyle(
-                                fontFamily: 'Comic Sans MS',
-                                fontSize: 20,
-                                fontWeight: FontWeight.bold,
-                                color: AppColors.primary,
-                              ),
-                            ),
-                            Text(
-                              'Completado',
-                              style: TextStyle(
-                                fontFamily: 'Comic Sans MS',
-                                fontSize: 12,
-                                color: Colors.grey,
-                              ),
-                            ),
-                          ],
-                        ),
-                    ],
-                  ),
-                ),
-              ),
-              const SizedBox(height: 24),
-            ],
-            
             // Grid de materias
             GridView.builder(
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
               gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                 crossAxisCount: 2,
-                childAspectRatio: 0.9,
+                childAspectRatio: 0.85,
                 crossAxisSpacing: 16,
                 mainAxisSpacing: 16,
               ),
               itemCount: subjects.length,
               itemBuilder: (context, index) {
                 final subject = subjects[index];
-                final progress = _subjectsProgress[subject.id] ?? {
-                  'progress': 0.0,
-                  'completed': 0,
-                  'total': 0,
-                  'percentage': 0,
-                };
+                final progress = _progressLoaded 
+                    ? _subjectsProgress[subject.id] ?? {
+                        'progress': 0.0,
+                        'completed': 0,
+                        'total': 0,
+                        'percentage': 0,
+                      }
+                    : {
+                        'progress': 0.0,
+                        'completed': 0,
+                        'total': 0,
+                        'percentage': 0,
+                      };
                 
                 return FadeAnimation(
                   delay: Duration(milliseconds: 200 + (index * 100)),
@@ -390,187 +301,133 @@ class _CoursesContentState extends State<CoursesContent> {
     );
   }
 
-  Widget _buildSubjectCard(subject, int index, Map<String, dynamic> progress) {
-    final IconData icon = AppIcons.getCourseIcon(subject.name);
-    final Color color = AppIcons.getCourseColor(index);
-    final double progressValue = progress['progress'] as double;
-    final int completed = progress['completed'] as int;
-    final int total = progress['total'] as int;
-    final int percentage = progress['percentage'] as int;
-    
-    return AppCard(
-      onTap: () {
-        // Navegar a la pantalla de lecciones de la materia específica
-        Navigator.pushNamed(
-          context,
-          '/subject-lessons',
-          arguments: subject,
-        ).then((_) {
-          // Recargar progreso cuando se regrese
-          _loadProgress();
-        });
-      },
-      child: Padding(
-        padding: const EdgeInsets.all(12.0),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-          children: [
-            // Icono de la materia con badge de progreso
-            Stack(
-              children: [
-                Container(
-                  width: 60,
-                  height: 60,
-                  decoration: BoxDecoration(
-                    color: color.withOpacity(0.2),
-                    shape: BoxShape.circle,
-                  ),
-                  child: Icon(
-                    icon,
-                    color: color,
-                    size: 32,
-                  ),
-                ),
-                // Badge de progreso
-                if (total > 0)
-                  Positioned(
-                    top: 0,
-                    right: 0,
-                    child: Container(
-                      width: 20,
-                      height: 20,
-                      decoration: BoxDecoration(
-                        color: _getProgressColor(progressValue),
-                        shape: BoxShape.circle,
-                        border: Border.all(color: Colors.white, width: 2),
-                      ),
-                      child: Center(
-                        child: progressValue >= 1.0
-                            ? Icon(
-                                Icons.check,
-                                color: Colors.white,
-                                size: 10,
-                              )
-                            : Text(
-                                '$percentage',
-                                style: TextStyle(
-                                  fontFamily: 'Comic Sans MS',
-                                  fontSize: 8,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.white,
-                                ),
-                              ),
-                      ),
-                    ),
-                  ),
-              ],
+Widget _buildSubjectCard(subject, int index, Map<String, dynamic> progress) {
+  final IconData icon = AppIcons.getCourseIcon(subject.name);
+  final Color color = AppIcons.getCourseColor(index);
+  final double progressValue = progress['progress'] as double;
+  final int completed = progress['completed'] as int;
+  final int total = progress['total'] as int;
+  final int percentage = progress['percentage'] as int;
+  
+  return AppCard(
+    onTap: () {
+      // CORREGIDO: Navegar a la pantalla de topics en lugar de directamente a lecciones
+      AppRoutes.navigateToSubjectTopics(context, subject);
+    },
+    child: Container(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          // Icono de la materia
+          Container(
+            padding: const EdgeInsets.all(12), // Reducido de 16 a 12
+            decoration: BoxDecoration(
+              color: color.withOpacity(0.15),
+              borderRadius: BorderRadius.circular(16), // Reducido de 20 a 16
             ),
-            
-            // Nombre de la materia
-            Text(
+            child: Icon(
+              icon,
+              size: 32, // Reducido de 40 a 32
+              color: color,
+            ),
+          ),
+          
+          const SizedBox(height: 8), // Reducido de 12 a 8
+          
+          // Nombre de la materia - CORREGIDO PARA EVITAR DESBORDAMIENTO
+          Flexible( // Cambiado de Container a Flexible
+            child: Text(
               subject.name,
               style: TextStyle(
                 fontFamily: 'Comic Sans MS',
-                fontSize: 16,
+                fontSize: 14, // Reducido de 16 a 14
                 fontWeight: FontWeight.bold,
-                color: Theme.of(context).brightness == Brightness.dark
-                    ? Colors.white
-                    : Colors.black87,
+                color: AppColors.textPrimary,
               ),
               textAlign: TextAlign.center,
-              maxLines: 1,
+              maxLines: 2,
               overflow: TextOverflow.ellipsis,
             ),
-            
-            // Descripción si existe
-            if (subject.description != null && subject.description!.isNotEmpty)
-              Text(
-                subject.description!,
-                style: TextStyle(
-                  fontFamily: 'Comic Sans MS',
-                  fontSize: 11,
-                  color: Colors.grey,
-                ),
-                textAlign: TextAlign.center,
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-              )
-            else
-              // Placeholder para mantener la altura consistente
-              SizedBox(height: 22),
-            
-            // Progreso mejorado
-            Column(
-              children: [
-                // Barra de progreso
-                Container(
-                  width: double.infinity,
-                  height: 8,
+          ),
+          
+          const SizedBox(height: 6), // Reducido de 8 a 6
+          
+          // Progreso
+          if (_progressLoaded) ...[
+            // Barra de progreso
+            Container(
+              width: double.infinity,
+              height: 4, // Reducido de 6 a 4
+              decoration: BoxDecoration(
+                color: Colors.grey.shade300,
+                borderRadius: BorderRadius.circular(2),
+              ),
+              child: FractionallySizedBox(
+                alignment: Alignment.centerLeft,
+                widthFactor: progressValue,
+                child: Container(
                   decoration: BoxDecoration(
-                    color: color.withOpacity(0.2),
-                    borderRadius: BorderRadius.circular(4),
+                    color: color,
+                    borderRadius: BorderRadius.circular(2),
                   ),
-                  child: FractionallySizedBox(
-                    widthFactor: progressValue,
-                    alignment: Alignment.centerLeft,
-                    child: Container(
-                      decoration: BoxDecoration(
-                        color: _getProgressColor(progressValue),
-                        borderRadius: BorderRadius.circular(4),
-                      ),
+                ),
+              ),
+            ),
+            
+            const SizedBox(height: 6), // Reducido de 8 a 6
+            
+            // Estadísticas
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Flexible( // Añadido Flexible
+                  child: Text(
+                    '$completed/$total',
+                    style: TextStyle(
+                      fontFamily: 'Comic Sans MS',
+                      fontSize: 11, // Reducido de 12 a 11
+                      color: Colors.grey.shade600,
+                      fontWeight: FontWeight.w600,
                     ),
                   ),
                 ),
-                
-                const SizedBox(height: 6),
-                
-                // Texto de progreso
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      total > 0 ? '$completed/$total' : 'Sin lecciones',
-                      style: TextStyle(
-                        fontFamily: 'Comic Sans MS',
-                        fontSize: 10,
-                        color: Colors.grey,
-                      ),
+                Flexible( // Añadido Flexible
+                  child: Text(
+                    '$percentage%',
+                    style: TextStyle(
+                      fontFamily: 'Comic Sans MS',
+                      fontSize: 11, // Reducido de 12 a 11
+                      color: color,
+                      fontWeight: FontWeight.bold,
                     ),
-                    Row(
-                      children: [
-                        Text(
-                          '$percentage%',
-                          style: TextStyle(
-                            fontFamily: 'Comic Sans MS',
-                            fontSize: 11,
-                            fontWeight: FontWeight.bold,
-                            color: _getProgressColor(progressValue),
-                          ),
-                        ),
-                        if (progressValue >= 1.0) ...[
-                          const SizedBox(width: 2),
-                          Icon(
-                            Icons.star,
-                            color: AppColors.star,
-                            size: 12,
-                          ),
-                        ],
-                      ],
-                    ),
-                  ],
+                  ),
                 ),
               ],
             ),
+          ] else ...[
+            // Indicador de carga
+            Container(
+              width: double.infinity,
+              height: 4, // Reducido de 6 a 4
+              decoration: BoxDecoration(
+                color: Colors.grey.shade300,
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            const SizedBox(height: 6), // Reducido de 8 a 6
+            Text(
+              'Cargando...',
+              style: TextStyle(
+                fontFamily: 'Comic Sans MS',
+                fontSize: 11, // Reducido de 12 a 11
+                color: Colors.grey.shade600,
+              ),
+            ),
           ],
-        ),
+        ],
       ),
-    );
-  }
-
-  Color _getProgressColor(double progress) {
-    if (progress >= 1.0) return AppColors.success;
-    if (progress >= 0.7) return AppColors.star;
-    if (progress >= 0.3) return AppColors.primary;
-    return Colors.grey;
-  }
+    ),
+  );
+}
 }

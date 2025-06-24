@@ -7,7 +7,7 @@ import '../screens/main/main_screen.dart';
 import '../screens/main/main_teacher_screen.dart';
 import '../screens/auth/register_teacher_screen.dart';
 import '../screens/join_classroom_screen.dart';
-import '../screens/courses/subject_topics_screen.dart'; // NUEVO IMPORT
+import '../screens/courses/subject_topics_screen.dart';
 import '../screens/courses/subject_lessons_screen.dart';
 import '../screens/courses/dynamic_lesson_screen.dart';
 import '../screens/game/integer_rescue_game.dart';
@@ -22,7 +22,7 @@ class AppRoutes {
   static const String main = '/main';
   static const String mainTeacher = '/main-teacher';
   static const String profile = '/profile';
-  static const String subjectTopics = '/subject-topics'; // NUEVA RUTA
+  static const String subjectTopics = '/subject-topics';
   static const String subjectLessons = '/subject-lessons';
   static const String registerTeacher = '/registerTeacher';
   static const String joinClassroom = '/joinClassroom';
@@ -41,18 +41,35 @@ class AppRoutes {
     mainTeacher: (context) => const MainTeacherScreen(),
     joinClassroom: (context) => const JoinClassroomScreen(),
     
-    // NUEVA RUTA: Pantalla de topics/temas
+    // RUTA CORREGIDA: Pantalla de topics/temas - acepta SubjectModel directamente
     subjectTopics: (context) {
-      final subject = ModalRoute.of(context)!.settings.arguments;
-      return SubjectTopicsScreen(subject: subject);
+      final arguments = ModalRoute.of(context)!.settings.arguments;
+      
+      // Si los argumentos son un Map, extraer el subject
+      if (arguments is Map<String, dynamic>) {
+        return SubjectTopicsScreen(subject: arguments['subject']);
+      }
+      
+      // Si es un SubjectModel directamente, usarlo así
+      return SubjectTopicsScreen(subject: arguments);
     },
     
-    // RUTA ACTUALIZADA: Pantalla de lecciones con soporte para topic específico
+    // RUTA CORREGIDA: Pantalla de lecciones con mejor manejo de argumentos
     subjectLessons: (context) {
-      final args = ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>;
+      final arguments = ModalRoute.of(context)!.settings.arguments;
+      
+      // Si es un Map (nueva arquitectura con topic específico)
+      if (arguments is Map<String, dynamic>) {
+        return SubjectLessonsScreen(
+          subject: arguments['subject'],
+          topic: arguments['topic'], // Puede ser null
+        );
+      }
+      
+      // Si es SubjectModel directamente (compatibilidad hacia atrás)
       return SubjectLessonsScreen(
-        subject: args['subject'],
-        topic: args['topic'], // Puede ser null para mantener compatibilidad
+        subject: arguments,
+        topic: null, // Para mantener compatibilidad
       );
     },
     
@@ -70,13 +87,13 @@ class AppRoutes {
   };
 
   /// Navega a una ruta nombrada
-  static void navigateTo(BuildContext context, String routeName) {
-    Navigator.pushNamed(context, routeName);
+  static void navigateTo(BuildContext context, String routeName, {Object? arguments}) {
+    Navigator.pushNamed(context, routeName, arguments: arguments);
   }
 
   /// Navega a una ruta y reemplaza la actual en el stack
-  static void navigateReplacementTo(BuildContext context, String routeName) {
-    Navigator.pushReplacementNamed(context, routeName);
+  static void navigateReplacementTo(BuildContext context, String routeName, {Object? arguments}) {
+    Navigator.pushReplacementNamed(context, routeName, arguments: arguments);
   }
 
   /// Navega al inicio y limpia todo el stack de navegación
@@ -93,6 +110,44 @@ class AppRoutes {
       context,
       mainTeacher,
       (Route<dynamic> route) => false,
+    );
+  }
+
+  /// Métodos auxiliares para navegación específica
+
+  /// Navega a la pantalla de topics de una materia
+  static void navigateToSubjectTopics(BuildContext context, dynamic subject) {
+    Navigator.pushNamed(
+      context,
+      subjectTopics,
+      arguments: subject, // Puede ser SubjectModel directamente
+    );
+  }
+
+  /// Navega a las lecciones de una materia (sin topic específico)
+  static void navigateToSubjectLessons(BuildContext context, dynamic subject) {
+    Navigator.pushNamed(
+      context,
+      subjectLessons,
+      arguments: subject, // Compatibilidad hacia atrás
+    );
+  }
+
+  /// Navega a las lecciones de un topic específico
+  static void navigateToTopicLessons(
+    BuildContext context, 
+    dynamic subject, 
+    dynamic topic, 
+    {VoidCallback? onTopicCompleted}
+  ) {
+    Navigator.pushNamed(
+      context,
+      subjectLessons,
+      arguments: {
+        'subject': subject,
+        'topic': topic,
+        'onTopicCompleted': onTopicCompleted,
+      },
     );
   }
 }

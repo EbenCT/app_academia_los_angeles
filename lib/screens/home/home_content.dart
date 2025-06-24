@@ -1,6 +1,7 @@
 // lib/screens/home/home_content.dart
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../../config/routes.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/student_provider.dart';
 import '../../providers/theme_provider.dart';
@@ -276,17 +277,10 @@ class _HomeContentState extends State<HomeContent> {
                     icon: icon,
                     color: color,
                     subjectId: subject.id, // Pasamos el ID de la materia
-                    onTap: () {
-                      // Navegar a la pantalla de lecciones de la materia
-                      Navigator.pushNamed(
-                        context,
-                        '/subject-lessons',
-                        arguments: subject,
-                      ).then((_) {
-                        // Recargar progreso cuando se regrese
-                        _loadOverallProgress();
-                      });
-                    },
+onTap: () {
+  // CORREGIDO: Navegar a la pantalla de topics en lugar de directamente a lecciones
+  AppRoutes.navigateToSubjectTopics(context, subject);
+},
                   );
                 },
               )
