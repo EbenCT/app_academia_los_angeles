@@ -9,7 +9,8 @@ import 'providers/auth_provider.dart';
 import 'providers/classroom_provider.dart';
 import 'providers/theme_provider.dart';
 import 'providers/student_provider.dart';
-import 'providers/student_tracking_provider.dart'; // NUEVO
+import 'providers/student_tracking_provider.dart';
+import 'providers/notification_provider.dart'; // NUEVO
 import 'providers/avatar_provider.dart';
 import 'providers/coin_provider.dart';
 import 'providers/booster_provider.dart';
@@ -63,11 +64,13 @@ class MyApp extends StatelessWidget {
             final client = Provider.of<GraphQLClient>(context, listen: false);
             return StudentProvider(client);
           }),
-          // Añade el StudentTrackingProvider - NUEVO
+          // Añade el StudentTrackingProvider
           ChangeNotifierProvider(create: (context) {
             final client = Provider.of<GraphQLClient>(context, listen: false);
             return StudentTrackingProvider(client);
           }),
+          // Añade el NotificationProvider - NUEVO
+          ChangeNotifierProvider(create: (_) => NotificationProvider()),
           // Añade el AvatarProvider (actualizado)
           ChangeNotifierProvider(create: (context) {
             return AvatarProvider();

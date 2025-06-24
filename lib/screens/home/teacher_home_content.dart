@@ -7,6 +7,7 @@ import '../../constants/asset_paths.dart';
 import '../../models/classroom_model.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/classroom_provider.dart';
+import '../../providers/notification_provider.dart';
 import '../../providers/theme_provider.dart';
 import '../../theme/app_colors.dart';
 import '../../widgets/animations/fade_animation.dart';
@@ -16,6 +17,7 @@ import '../../widgets/teacher/create_classroom_dialog.dart';
 import '../../widgets/common/section_title.dart';
 import '../../widgets/common/app_card.dart';
 import '../../utils/app_snackbars.dart';
+import '../teacher/notifications_screen.dart';
 import '../teacher/teacher_progress_dashboard.dart';
 
 class TeacherHomeContent extends StatelessWidget {
@@ -129,84 +131,126 @@ const SizedBox(height: 24),
     );
   }
   
-  Widget _buildAppBar(bool isDarkMode, String username, ThemeProvider themeProvider, BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [
-            AppColors.secondary,
-            AppColors.secondary.withOpacity(0.7),
-          ],
-          begin: Alignment.centerLeft,
-          end: Alignment.centerRight,
-        ),
-        borderRadius: const BorderRadius.only(
-          bottomLeft: Radius.circular(20),
-          bottomRight: Radius.circular(20),
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.1),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
+Widget _buildAppBar(bool isDarkMode, String username, ThemeProvider themeProvider, BuildContext context) {
+  return Container(
+    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+    decoration: BoxDecoration(
+      gradient: LinearGradient(
+        colors: [
+          AppColors.secondary,
+          AppColors.secondary.withOpacity(0.7),
         ],
+        begin: Alignment.centerLeft,
+        end: Alignment.centerRight,
       ),
-      child: Row(
-        children: [
-          Icon(
-            Icons.dashboard_rounded,
+      borderRadius: const BorderRadius.only(
+        bottomLeft: Radius.circular(20),
+        bottomRight: Radius.circular(20),
+      ),
+      boxShadow: [
+        BoxShadow(
+          color: Colors.black.withOpacity(0.1),
+          blurRadius: 8,
+          offset: const Offset(0, 2),
+        ),
+      ],
+    ),
+    child: Row(
+      children: [
+        Icon(
+          Icons.dashboard_rounded,
+          color: Colors.white,
+          size: 24,
+        ),
+        const SizedBox(width: 8),
+        Expanded(
+          child: Text(
+            '¡Hola, Profesor $username!',
+            style: TextStyle(
+              fontFamily: 'Comic Sans MS',
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: Colors.white,
+            ),
+            overflow: TextOverflow.ellipsis,
+            maxLines: 1,
+          ),
+        ),
+        const SizedBox(width: 8),
+        
+        // Botón de tema
+        IconButton(
+          icon: Icon(
+            isDarkMode ? Icons.wb_sunny : Icons.nightlight_round,
             color: Colors.white,
-            size: 24,
+            size: 20,
           ),
-          const SizedBox(width: 8), // Reducido de 12 a 8
-          Expanded( // Agregado Expanded para evitar overflow
-            child: Text(
-              '¡Hola, Profesor $username!',
-              style: TextStyle(
-                fontFamily: 'Comic Sans MS',
-                fontSize: 18, // Reducido de 20 a 18
-                fontWeight: FontWeight.bold,
-                color: Colors.white,
-              ),
-              overflow: TextOverflow.ellipsis, // Añadido para textos largos
-              maxLines: 1,
-            ),
-          ),
-          const SizedBox(width: 8), // Espaciado entre texto y botones
-          IconButton(
-            icon: Icon(
-              isDarkMode ? Icons.wb_sunny : Icons.nightlight_round,
-              color: Colors.white,
-              size: 20, // Reducido tamaño del icono
-            ),
-            onPressed: () {
-              themeProvider.toggleTheme();
-            },
-            padding: EdgeInsets.all(4), // Reducido padding
-            constraints: BoxConstraints(), // Sin restricciones mínimas
-          ),
-          IconButton(
-            icon: const Icon(
-              Icons.notifications_active,
-              color: Colors.white,
-              size: 20, // Reducido tamaño del icono
-            ),
-            onPressed: () {
-              AppSnackbars.showInfoSnackBar(
-                context,
-                message: '¡No tienes notificaciones nuevas!',
-              );
-            },
-            padding: EdgeInsets.all(4), // Reducido padding
-            constraints: BoxConstraints(), // Sin restricciones mínimas
-          ),
-        ],
-      ),
-    );
-  }
-  
+          onPressed: () {
+            themeProvider.toggleTheme();
+          },
+          padding: EdgeInsets.all(4),
+          constraints: BoxConstraints(),
+        ),
+        
+        // Botón de notificaciones con badge
+        Consumer<NotificationProvider>(
+          builder: (context, notificationProvider, child) {
+            final unreadCount = notificationProvider.unreadCount;
+            
+            return Stack(
+              children: [
+                IconButton(
+                  icon: const Icon(
+                    Icons.notifications_outlined,
+                    color: Colors.white,
+                    size: 22,
+                  ),
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const NotificationsScreen(),
+                      ),
+                    );
+                  },
+                  padding: EdgeInsets.all(4),
+                  constraints: BoxConstraints(),
+                ),
+                if (unreadCount > 0)
+                  Positioned(
+                    right: 2,
+                    top: 2,
+                    child: Container(
+                      padding: const EdgeInsets.all(2),
+                      decoration: BoxDecoration(
+                        color: AppColors.error,
+                        borderRadius: BorderRadius.circular(10),
+                        border: Border.all(color: Colors.white, width: 1),
+                      ),
+                      constraints: const BoxConstraints(
+                        minWidth: 16,
+                        minHeight: 16,
+                      ),
+                      child: Text(
+                        unreadCount > 9 ? '9+' : unreadCount.toString(),
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 10,
+                          fontWeight: FontWeight.bold,
+                          fontFamily: 'Comic Sans MS',
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
+                  ),
+              ],
+            );
+          },
+        ),
+      ],
+    ),
+  );
+}
   Widget _buildTeacherWelcomeBanner(String username) {
     return AppCard.withGradient(
       colors: [
