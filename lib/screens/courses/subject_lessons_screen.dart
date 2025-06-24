@@ -1,20 +1,26 @@
-// lib/screens/courses/subject_lessons_screen.dart (con persistencia)
+// lib/screens/courses/subject_lessons_screen.dart
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../widgets/screens/screen_base.dart';
 import '../../theme/app_colors.dart';
 import '../../widgets/animations/bounce_animation.dart';
 import '../../config/routes.dart';
+import '../../models/lesson_models.dart';
+import '../../services/topic_lesson_service.dart';
+import '../../services/graphql_service.dart';
 
-enum LessonType { lesson, game }
+enum LessonNodeType { lesson, game }
 
 class LessonNode {
   final int id;
   final String title;
-  final LessonType type;
+  final LessonNodeType type;
   final bool isUnlocked;
   final bool isCompleted;
   final String? description;
+  final int? topicId;
+  final Lesson? lessonData; // Datos reales del backend
 
   const LessonNode({
     required this.id,
@@ -23,16 +29,19 @@ class LessonNode {
     required this.isUnlocked,
     required this.isCompleted,
     this.description,
+    this.topicId,
+    this.lessonData,
   });
 
-  // Método para crear una copia con cambios
   LessonNode copyWith({
     int? id,
     String? title,
-    LessonType? type,
+    LessonNodeType? type,
     bool? isUnlocked,
     bool? isCompleted,
     String? description,
+    int? topicId,
+    Lesson? lessonData,
   }) {
     return LessonNode(
       id: id ?? this.id,
@@ -41,33 +50,8 @@ class LessonNode {
       isUnlocked: isUnlocked ?? this.isUnlocked,
       isCompleted: isCompleted ?? this.isCompleted,
       description: description ?? this.description,
-    );
-  }
-
-  // Convertir a Map para SharedPreferences
-  Map<String, dynamic> toMap() {
-    return {
-      'id': id,
-      'title': title,
-      'type': type.toString(),
-      'isUnlocked': isUnlocked,
-      'isCompleted': isCompleted,
-      'description': description,
-    };
-  }
-
-  // Crear desde Map
-  factory LessonNode.fromMap(Map<String, dynamic> map) {
-    return LessonNode(
-      id: map['id'],
-      title: map['title'],
-      type: LessonType.values.firstWhere(
-        (e) => e.toString() == map['type'],
-        orElse: () => LessonType.lesson,
-      ),
-      isUnlocked: map['isUnlocked'],
-      isCompleted: map['isCompleted'],
-      description: map['description'],
+      topicId: topicId ?? this.topicId,
+      lessonData: lessonData ?? this.lessonData,
     );
   }
 }
@@ -83,118 +67,123 @@ class SubjectLessonsScreen extends StatefulWidget {
 
 class _SubjectLessonsScreenState extends State<SubjectLessonsScreen> {
   late List<LessonNode> lessons;
+  late TopicLessonService _topicLessonService;
   bool _isLoading = true;
+  String? _errorMessage;
 
   @override
   void initState() {
     super.initState();
-    _initializeLessons();
+    _initializeService();
+    _loadLessonsFromBackend();
   }
 
-  Future<void> _initializeLessons() async {
+  void _initializeService() async {
+    final client = await GraphQLService.getClient();
+    _topicLessonService = TopicLessonService(client);
+  }
+
+  Future<void> _loadLessonsFromBackend() async {
     setState(() {
       _isLoading = true;
+      _errorMessage = null;
     });
 
-    // Crear lecciones base
-    final baseLessons = [
-      LessonNode(
-        id: 1,
-        title: 'Introducción a los números enteros',
-        type: LessonType.lesson,
-        isUnlocked: true, // La primera siempre está desbloqueada
-        isCompleted: false,
-        description: 'Aprende qué son los números enteros',
-      ),
-      LessonNode(
-        id: 2,
-        title: 'Rescate de alturas',
-        type: LessonType.game,
-        isUnlocked: false,
-        isCompleted: false,
-        description: 'Practica con números enteros en un juego divertido',
-      ),
-      // Puedes agregar más lecciones aquí
-      LessonNode(
-        id: 3,
-        title: 'Operaciones con enteros',
-        type: LessonType.lesson,
-        isUnlocked: false,
-        isCompleted: false,
-        description: 'Suma y resta de números enteros',
-      ),
-      LessonNode(
-        id: 4,
-        title: 'Batalla matemática',
-        type: LessonType.game,
-        isUnlocked: false,
-        isCompleted: false,
-        description: 'Demuestra tu dominio de los números enteros',
-      ),
-    ];
+    try {
+      // Obtener topics y lecciones del backend
+      final subjectData = await _topicLessonService.getSubjectTopics(widget.subject.id.toString());
+      
+      final topics = (subjectData['topics'] as List)
+          .map((topicJson) => Topic.fromJson(topicJson))
+          .toList();
 
-    // Cargar progreso guardado
-    await _loadLessonProgress(baseLessons);
+      // Convertir a LessonNodes
+      List<LessonNode> backendLessons = [];
+      int nodeIndex = 0;
 
-    setState(() {
-      _isLoading = false;
-    });
+      for (final topic in topics) {
+        for (final lesson in topic.lessons) {
+          nodeIndex++;
+          backendLessons.add(LessonNode(
+            id: lesson.id,
+            title: lesson.title,
+            type: lesson.exercises.isEmpty ? LessonNodeType.lesson : LessonNodeType.lesson,
+            isUnlocked: nodeIndex == 1, // La primera siempre desbloqueada
+            isCompleted: false,
+            description: lesson.content,
+            topicId: topic.id,
+            lessonData: lesson,
+          ));
+        }
+      }
+
+      // Cargar progreso guardado
+      await _loadLessonProgress(backendLessons);
+
+      setState(() {
+        _isLoading = false;
+      });
+    } catch (e) {
+      setState(() {
+        _isLoading = false;
+        _errorMessage = e.toString();
+      });
+      print('Error cargando lecciones: $e');
+    }
   }
 
-  Future<void> _loadLessonProgress(List<LessonNode> baseLessons) async {
+  Future<void> _loadLessonProgress(List<LessonNode> backendLessons) async {
     try {
       final prefs = await SharedPreferences.getInstance();
-      final subjectKey = 'subject_${widget.subject.id}_lessons';
+      final subjectKey = 'subject_${widget.subject.id}_lessons_v2';
       final progressJson = prefs.getStringList(subjectKey) ?? [];
 
       if (progressJson.isNotEmpty) {
         // Cargar progreso guardado
-        final savedLessons = progressJson.map((lessonString) {
-          final parts = lessonString.split('|');
-          if (parts.length >= 4) {
-            return LessonNode(
-              id: int.parse(parts[0]),
-              title: parts[1],
-              type: parts[2] == 'LessonType.game' ? LessonType.game : LessonType.lesson,
-              isUnlocked: parts[3] == 'true',
-              isCompleted: parts[4] == 'true',
-              description: parts.length > 5 ? parts[5] : null,
+        final Map<int, Map<String, bool>> savedProgress = {};
+        
+        for (String progressString in progressJson) {
+          final parts = progressString.split('|');
+          if (parts.length >= 3) {
+            final id = int.parse(parts[0]);
+            savedProgress[id] = {
+              'isUnlocked': parts[1] == 'true',
+              'isCompleted': parts[2] == 'true',
+            };
+          }
+        }
+
+        // Aplicar progreso a las lecciones del backend
+        lessons = backendLessons.map((lesson) {
+          final progress = savedProgress[lesson.id];
+          if (progress != null) {
+            return lesson.copyWith(
+              isUnlocked: progress['isUnlocked']!,
+              isCompleted: progress['isCompleted']!,
             );
           }
-          return null;
-        }).where((lesson) => lesson != null).cast<LessonNode>().toList();
-
-        // Combinar con lecciones base, manteniendo el progreso
-        lessons = baseLessons.map((baseLesson) {
-          final savedLesson = savedLessons.firstWhere(
-            (saved) => saved.id == baseLesson.id,
-            orElse: () => baseLesson,
-          );
-          return baseLesson.copyWith(
-            isUnlocked: savedLesson.isUnlocked,
-            isCompleted: savedLesson.isCompleted,
-          );
+          return lesson;
         }).toList();
 
         print('Progreso de lecciones cargado para materia ${widget.subject.name}');
       } else {
-        // No hay progreso guardado, usar lecciones base
-        lessons = baseLessons;
-        print('Usando lecciones base para materia ${widget.subject.name}');
+        // No hay progreso guardado, usar lecciones del backend
+        lessons = backendLessons;
+        print('Usando lecciones del backend para materia ${widget.subject.name}');
       }
     } catch (e) {
       print('Error cargando progreso de lecciones: $e');
-      lessons = baseLessons;
+      lessons = backendLessons;
     }
   }
 
   Future<void> _saveLessonProgress() async {
     try {
       final prefs = await SharedPreferences.getInstance();
-      final subjectKey = 'subject_${widget.subject.id}_lessons';
+      final subjectKey = 'subject_${widget.subject.id}_lessons_v2';
       
       final progressStrings = lessons.map((lesson) {
-        return '${lesson.id}|${lesson.title}|${lesson.type}|${lesson.isUnlocked}|${lesson.isCompleted}|${lesson.description ?? ''}';
+        return '${lesson.id}|${lesson.isUnlocked}|${lesson.isCompleted}';
       }).toList();
       
       await prefs.setStringList(subjectKey, progressStrings);
@@ -206,7 +195,6 @@ class _SubjectLessonsScreenState extends State<SubjectLessonsScreen> {
 
   void _completeLessonNode(int lessonId) async {
     setState(() {
-      // Marcar la lección como completada
       final lessonIndex = lessons.indexWhere((lesson) => lesson.id == lessonId);
       if (lessonIndex != -1) {
         lessons[lessonIndex] = lessons[lessonIndex].copyWith(isCompleted: true);
@@ -218,10 +206,8 @@ class _SubjectLessonsScreenState extends State<SubjectLessonsScreen> {
       }
     });
 
-    // Guardar progreso
     await _saveLessonProgress();
 
-    // Mostrar mensaje de éxito
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -245,6 +231,35 @@ class _SubjectLessonsScreenState extends State<SubjectLessonsScreen> {
     return '¡Has completado todas las lecciones disponibles!';
   }
 
+  void _handleLessonTap(LessonNode lesson) {
+    if (lesson.lessonData != null) {
+      // Navegar a la pantalla de lección dinámica
+      Navigator.pushNamed(
+        context,
+        AppRoutes.dynamicLesson,
+        arguments: {
+          'lesson': lesson.lessonData,
+          'onComplete': () => _completeLessonNode(lesson.id),
+        },
+      );
+    } else {
+      _showLockedMessage();
+    }
+  }
+
+  void _showLockedMessage() {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          'Completa las lecciones anteriores para desbloquear esta',
+          style: TextStyle(fontFamily: 'Comic Sans MS'),
+        ),
+        backgroundColor: AppColors.warning,
+        behavior: SnackBarBehavior.floating,
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     if (_isLoading) {
@@ -254,6 +269,56 @@ class _SubjectLessonsScreenState extends State<SubjectLessonsScreen> {
         isLoading: true,
         loadingMessage: 'Cargando lecciones...',
         body: Container(),
+      );
+    }
+
+    if (_errorMessage != null) {
+      return ScreenBase.forStudent(
+        title: widget.subject.name,
+        showBackButton: true,
+        body: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(Icons.error_outline, size: 64, color: AppColors.error),
+              SizedBox(height: 16),
+              Text(
+                'Error al cargar las lecciones',
+                style: TextStyle(
+                  fontFamily: 'Comic Sans MS',
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              SizedBox(height: 8),
+              Padding(
+                padding: EdgeInsets.symmetric(horizontal: 32),
+                child: Text(
+                  _errorMessage!,
+                  style: TextStyle(
+                    fontFamily: 'Comic Sans MS',
+                    fontSize: 14,
+                    color: Colors.grey,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+              ),
+              SizedBox(height: 24),
+              ElevatedButton.icon(
+                onPressed: _loadLessonsFromBackend,
+                icon: Icon(Icons.refresh),
+                label: Text(
+                  'Reintentar',
+                  style: TextStyle(fontFamily: 'Comic Sans MS'),
+                ),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.primary,
+                  foregroundColor: Colors.white,
+                ),
+              ),
+            ],
+          ),
+        ),
       );
     }
 
@@ -273,12 +338,9 @@ class _SubjectLessonsScreenState extends State<SubjectLessonsScreen> {
         ),
         child: CustomScrollView(
           slivers: [
-            // Información de la materia
             SliverToBoxAdapter(
               child: _buildSubjectHeader(),
             ),
-            
-            // Path de lecciones estilo Duolingo
             SliverToBoxAdapter(
               child: _buildLessonsPath(),
             ),
@@ -289,103 +351,75 @@ class _SubjectLessonsScreenState extends State<SubjectLessonsScreen> {
   }
 
   Widget _buildSubjectHeader() {
+    final completedCount = lessons.where((l) => l.isCompleted).length;
+    final totalCount = lessons.length;
+    final progress = totalCount > 0 ? completedCount / totalCount : 0.0;
+
     return Container(
       padding: const EdgeInsets.all(24),
       child: Column(
         children: [
-          // Estadísticas de progreso
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: [
-              _buildProgressStat(
+              _buildStatItem(
+                Icons.school, 
+                completedCount.toString(), 
+                totalCount.toString(), 
                 'Completadas',
-                '${lessons.where((l) => l.isCompleted).length}',
-                '${lessons.length}',
-                AppColors.success,
-                Icons.check_circle,
-              ),
-              _buildProgressStat(
-                'Disponibles',
-                '${lessons.where((l) => l.isUnlocked).length}',
-                '${lessons.length}',
                 AppColors.primary,
-                Icons.lock_open,
+                showFraction: true,
               ),
-              _buildProgressStat(
+              _buildStatItem(
+                Icons.trending_up, 
+                '${(progress * 100).round()}%', 
+                '', 
                 'Progreso',
-                '${((lessons.where((l) => l.isCompleted).length / lessons.length) * 100).round()}%',
-                '',
-                AppColors.accent,
-                Icons.trending_up,
+                AppColors.success,
+              ),
+              _buildStatItem(
+                Icons.stars, 
+                '${lessons.where((l) => l.isUnlocked).length}', 
+                '', 
+                'Desbloqueadas',
+                AppColors.secondary,
               ),
             ],
           ),
-          const SizedBox(height: 20),
           
-          // Icono de la materia
+          const SizedBox(height: 24),
+          
+          // Barra de progreso
           Container(
-            width: 80,
-            height: 80,
+            width: double.infinity,
+            height: 8,
             decoration: BoxDecoration(
-              color: AppColors.primary.withOpacity(0.2),
-              shape: BoxShape.circle,
-              border: Border.all(
-                color: AppColors.primary,
-                width: 3,
+              color: Colors.grey.shade300,
+              borderRadius: BorderRadius.circular(4),
+            ),
+            child: FractionallySizedBox(
+              alignment: Alignment.centerLeft,
+              widthFactor: progress,
+              child: Container(
+                decoration: BoxDecoration(
+                  color: AppColors.primary,
+                  borderRadius: BorderRadius.circular(4),
+                ),
               ),
             ),
-            child: Icon(
-              Icons.calculate, // Esto debería ser dinámico basado en la materia
-              color: AppColors.primary,
-              size: 40,
-            ),
           ),
-          const SizedBox(height: 16),
-          Text(
-            widget.subject.name,
-            style: TextStyle(
-              fontFamily: 'Comic Sans MS',
-              fontSize: 24,
-              fontWeight: FontWeight.bold,
-              color: AppColors.primary,
-            ),
-          ),
-          if (widget.subject.description != null) ...[
-            const SizedBox(height: 8),
-            Text(
-              widget.subject.description!,
-              style: TextStyle(
-                fontFamily: 'Comic Sans MS',
-                fontSize: 16,
-                color: Colors.grey.shade600,
-              ),
-              textAlign: TextAlign.center,
-            ),
-          ],
         ],
       ),
     );
   }
 
-  Widget _buildProgressStat(String label, String value, String total, Color color, IconData icon) {
+  Widget _buildStatItem(IconData icon, String value, String total, String label, Color color, {bool showFraction = false}) {
     return Column(
       children: [
-        Container(
-          width: 50,
-          height: 50,
-          decoration: BoxDecoration(
-            color: color.withOpacity(0.2),
-            shape: BoxShape.circle,
-          ),
-          child: Icon(
-            icon,
-            color: color,
-            size: 24,
-          ),
-        ),
+        Icon(icon, color: color, size: 32),
         const SizedBox(height: 8),
         Text(
-          total.isNotEmpty ? '$value/$total' : value,
+          showFraction && total.isNotEmpty ? '$value/$total' : value,
           style: TextStyle(
             fontFamily: 'Comic Sans MS',
             fontSize: 16,
@@ -414,7 +448,7 @@ class _SubjectLessonsScreenState extends State<SubjectLessonsScreen> {
             _buildLessonNode(lessons[i], i),
             if (i < lessons.length - 1) _buildConnector(),
           ],
-          const SizedBox(height: 100), // Espacio extra al final
+          const SizedBox(height: 100),
         ],
       ),
     );
@@ -435,7 +469,6 @@ class _SubjectLessonsScreenState extends State<SubjectLessonsScreen> {
           onTap: lesson.isUnlocked ? () => _handleLessonTap(lesson) : () => _showLockedMessage(),
           child: Column(
             children: [
-              // Nodo principal
               Container(
                 width: 120,
                 height: 120,
@@ -475,18 +508,13 @@ class _SubjectLessonsScreenState extends State<SubjectLessonsScreen> {
               
               const SizedBox(height: 12),
               
-              // Título de la lección
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                 decoration: BoxDecoration(
-                  color: lesson.isUnlocked 
-                      ? Colors.white 
-                      : Colors.grey.shade200,
+                  color: lesson.isUnlocked ? Colors.white : Colors.grey.shade200,
                   borderRadius: BorderRadius.circular(20),
                   border: Border.all(
-                    color: lesson.isUnlocked 
-                        ? AppColors.primary.withOpacity(0.3) 
-                        : Colors.grey.shade300,
+                    color: lesson.isUnlocked ? AppColors.primary.withOpacity(0.3) : Colors.grey.shade300,
                   ),
                 ),
                 child: Text(
@@ -494,12 +522,12 @@ class _SubjectLessonsScreenState extends State<SubjectLessonsScreen> {
                   style: TextStyle(
                     fontFamily: 'Comic Sans MS',
                     fontSize: 14,
-                    fontWeight: FontWeight.bold,
-                    color: lesson.isUnlocked 
-                        ? AppColors.primary 
-                        : Colors.grey,
+                    fontWeight: FontWeight.w600,
+                    color: lesson.isUnlocked ? AppColors.textPrimary : Colors.grey,
                   ),
                   textAlign: TextAlign.center,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
                 ),
               ),
             ],
@@ -512,7 +540,7 @@ class _SubjectLessonsScreenState extends State<SubjectLessonsScreen> {
   Widget _buildConnector() {
     return Container(
       width: 4,
-      height: 40,
+      height: 30,
       decoration: BoxDecoration(
         color: AppColors.primary.withOpacity(0.3),
         borderRadius: BorderRadius.circular(2),
@@ -521,64 +549,27 @@ class _SubjectLessonsScreenState extends State<SubjectLessonsScreen> {
   }
 
   Color _getNodeColor(LessonNode lesson) {
-    if (!lesson.isUnlocked) return Colors.grey.shade300;
     if (lesson.isCompleted) return AppColors.success;
-    return lesson.type == LessonType.lesson 
-        ? AppColors.primary 
-        : AppColors.secondary;
+    if (lesson.isUnlocked) return AppColors.primary;
+    return Colors.grey.shade400;
   }
 
   Color _getNodeBorderColor(LessonNode lesson) {
-    if (!lesson.isUnlocked) return Colors.grey.shade400;
-    if (lesson.isCompleted) return AppColors.success;
-    return lesson.type == LessonType.lesson 
-        ? AppColors.primary 
-        : AppColors.secondary;
+    if (lesson.isCompleted) return AppColors.success.withOpacity(0.8);
+    if (lesson.isUnlocked) return AppColors.primary.withOpacity(0.8);
+    return Colors.grey.shade500;
   }
 
   Color _getNodeIconColor(LessonNode lesson) {
-    if (!lesson.isUnlocked) return Colors.grey.shade500;
-    return Colors.white;
+    if (lesson.isCompleted) return Colors.white;
+    if (lesson.isUnlocked) return Colors.white;
+    return Colors.grey.shade600;
   }
 
   IconData _getNodeIcon(LessonNode lesson) {
-    if (!lesson.isUnlocked) return Icons.lock;
-    return lesson.type == LessonType.lesson 
-        ? Icons.school 
-        : Icons.videogame_asset;
-  }
-
-  void _showLockedMessage() {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          'Completa la lección anterior para desbloquear esta',
-          style: TextStyle(fontFamily: 'Comic Sans MS'),
-        ),
-        backgroundColor: AppColors.warning,
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-      ),
-    );
-  }
-
-  void _handleLessonTap(LessonNode lesson) {
-    if (lesson.type == LessonType.lesson) {
-      // Navegar a la lección interactiva
-      Navigator.pushNamed(context, AppRoutes.integerLesson).then((result) {
-        // Si la lección se completó, actualizar el estado
-        if (result == true) {
-          _completeLessonNode(lesson.id);
-        }
-      });
-    } else {
-      // Navegar al juego
-      Navigator.pushNamed(context, AppRoutes.integerRescueGame).then((result) {
-        // Si el juego se completó, actualizar el estado
-        if (result == true) {
-          _completeLessonNode(lesson.id);
-        }
-      });
+    if (lesson.type == LessonNodeType.game) {
+      return Icons.videogame_asset;
     }
+    return Icons.school;
   }
 }

@@ -8,6 +8,7 @@ import '../screens/main/main_teacher_screen.dart';
 import '../screens/auth/register_teacher_screen.dart';
 import '../screens/join_classroom_screen.dart';
 import '../screens/courses/subject_lessons_screen.dart';
+import '../screens/courses/dynamic_lesson_screen.dart'; // NUEVO IMPORT
 import '../screens/game/integer_rescue_game.dart';
 import '../screens/shop/shop_screen.dart';
 import '../screens/shop/inventory_screen.dart';
@@ -25,6 +26,7 @@ class AppRoutes {
   static const String joinClassroom = '/joinClassroom';
   static const String integerRescueGame = '/games/integer-rescue';
   static const String integerLesson = '/integer_lesson';
+  static const String dynamicLesson = '/dynamic-lesson'; // NUEVA RUTA
   static const String shop = '/shop';
   static const String inventory = '/inventory';
 
@@ -39,6 +41,14 @@ class AppRoutes {
     subjectLessons: (context) {
       final subject = ModalRoute.of(context)!.settings.arguments;
       return SubjectLessonsScreen(subject: subject);
+    },
+    // NUEVA RUTA PARA LECCIONES DINÁMICAS
+    dynamicLesson: (context) {
+      final args = ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>;
+      return DynamicLessonScreen(
+        lesson: args['lesson'],
+        onComplete: args['onComplete'],
+      );
     },
     integerRescueGame: (context) => const IntegerRescueGame(),
     integerLesson: (context) => const IntegerLessonScreenInteractive(),

@@ -1,3 +1,4 @@
+// lib/main.dart
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
@@ -82,7 +83,7 @@ class MyApp extends StatelessWidget {
               theme: themeProvider.isDarkMode
                 ? AppThemes.darkTheme
                 : AppThemes.lightTheme,
-              routes: AppRoutes.routes,
+              routes: AppRoutes.routes, // USO DE LAS RUTAS DE AppRoutes
               home: const LoginScreen(),
             );
           },
