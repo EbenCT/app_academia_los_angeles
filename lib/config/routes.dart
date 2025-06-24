@@ -7,8 +7,9 @@ import '../screens/main/main_screen.dart';
 import '../screens/main/main_teacher_screen.dart';
 import '../screens/auth/register_teacher_screen.dart';
 import '../screens/join_classroom_screen.dart';
+import '../screens/courses/subject_topics_screen.dart'; // NUEVO IMPORT
 import '../screens/courses/subject_lessons_screen.dart';
-import '../screens/courses/dynamic_lesson_screen.dart'; // NUEVO IMPORT
+import '../screens/courses/dynamic_lesson_screen.dart';
 import '../screens/game/integer_rescue_game.dart';
 import '../screens/shop/shop_screen.dart';
 import '../screens/shop/inventory_screen.dart';
@@ -18,15 +19,16 @@ class AppRoutes {
   // Nombres de rutas estáticas para fácil referencia
   static const String login = '/login';
   static const String register = '/register';
-  static const String main = '/main'; // Nueva ruta principal para estudiantes
-  static const String mainTeacher = '/main-teacher'; // Nueva ruta principal para profesores
+  static const String main = '/main';
+  static const String mainTeacher = '/main-teacher';
   static const String profile = '/profile';
+  static const String subjectTopics = '/subject-topics'; // NUEVA RUTA
   static const String subjectLessons = '/subject-lessons';
   static const String registerTeacher = '/registerTeacher';
   static const String joinClassroom = '/joinClassroom';
   static const String integerRescueGame = '/games/integer-rescue';
   static const String integerLesson = '/integer_lesson';
-  static const String dynamicLesson = '/dynamic-lesson'; // NUEVA RUTA
+  static const String dynamicLesson = '/dynamic-lesson';
   static const String shop = '/shop';
   static const String inventory = '/inventory';
 
@@ -35,14 +37,25 @@ class AppRoutes {
     login: (context) => const LoginScreen(),
     register: (context) => const RegisterScreen(),
     registerTeacher: (context) => const RegisterTeacherScreen(),
-    main: (context) => const MainScreen(), // Pantalla principal para estudiantes
-    mainTeacher: (context) => const MainTeacherScreen(), // Pantalla principal para profesores
+    main: (context) => const MainScreen(),
+    mainTeacher: (context) => const MainTeacherScreen(),
     joinClassroom: (context) => const JoinClassroomScreen(),
-    subjectLessons: (context) {
+    
+    // NUEVA RUTA: Pantalla de topics/temas
+    subjectTopics: (context) {
       final subject = ModalRoute.of(context)!.settings.arguments;
-      return SubjectLessonsScreen(subject: subject);
+      return SubjectTopicsScreen(subject: subject);
     },
-    // NUEVA RUTA PARA LECCIONES DINÁMICAS
+    
+    // RUTA ACTUALIZADA: Pantalla de lecciones con soporte para topic específico
+    subjectLessons: (context) {
+      final args = ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>;
+      return SubjectLessonsScreen(
+        subject: args['subject'],
+        topic: args['topic'], // Puede ser null para mantener compatibilidad
+      );
+    },
+    
     dynamicLesson: (context) {
       final args = ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>;
       return DynamicLessonScreen(

@@ -65,7 +65,7 @@ class LessonNode {
 class SubjectLessonsScreen extends StatefulWidget {
   final dynamic subject;
 
-  const SubjectLessonsScreen({super.key, required this.subject});
+  const SubjectLessonsScreen({super.key, required this.subject, required topic});
 
   @override
   State<SubjectLessonsScreen> createState() => _SubjectLessonsScreenState();
