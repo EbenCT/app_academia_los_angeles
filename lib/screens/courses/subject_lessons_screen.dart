@@ -7,10 +7,12 @@ import '../../theme/app_colors.dart';
 import '../../widgets/animations/bounce_animation.dart';
 import '../../config/routes.dart';
 import '../../models/lesson_models.dart';
+import '../../models/adaptive_lesson_models.dart';
 import '../../services/topic_lesson_service.dart';
+import '../../services/adaptive_exercise_service.dart';
 import '../../services/graphql_service.dart';
 
-enum LessonNodeType { lesson, game }
+enum LessonNodeType { lesson, game, adaptive }
 
 class LessonNode {
   final int id;
@@ -20,7 +22,8 @@ class LessonNode {
   final bool isCompleted;
   final String? description;
   final int? topicId;
-  final Lesson? lessonData; // Datos reales del backend
+  final Lesson? lessonData;
+  final SpecialLessonNode? specialNode;
 
   const LessonNode({
     required this.id,
@@ -31,6 +34,7 @@ class LessonNode {
     this.description,
     this.topicId,
     this.lessonData,
+    this.specialNode,
   });
 
   LessonNode copyWith({
@@ -42,6 +46,7 @@ class LessonNode {
     String? description,
     int? topicId,
     Lesson? lessonData,
+    SpecialLessonNode? specialNode,
   }) {
     return LessonNode(
       id: id ?? this.id,
@@ -52,6 +57,7 @@ class LessonNode {
       description: description ?? this.description,
       topicId: topicId ?? this.topicId,
       lessonData: lessonData ?? this.lessonData,
+      specialNode: specialNode ?? this.specialNode,
     );
   }
 }
@@ -66,23 +72,28 @@ class SubjectLessonsScreen extends StatefulWidget {
 }
 
 class _SubjectLessonsScreenState extends State<SubjectLessonsScreen> {
+  // ESTADO
   late List<LessonNode> lessons;
   late TopicLessonService _topicLessonService;
+  late AdaptiveExerciseService _adaptiveService;
   bool _isLoading = true;
   String? _errorMessage;
 
+  // INICIALIZACIÓN
   @override
   void initState() {
     super.initState();
-    _initializeService();
+    _initializeServices();
     _loadLessonsFromBackend();
   }
 
-  void _initializeService() async {
+  void _initializeServices() async {
     final client = await GraphQLService.getClient();
     _topicLessonService = TopicLessonService(client);
+    _adaptiveService = AdaptiveExerciseService(client);
   }
 
+  // CARGA DE DATOS
   Future<void> _loadLessonsFromBackend() async {
     setState(() {
       _isLoading = true;
@@ -90,14 +101,9 @@ class _SubjectLessonsScreenState extends State<SubjectLessonsScreen> {
     });
 
     try {
-      // Obtener topics y lecciones del backend
       final subjectData = await _topicLessonService.getSubjectTopics(widget.subject.id.toString());
-      
-      final topics = (subjectData['topics'] as List)
-          .map((topicJson) => Topic.fromJson(topicJson))
-          .toList();
+      final topics = (subjectData['topics'] as List).map((topicJson) => Topic.fromJson(topicJson)).toList();
 
-      // Convertir a LessonNodes
       List<LessonNode> backendLessons = [];
       int nodeIndex = 0;
 
@@ -107,8 +113,8 @@ class _SubjectLessonsScreenState extends State<SubjectLessonsScreen> {
           backendLessons.add(LessonNode(
             id: lesson.id,
             title: lesson.title,
-            type: lesson.exercises.isEmpty ? LessonNodeType.lesson : LessonNodeType.lesson,
-            isUnlocked: nodeIndex == 1, // La primera siempre desbloqueada
+            type: LessonNodeType.lesson,
+            isUnlocked: nodeIndex == 1,
             isCompleted: false,
             description: lesson.content,
             topicId: topic.id,
@@ -117,29 +123,25 @@ class _SubjectLessonsScreenState extends State<SubjectLessonsScreen> {
         }
       }
 
-      // Cargar progreso guardado
       await _loadLessonProgress(backendLessons);
+      await _generateSpecialNodes();
 
-      setState(() {
-        _isLoading = false;
-      });
+      setState(() => _isLoading = false);
     } catch (e) {
       setState(() {
         _isLoading = false;
         _errorMessage = e.toString();
       });
-      print('Error cargando lecciones: $e');
     }
   }
 
   Future<void> _loadLessonProgress(List<LessonNode> backendLessons) async {
     try {
       final prefs = await SharedPreferences.getInstance();
-      final subjectKey = 'subject_${widget.subject.id}_lessons_v2';
+      final subjectKey = 'subject_${widget.subject.id}_lessons_v3';
       final progressJson = prefs.getStringList(subjectKey) ?? [];
 
       if (progressJson.isNotEmpty) {
-        // Cargar progreso guardado
         final Map<int, Map<String, bool>> savedProgress = {};
         
         for (String progressString in progressJson) {
@@ -153,7 +155,6 @@ class _SubjectLessonsScreenState extends State<SubjectLessonsScreen> {
           }
         }
 
-        // Aplicar progreso a las lecciones del backend
         lessons = backendLessons.map((lesson) {
           final progress = savedProgress[lesson.id];
           if (progress != null) {
@@ -164,15 +165,10 @@ class _SubjectLessonsScreenState extends State<SubjectLessonsScreen> {
           }
           return lesson;
         }).toList();
-
-        print('Progreso de lecciones cargado para materia ${widget.subject.name}');
       } else {
-        // No hay progreso guardado, usar lecciones del backend
         lessons = backendLessons;
-        print('Usando lecciones del backend para materia ${widget.subject.name}');
       }
     } catch (e) {
-      print('Error cargando progreso de lecciones: $e');
       lessons = backendLessons;
     }
   }
@@ -180,16 +176,171 @@ class _SubjectLessonsScreenState extends State<SubjectLessonsScreen> {
   Future<void> _saveLessonProgress() async {
     try {
       final prefs = await SharedPreferences.getInstance();
-      final subjectKey = 'subject_${widget.subject.id}_lessons_v2';
+      final subjectKey = 'subject_${widget.subject.id}_lessons_v3';
       
       final progressStrings = lessons.map((lesson) {
         return '${lesson.id}|${lesson.isUnlocked}|${lesson.isCompleted}';
       }).toList();
       
       await prefs.setStringList(subjectKey, progressStrings);
-      print('Progreso de lecciones guardado para materia ${widget.subject.name}');
     } catch (e) {
-      print('Error guardando progreso de lecciones: $e');
+      print('Error guardando progreso: $e');
+    }
+  }
+
+  // GENERACIÓN DE NODOS ESPECIALES
+  Future<void> _generateSpecialNodes() async {
+    final completedCount = lessons.where((l) => l.isCompleted && l.type == LessonNodeType.lesson).length;
+    final specialNodesNeeded = (completedCount / 5).floor();
+    
+    List<LessonNode> specialNodes = [];
+    
+    for (int i = 1; i <= specialNodesNeeded; i++) {
+      final requiredLessons = i * 5;
+      final isUnlocked = completedCount >= requiredLessons;
+      
+      // Nodo de juego (Rescate en las Alturas)
+      final gameNode = LessonNode(
+        id: 1000 + (i * 2 - 1),
+        title: '🎮 Rescate en las Alturas $i',
+        type: LessonNodeType.game,
+        isUnlocked: isUnlocked,
+        isCompleted: false,
+        description: 'Juego desbloqueado por completar $requiredLessons lecciones',
+        specialNode: SpecialLessonNode.game(
+          levelNumber: i,
+          requiredCompletedLessons: requiredLessons,
+          isUnlocked: isUnlocked,
+        ),
+      );
+      
+      // Nodo adaptativo
+      AdaptiveLesson? adaptiveLesson;
+      if (isUnlocked) {
+        try {
+          final adaptiveExercises = await _adaptiveService.getAdaptiveExercises();
+          adaptiveLesson = AdaptiveLesson.fromExercises(
+            exercises: adaptiveExercises,
+            levelNumber: i,
+            requiredCompletedLessons: requiredLessons,
+            isUnlocked: true,
+          );
+        } catch (e) {
+          adaptiveLesson = AdaptiveLesson.fromExercises(
+            exercises: [],
+            levelNumber: i,
+            requiredCompletedLessons: requiredLessons,
+            isUnlocked: true,
+          );
+        }
+      }
+      
+      final adaptiveNode = LessonNode(
+        id: 1000 + (i * 2),
+        title: '🧠 Nivel Adaptativo $i',
+        type: LessonNodeType.adaptive,
+        isUnlocked: isUnlocked,
+        isCompleted: false,
+        description: 'Ejercicios personalizados según tu progreso',
+        specialNode: SpecialLessonNode.adaptive(
+          levelNumber: i,
+          requiredCompletedLessons: requiredLessons,
+          isUnlocked: isUnlocked,
+          adaptiveLesson: adaptiveLesson!,
+        ),
+      );
+      
+      specialNodes.addAll([gameNode, adaptiveNode]);
+    }
+    
+    _insertSpecialNodes(specialNodes);
+  }
+
+  void _insertSpecialNodes(List<LessonNode> specialNodes) {
+    List<LessonNode> finalLessons = [];
+    int regularLessonCount = 0;
+    int specialNodeIndex = 0;
+    
+    for (final lesson in lessons) {
+      if (lesson.type == LessonNodeType.lesson) {
+        finalLessons.add(lesson);
+        regularLessonCount++;
+        
+        if (regularLessonCount % 5 == 0 && specialNodeIndex < specialNodes.length - 1) {
+          finalLessons.add(specialNodes[specialNodeIndex]);     // Juego
+          finalLessons.add(specialNodes[specialNodeIndex + 1]); // Adaptativo
+          specialNodeIndex += 2;
+        }
+      }
+    }
+    
+    lessons = finalLessons;
+  }
+
+  // NAVEGACIÓN Y ACCIONES
+  void _handleLessonTap(LessonNode lesson) {
+    if (!lesson.isUnlocked) {
+      _showLockedMessage();
+      return;
+    }
+
+    switch (lesson.type) {
+      case LessonNodeType.lesson:
+        if (lesson.lessonData != null) {
+          Navigator.pushNamed(
+            context,
+            AppRoutes.dynamicLesson,
+            arguments: {
+              'lesson': lesson.lessonData,
+              'onComplete': () => _completeLessonNode(lesson.id),
+            },
+          );
+        }
+        break;
+        
+      case LessonNodeType.game:
+        // Navegar al juego Rescate en las Alturas
+        Navigator.pushNamed(
+          context,
+          AppRoutes.integerRescueGame,
+        ).then((_) {
+          // Marcar como completado cuando regrese del juego
+          _completeLessonNode(lesson.id);
+        });
+        break;
+        
+      case LessonNodeType.adaptive:
+        _navigateToAdaptiveLevel(lesson);
+        break;
+    }
+  }
+
+  void _navigateToAdaptiveLevel(LessonNode adaptiveNode) {
+    if (adaptiveNode.specialNode?.adaptiveLesson != null) {
+      final adaptiveLesson = adaptiveNode.specialNode!.adaptiveLesson!;
+      
+      if (adaptiveLesson.exercises.isEmpty) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'No hay ejercicios adaptativos disponibles en este momento',
+              style: TextStyle(fontFamily: 'Comic Sans MS'),
+            ),
+            backgroundColor: AppColors.warning,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+        return;
+      }
+      
+      Navigator.pushNamed(
+        context,
+        AppRoutes.dynamicLesson,
+        arguments: {
+          'lesson': adaptiveLesson.toStandardLesson(),
+          'onComplete': () => _completeLessonNode(adaptiveNode.id),
+        },
+      );
     }
   }
 
@@ -199,7 +350,6 @@ class _SubjectLessonsScreenState extends State<SubjectLessonsScreen> {
       if (lessonIndex != -1) {
         lessons[lessonIndex] = lessons[lessonIndex].copyWith(isCompleted: true);
         
-        // Desbloquear la siguiente lección
         if (lessonIndex + 1 < lessons.length) {
           lessons[lessonIndex + 1] = lessons[lessonIndex + 1].copyWith(isUnlocked: true);
         }
@@ -207,6 +357,14 @@ class _SubjectLessonsScreenState extends State<SubjectLessonsScreen> {
     });
 
     await _saveLessonProgress();
+
+    final completedRegularLessons = lessons.where((l) => l.isCompleted && l.type == LessonNodeType.lesson).length;
+    
+    if (AdaptiveExerciseService.shouldUnlockAdaptiveExercises(completedRegularLessons)) {
+      await _generateSpecialNodes();
+      setState(() {});
+      _showSpecialNodesUnlockedMessage(completedRegularLessons);
+    }
 
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -223,28 +381,129 @@ class _SubjectLessonsScreenState extends State<SubjectLessonsScreen> {
     }
   }
 
+  // MENSAJES Y DIÁLOGOS
+  void _showSpecialNodesUnlockedMessage(int completedLessons) {
+    final levelNumber = (completedLessons / 5).floor();
+    
+    showDialog(
+      context: context,
+      builder: (context) => Dialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        child: Container(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: AppColors.secondary.withOpacity(0.1),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(Icons.celebration, color: AppColors.secondary, size: 48),
+              ),
+              const SizedBox(height: 16),
+              Text(
+                '🎉 ¡Felicidades!',
+                style: TextStyle(
+                  fontFamily: 'Comic Sans MS',
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.secondary,
+                ),
+              ),
+              const SizedBox(height: 12),
+              Text(
+                'Has completado $completedLessons lecciones y has desbloqueado:',
+                style: TextStyle(
+                  fontFamily: 'Comic Sans MS',
+                  fontSize: 16,
+                  color: AppColors.textPrimary,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 16),
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Colors.blue.shade50,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: Colors.blue.shade200),
+                ),
+                child: Column(
+                  children: [
+                    Row(
+                      children: [
+                        Icon(Icons.videogame_asset, color: Colors.blue.shade600),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            '🎮 Rescate en las Alturas $levelNumber',
+                            style: TextStyle(
+                              fontFamily: 'Comic Sans MS',
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                              color: Colors.blue.shade700,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    Row(
+                      children: [
+                        Icon(Icons.psychology, color: Colors.blue.shade600),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            '🧠 Nivel Adaptativo $levelNumber',
+                            style: TextStyle(
+                              fontFamily: 'Comic Sans MS',
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                              color: Colors.blue.shade700,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 20),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: () => Navigator.of(context).pop(),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.secondary,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                  ),
+                  child: Text(
+                    '¡Continuar!',
+                    style: TextStyle(
+                      fontFamily: 'Comic Sans MS',
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   String _getNextLessonMessage(int completedLessonId) {
     final currentIndex = lessons.indexWhere((lesson) => lesson.id == completedLessonId);
     if (currentIndex != -1 && currentIndex + 1 < lessons.length) {
       return 'Se desbloqueó: ${lessons[currentIndex + 1].title}';
     }
     return '¡Has completado todas las lecciones disponibles!';
-  }
-
-  void _handleLessonTap(LessonNode lesson) {
-    if (lesson.lessonData != null) {
-      // Navegar a la pantalla de lección dinámica
-      Navigator.pushNamed(
-        context,
-        AppRoutes.dynamicLesson,
-        arguments: {
-          'lesson': lesson.lessonData,
-          'onComplete': () => _completeLessonNode(lesson.id),
-        },
-      );
-    } else {
-      _showLockedMessage();
-    }
   }
 
   void _showLockedMessage() {
@@ -260,6 +519,45 @@ class _SubjectLessonsScreenState extends State<SubjectLessonsScreen> {
     );
   }
 
+  // UI HELPERS
+  Color _getNodeColor(LessonNode lesson) {
+    if (lesson.isCompleted) return AppColors.success;
+    if (lesson.isUnlocked) {
+      switch (lesson.type) {
+        case LessonNodeType.lesson: return AppColors.primary;
+        case LessonNodeType.game: return AppColors.secondary;
+        case LessonNodeType.adaptive: return AppColors.info;
+      }
+    }
+    return Colors.grey.shade400;
+  }
+
+  Color _getNodeBorderColor(LessonNode lesson) {
+    if (lesson.isCompleted) return AppColors.success.withOpacity(0.8);
+    if (lesson.isUnlocked) {
+      switch (lesson.type) {
+        case LessonNodeType.lesson: return AppColors.primary.withOpacity(0.8);
+        case LessonNodeType.game: return AppColors.secondary.withOpacity(0.8);
+        case LessonNodeType.adaptive: return AppColors.info.withOpacity(0.8);
+      }
+    }
+    return Colors.grey.shade500;
+  }
+
+  Color _getNodeIconColor(LessonNode lesson) {
+    if (lesson.isCompleted || lesson.isUnlocked) return Colors.white;
+    return Colors.grey.shade600;
+  }
+
+  IconData _getNodeIcon(LessonNode lesson) {
+    switch (lesson.type) {
+      case LessonNodeType.game: return Icons.videogame_asset;
+      case LessonNodeType.adaptive: return Icons.psychology;
+      case LessonNodeType.lesson: return Icons.school;
+    }
+  }
+
+  // BUILD METHODS
   @override
   Widget build(BuildContext context) {
     if (_isLoading) {
@@ -276,49 +574,7 @@ class _SubjectLessonsScreenState extends State<SubjectLessonsScreen> {
       return ScreenBase.forStudent(
         title: widget.subject.name,
         showBackButton: true,
-        body: Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(Icons.error_outline, size: 64, color: AppColors.error),
-              SizedBox(height: 16),
-              Text(
-                'Error al cargar las lecciones',
-                style: TextStyle(
-                  fontFamily: 'Comic Sans MS',
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              SizedBox(height: 8),
-              Padding(
-                padding: EdgeInsets.symmetric(horizontal: 32),
-                child: Text(
-                  _errorMessage!,
-                  style: TextStyle(
-                    fontFamily: 'Comic Sans MS',
-                    fontSize: 14,
-                    color: Colors.grey,
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-              ),
-              SizedBox(height: 24),
-              ElevatedButton.icon(
-                onPressed: _loadLessonsFromBackend,
-                icon: Icon(Icons.refresh),
-                label: Text(
-                  'Reintentar',
-                  style: TextStyle(fontFamily: 'Comic Sans MS'),
-                ),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.primary,
-                  foregroundColor: Colors.white,
-                ),
-              ),
-            ],
-          ),
-        ),
+        body: _buildErrorState(),
       );
     }
 
@@ -330,22 +586,58 @@ class _SubjectLessonsScreenState extends State<SubjectLessonsScreen> {
           gradient: LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
-            colors: [
-              AppColors.primary.withOpacity(0.1),
-              Colors.white,
-            ],
+            colors: [AppColors.primary.withOpacity(0.1), Colors.white],
           ),
         ),
         child: CustomScrollView(
           slivers: [
-            SliverToBoxAdapter(
-              child: _buildSubjectHeader(),
-            ),
-            SliverToBoxAdapter(
-              child: _buildLessonsPath(),
-            ),
+            SliverToBoxAdapter(child: _buildSubjectHeader()),
+            SliverToBoxAdapter(child: _buildLessonsPath()),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildErrorState() {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(Icons.error_outline, size: 64, color: AppColors.error),
+          SizedBox(height: 16),
+          Text(
+            'Error al cargar las lecciones',
+            style: TextStyle(
+              fontFamily: 'Comic Sans MS',
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          SizedBox(height: 8),
+          Padding(
+            padding: EdgeInsets.symmetric(horizontal: 32),
+            child: Text(
+              _errorMessage!,
+              style: TextStyle(
+                fontFamily: 'Comic Sans MS',
+                fontSize: 14,
+                color: Colors.grey,
+              ),
+              textAlign: TextAlign.center,
+            ),
+          ),
+          SizedBox(height: 24),
+          ElevatedButton.icon(
+            onPressed: _loadLessonsFromBackend,
+            icon: Icon(Icons.refresh),
+            label: Text('Reintentar', style: TextStyle(fontFamily: 'Comic Sans MS')),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.primary,
+              foregroundColor: Colors.white,
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -353,6 +645,7 @@ class _SubjectLessonsScreenState extends State<SubjectLessonsScreen> {
   Widget _buildSubjectHeader() {
     final completedCount = lessons.where((l) => l.isCompleted).length;
     final totalCount = lessons.length;
+    final regularLessonsCompleted = lessons.where((l) => l.isCompleted && l.type == LessonNodeType.lesson).length;
     final progress = totalCount > 0 ? completedCount / totalCount : 0.0;
 
     return Container(
@@ -362,34 +655,12 @@ class _SubjectLessonsScreenState extends State<SubjectLessonsScreen> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: [
-              _buildStatItem(
-                Icons.school, 
-                completedCount.toString(), 
-                totalCount.toString(), 
-                'Completadas',
-                AppColors.primary,
-                showFraction: true,
-              ),
-              _buildStatItem(
-                Icons.trending_up, 
-                '${(progress * 100).round()}%', 
-                '', 
-                'Progreso',
-                AppColors.success,
-              ),
-              _buildStatItem(
-                Icons.stars, 
-                '${lessons.where((l) => l.isUnlocked).length}', 
-                '', 
-                'Desbloqueadas',
-                AppColors.secondary,
-              ),
+              _buildStatItem(Icons.school, '$completedCount/$totalCount', 'Completadas', AppColors.primary),
+              _buildStatItem(Icons.trending_up, '${(progress * 100).round()}%', 'Progreso', AppColors.success),
+              _buildStatItem(Icons.psychology, '${(regularLessonsCompleted / 5).floor()}', 'Adaptativos', AppColors.secondary),
             ],
           ),
-          
           const SizedBox(height: 24),
-          
-          // Barra de progreso
           Container(
             width: double.infinity,
             height: 8,
@@ -413,13 +684,13 @@ class _SubjectLessonsScreenState extends State<SubjectLessonsScreen> {
     );
   }
 
-  Widget _buildStatItem(IconData icon, String value, String total, String label, Color color, {bool showFraction = false}) {
+  Widget _buildStatItem(IconData icon, String value, String label, Color color) {
     return Column(
       children: [
         Icon(icon, color: color, size: 32),
         const SizedBox(height: 8),
         Text(
-          showFraction && total.isNotEmpty ? '$value/$total' : value,
+          value,
           style: TextStyle(
             fontFamily: 'Comic Sans MS',
             fontSize: 16,
@@ -466,7 +737,7 @@ class _SubjectLessonsScreenState extends State<SubjectLessonsScreen> {
       ),
       child: BounceAnimation(
         child: GestureDetector(
-          onTap: lesson.isUnlocked ? () => _handleLessonTap(lesson) : () => _showLockedMessage(),
+          onTap: () => _handleLessonTap(lesson),
           child: Column(
             children: [
               Container(
@@ -497,17 +768,11 @@ class _SubjectLessonsScreenState extends State<SubjectLessonsScreen> {
                     ),
                     const SizedBox(height: 4),
                     if (lesson.isCompleted)
-                      Icon(
-                        Icons.check_circle,
-                        color: Colors.white,
-                        size: 20,
-                      ),
+                      Icon(Icons.check_circle, color: Colors.white, size: 20),
                   ],
                 ),
               ),
-              
               const SizedBox(height: 12),
-              
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                 decoration: BoxDecoration(
@@ -546,30 +811,5 @@ class _SubjectLessonsScreenState extends State<SubjectLessonsScreen> {
         borderRadius: BorderRadius.circular(2),
       ),
     );
-  }
-
-  Color _getNodeColor(LessonNode lesson) {
-    if (lesson.isCompleted) return AppColors.success;
-    if (lesson.isUnlocked) return AppColors.primary;
-    return Colors.grey.shade400;
-  }
-
-  Color _getNodeBorderColor(LessonNode lesson) {
-    if (lesson.isCompleted) return AppColors.success.withOpacity(0.8);
-    if (lesson.isUnlocked) return AppColors.primary.withOpacity(0.8);
-    return Colors.grey.shade500;
-  }
-
-  Color _getNodeIconColor(LessonNode lesson) {
-    if (lesson.isCompleted) return Colors.white;
-    if (lesson.isUnlocked) return Colors.white;
-    return Colors.grey.shade600;
-  }
-
-  IconData _getNodeIcon(LessonNode lesson) {
-    if (lesson.type == LessonNodeType.game) {
-      return Icons.videogame_asset;
-    }
-    return Icons.school;
   }
 }
